@@ -1,0 +1,27 @@
+<% content_for :title, "Books" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Books</h1>
+  <% if signed_in? %>
+    <%= link_to "Add a Book", new_book_path, class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<% if @books.any? %>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+    <% @books.each do |book| %>
+      <div class="col">
+        <%= link_to book, class: "text-decoration-none text-dark" do %>
+          <%= render book %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <p class="fs-5">No books yet.</p>
+    <% if signed_in? %>
+      <%= link_to "Add the first one", new_book_path, class: "btn btn-primary" %>
+    <% end %>
+  </div>
+<% end %>

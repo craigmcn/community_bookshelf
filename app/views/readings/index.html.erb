@@ -1,0 +1,32 @@
+<% content_for :title, "My Shelf" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">My Shelf</h1>
+  <%= link_to "Log a Reading", new_reading_path, class: "btn btn-primary" %>
+</div>
+
+<% if @readings.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Book</th>
+          <th>Status</th>
+          <th>Rating</th>
+          <th>Review</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @readings.each do |reading| %>
+          <%= render reading %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <p class="fs-5">Your shelf is empty.</p>
+    <%= link_to "Log your first reading", new_reading_path, class: "btn btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,12 @@
+<tr id="<%= dom_id reading %>">
+  <td><%= link_to reading.book.title, reading.book, class: "text-decoration-none fw-semibold" %></td>
+  <td><span class="badge bg-secondary"><%= reading.status.humanize %></span></td>
+  <td><%= reading.rating&.humanize || "—" %></td>
+  <td class="text-muted"><%= truncate(reading.review, length: 80) %></td>
+  <td class="d-flex">
+    <%= link_to "Edit", edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary" %>
+    <%= button_to "Delete", reading, method: :delete,
+          class: "btn btn-sm btn-outline-danger ms-1",
+          form: { data: { turbo_confirm: "Remove this reading?" } } %>
+  </td>
+</tr>

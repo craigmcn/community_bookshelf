@@ -1,0 +1,29 @@
+<% content_for :title, @reading.book.title %>
+
+<div class="card">
+  <div class="card-body">
+    <h2 class="card-title"><%= @reading.book.title %></h2>
+    <p class="text-muted"><%= @reading.book.author %></p>
+
+    <dl class="row mt-3">
+      <dt class="col-sm-2">Status</dt>
+      <dd class="col-sm-10"><span class="badge bg-secondary"><%= @reading.status.humanize %></span></dd>
+
+      <dt class="col-sm-2">Rating</dt>
+      <dd class="col-sm-10"><%= @reading.rating&.humanize || "—" %></dd>
+
+      <% if @reading.review.present? %>
+        <dt class="col-sm-2">Review</dt>
+        <dd class="col-sm-10"><%= @reading.review %></dd>
+      <% end %>
+    </dl>
+
+    <div class="d-flex gap-2 mt-3">
+      <%= link_to "Back to Shelf", readings_path, class: "btn btn-outline-secondary" %>
+      <%= link_to "Edit", edit_reading_path(@reading), class: "btn btn-outline-primary" %>
+      <%= button_to "Delete", @reading, method: :delete,
+            class: "btn btn-outline-danger",
+            form: { data: { turbo_confirm: "Remove this reading?" } } %>
+    </div>
+  </div>
+</div>

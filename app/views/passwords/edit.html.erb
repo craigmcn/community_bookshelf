@@ -1,0 +1,29 @@
+<% content_for :title, "Change Your Password" %>
+
+<div class="row justify-content-center mt-5">
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="card-title mb-2 text-center">Change Your Password</h2>
+        <p class="text-center text-muted mb-4 small">Enter a new password for your account.</p>
+
+        <%= form_for :password_reset,
+              url: [@user, :password, token: @user.confirmation_token],
+              html: { method: :put } do |form| %>
+          <div class="mb-3">
+            <%= form.label :password, class: "form-label" %>
+            <%= form.password_field :password, class: "form-control", autofocus: true %>
+          </div>
+
+          <div class="d-grid mb-3">
+            <%= form.submit "Change Password", class: "btn btn-primary" %>
+          </div>
+
+          <div class="text-center small">
+            <%= link_to "Back to Sign In", sign_in_path %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

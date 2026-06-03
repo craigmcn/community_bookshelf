@@ -1,0 +1,24 @@
+<%= form_for :session, url: session_path do |form| %>
+  <div class="mb-3">
+    <%= form.label :email, class: "form-label" %>
+    <%= form.email_field :email, class: "form-control", autofocus: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :password, class: "form-label" %>
+    <%= form.password_field :password, class: "form-control" %>
+  </div>
+
+  <div class="d-grid mb-3">
+    <%= form.submit "Sign In", class: "btn btn-primary" %>
+  </div>
+
+  <div class="text-center small">
+    <% if Clearance.configuration.allow_sign_up? %>
+      <%= link_to "Create an account", sign_up_path %> &nbsp;·&nbsp;
+    <% end %>
+    <% if Clearance.configuration.allow_password_reset? %>
+      <%= link_to "Forgot password?", new_password_path %>
+    <% end %>
+  </div>
+<% end %>

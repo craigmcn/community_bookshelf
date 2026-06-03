@@ -1,0 +1,63 @@
+<% content_for :title, @book.title %>
+
+<div class="row">
+  <div class="col-md-3">
+    <% if @book.cover_url.present? %>
+      <%= image_tag @book.cover_url, class: "img-fluid rounded shadow-sm", alt: @book.title %>
+    <% else %>
+      <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 300px;">
+        <span class="text-white fs-1">📚</span>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="col-md-9">
+    <h1><%= @book.title %></h1>
+    <p class="fs-5 text-muted"><%= @book.author %></p>
+    <p class="text-muted"><small>Added by <%= @book.added_by.email %></small></p>
+
+    <div class="d-flex mt-4">
+      <%= link_to "Back to Books", books_path, class: "btn btn-outline-secondary" %>
+      <% if @user_reading %>
+        <%= link_to "View on shelf", @user_reading, class: "btn btn-success ms-2" %>
+      <% elsif current_user %>
+        <%= link_to "Add to shelf", new_reading_path(book_id: @book.id), class: "btn btn-primary ms-2" %>
+      <% end %>
+      <% if policy(@book).update? %>
+        <%= link_to "Edit", edit_book_path(@book), class: "btn btn-outline-primary ms-2" %>
+      <% end %>
+      <% if policy(@book).destroy? %>
+        <%= button_to "Delete", @book, method: :delete,
+              class: "btn btn-outline-danger ms-2",
+              form: { data: { turbo_confirm: "Delete #{@book.title}?" } } %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% if @book.readings.any? %>
+  <hr class="my-4">
+  <h3>Community Readings</h3>
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Reader</th>
+          <th>Status</th>
+          <th>Rating</th>
+          <th>Review</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @book.readings.includes(:user).each do |reading| %>
+          <tr>
+            <td><%= reading.user.email %></td>
+            <td><span class="badge bg-secondary"><%= reading.status.humanize %></span></td>
+            <td><%= reading.rating&.humanize || "—" %></td>
+            <td><%= truncate(reading.review, length: 100) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
