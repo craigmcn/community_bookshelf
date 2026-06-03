@@ -49,3 +49,47 @@ Rails implementation (completed)
 3. Namespaced `/admin` routes with `Admin::BaseController` enforcing `require_admin`
 4. Enum-based role checking in `BookPolicy` and `ReadingPolicy`
 5. Custom `SessionsController < Clearance::SessionsController` for role-based redirect after sign-in (admins → `/admin`, everyone else → `/`)
+
+---
+
+## Known gaps / planned work
+
+### 1 — Readings controller missing authorization checks (security gap)
+
+`ReadingsController` calls `authorize @reading` only for `create`. The `show`, `edit`, `update`, and `destroy` actions all use `set_reading` which does a plain `Reading.find(params[:id])` with no Pundit check. Any signed-in user who knows a reading's ID can view, edit, or delete it via direct URL.
+
+**Fix required:**
+
+- Add `authorize @reading` at the top of `show`, `edit`, `update`, and `destroy` actions (or inside `set_reading` after the find).
+- Add `show?` and `edit?` to `ReadingPolicy` — both should allow the record owner and admin; moderators may also view all for the workflow below.
+
+```ruby
+# ReadingPolicy additions
+def show? = record.user == user || user&.moderator? || user&.admin?
+def edit? = record.user == user || user&.admin?
+```
+
+### 2 — Moderator review workflow not implemented
+
+`ReadingPolicy#destroy?` is `record.user == user || user&.admin?`. Moderators are excluded — they can only destroy their own readings, the same as any member.
+
+**Planned workflow:**
+
+1. Update `ReadingPolicy`:
+   - `show?` — owner, moderator, admin
+   - `destroy?` — owner, moderator, admin
+
+2. Surface a "All Reviews" view accessible to moderators (e.g., a route under the existing readings resource or a new moderator namespace), listing every reading with reader email, book, status, and a Delete button. Policy-gated: `policy_scope(Reading)` must return `scope.all` for moderators.
+
+3. On `books#show`, show a Delete button next to each community reading row for moderators (same `policy(@reading).destroy?` guard already used on the shelf view).
+
+4. Update `ReadingPolicy::Scope`:
+   ```ruby
+   def resolve
+     if user&.moderator? || user&.admin?
+       scope.all
+     else
+       scope.where(user: user)
+     end
+   end
+   ```

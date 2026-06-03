@@ -9,6 +9,7 @@ class BooksController < ApplicationController
 
   # GET /books/1 or /books/1.json
   def show
+    authorize @book
     @user_reading = current_user&.readings&.find_by(book: @book)
   end
 
@@ -19,6 +20,7 @@ class BooksController < ApplicationController
 
   # GET /books/1/edit
   def edit
+    authorize @book
   end
 
   # POST /books or /books.json
@@ -39,6 +41,7 @@ class BooksController < ApplicationController
 
   # PATCH/PUT /books/1 or /books/1.json
   def update
+    authorize @book
     respond_to do |format|
       if @book.update(book_params)
         format.html { redirect_to @book, notice: "Book was successfully updated.", status: :see_other }
@@ -52,6 +55,7 @@ class BooksController < ApplicationController
 
   # DELETE /books/1 or /books/1.json
   def destroy
+    authorize @book
     @book.destroy!
 
     respond_to do |format|
@@ -64,7 +68,6 @@ class BooksController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_book
       @book = Book.find(params.expect(:id))
-      authorize @book
     end
 
     # Only allow a list of trusted parameters through.

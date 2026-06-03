@@ -8,6 +8,7 @@ class ReadingsController < ApplicationController
 
   # GET /readings/1 or /readings/1.json
   def show
+    authorize @reading
   end
 
   # GET /readings/new
@@ -17,6 +18,7 @@ class ReadingsController < ApplicationController
 
   # GET /readings/1/edit
   def edit
+    authorize @reading
   end
 
   # POST /readings or /readings.json
@@ -36,6 +38,7 @@ class ReadingsController < ApplicationController
 
   # PATCH/PUT /readings/1 or /readings/1.json
   def update
+    authorize @reading
     respond_to do |format|
       if @reading.update(reading_params)
         format.html { redirect_to @reading, notice: "Reading was successfully updated.", status: :see_other }
@@ -49,6 +52,7 @@ class ReadingsController < ApplicationController
 
   # DELETE /readings/1 or /readings/1.json
   def destroy
+    authorize @reading
     @reading.destroy!
 
     respond_to do |format|
