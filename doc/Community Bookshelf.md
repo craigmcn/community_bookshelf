@@ -19,7 +19,7 @@ Authentication:
 Roles (store as an enum on User: `member`, `moderator`, `admin`):
 
 * Member: manage their own readings, view everyone's shelves
-* Moderator: edit/delete any book entry, remove reviews
+* Moderator: edit/delete any book entry *(review removal not yet implemented — only admins can delete other users' readings)*
 * Admin: full access including user management
 
 Authorized views:
@@ -33,7 +33,6 @@ Admin dashboard:
 
 * User list with role assignment
 * Site stats (total books, total readings, most popular books)
-* Moderation queue (flagged reviews)
 
 Why this works well for the exercise
 
@@ -43,9 +42,10 @@ Why this works well for the exercise
 * The admin dashboard gives you a distinct UI surface to compare between plain Rails and the framework
 * No complex domain logic -- the complexity is in the access control layer, which is exactly what you're studying
 
-Rails implementation path (when you get there)
+Rails implementation (completed)
 
-1. `devise` for authentication
-2. `pundit` for authorization
-3. Namespaced `/admin` routes with a base controller that enforces admin role
-4. Enum-based role checking in policies
+1. `clearance` — authentication (sessions, password reset, sign-up/sign-out)
+2. `pundit` — authorization (role-based policies, `Pundit::NotAuthorizedError` rescue in `ApplicationController`)
+3. Namespaced `/admin` routes with `Admin::BaseController` enforcing `require_admin`
+4. Enum-based role checking in `BookPolicy` and `ReadingPolicy`
+5. Custom `SessionsController < Clearance::SessionsController` for role-based redirect after sign-in (admins → `/admin`, everyone else → `/`)

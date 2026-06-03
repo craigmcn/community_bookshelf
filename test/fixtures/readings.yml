@@ -1,15 +1,6 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  user: one
+  user: member
   book: one
-  status: 1
-  rating: 1
-  review: MyText
-
-two:
-  user: two
-  book: two
-  status: 1
-  rating: 1
-  review: MyText
+  status: 0
+  rating: 4
+  review: A great read.

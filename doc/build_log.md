@@ -124,6 +124,8 @@ Policies created:
 - `update?` / `destroy?` — record owner or admin
 - `Scope#resolve` — scoped to current user's readings only
 
+> **Note:** The original plan intended moderators to be able to remove any review. `ReadingPolicy#destroy?` is currently `record.user == user || user&.admin?` — moderators are not included and can only delete their own readings. To implement the original intent, add `user&.moderator?` to the condition.
+
 ### Controllers
 
 Generated scaffold controllers for `Books` and `Readings`, then customized:

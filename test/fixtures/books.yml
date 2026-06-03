@@ -1,13 +1,11 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  title: MyString
-  author: MyString
-  cover_url: MyString
-  added_by: one
+  title: The Great Gatsby
+  author: F. Scott Fitzgerald
+  cover_url: ""
+  added_by: member
 
 two:
-  title: MyString
-  author: MyString
-  cover_url: MyString
-  added_by: two
+  title: "1984"
+  author: George Orwell
+  cover_url: ""
+  added_by: admin
