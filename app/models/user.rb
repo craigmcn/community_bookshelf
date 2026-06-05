@@ -10,6 +10,8 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: true
 
+  after_create :assign_default_role
+
   def admin?
     roles.exists?(name: "admin")
   end
@@ -31,5 +33,12 @@ class User < ApplicationRecord
     return "moderator" if moderator?
 
     "member"
+  end
+
+  private
+
+  def assign_default_role
+    member_role = Role.find_by(name: "member")
+    roles << member_role if member_role
   end
 end
