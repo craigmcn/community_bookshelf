@@ -38,12 +38,16 @@
                 <%= link_to "My Shelf", readings_path, class: "nav-link" %>
               </li>
             <% end %>
-            <% if current_user&.admin? %>
+            <% if current_user&.moderator_or_above? %>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Admin</a>
                 <ul class="dropdown-menu">
-                  <li><%= link_to "Dashboard", admin_root_path, class: "dropdown-item" %></li>
-                  <li><%= link_to "Users", admin_users_path, class: "dropdown-item" %></li>
+                  <% if current_user.admin? %>
+                    <li><%= link_to "Dashboard", admin_root_path, class: "dropdown-item" %></li>
+                    <li><%= link_to "Users", admin_users_path, class: "dropdown-item" %></li>
+                    <li><hr class="dropdown-divider"></li>
+                  <% end %>
+                  <li><%= link_to "Reviewed Readings", admin_readings_path, class: "dropdown-item" %></li>
                 </ul>
               </li>
             <% end %>
