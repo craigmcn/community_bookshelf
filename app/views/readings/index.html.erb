@@ -1,8 +1,10 @@
 <% content_for :title, "My Shelf" %>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h1 class="mb-0">My Shelf</h1>
-  <%= link_to "Log a Reading", new_reading_path, class: "btn btn-primary" %>
+  <h1 class="mb-0"><i class="fasl fa-bookmark me-2 opacity-75"></i>My Shelf</h1>
+  <%= link_to new_reading_path, class: "btn btn-primary" do %>
+    <i class="fasl fa-plus me-1"></i>Log a Reading
+  <% end %>
 </div>
 
 <% if @readings.any? %>
@@ -26,7 +28,10 @@
   </div>
 <% else %>
   <div class="text-center text-muted py-5">
+    <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>
     <p class="fs-5">Your shelf is empty.</p>
-    <%= link_to "Log your first reading", new_reading_path, class: "btn btn-primary" %>
+    <%= link_to new_reading_path, class: "btn btn-primary" do %>
+      <i class="fasl fa-plus me-1"></i>Log your first reading
+    <% end %>
   </div>
 <% end %>

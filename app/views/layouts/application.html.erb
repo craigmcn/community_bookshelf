@@ -17,12 +17,16 @@
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+    <script src="https://kit.fontawesome.com/b41e4928e6.js" crossorigin="anonymous"></script>
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-0">
       <div class="container">
-        <%= link_to "Community Bookshelf", root_path, class: "navbar-brand fw-bold" %>
+        <%= link_to root_path, class: "navbar-brand fw-bold d-flex align-items-center" do %>
+          <i class="fasl fa-books"></i>
+          Community Bookshelf
+        <% end %>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
           <span class="navbar-toggler-icon"></span>
@@ -31,23 +35,41 @@
         <div class="collapse navbar-collapse" id="navbarMain">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <%= link_to "Books", books_path, class: "nav-link" %>
+              <%= link_to books_path, class: "nav-link" do %>
+                <i class="fasl fa-book-open me-1"></i>Books
+              <% end %>
             </li>
             <% if signed_in? %>
               <li class="nav-item">
-                <%= link_to "My Shelf", readings_path, class: "nav-link" %>
+                <%= link_to readings_path, class: "nav-link" do %>
+                  <i class="fasl fa-bookmark me-1"></i>My Shelf
+                <% end %>
               </li>
             <% end %>
             <% if current_user&.moderator_or_above? %>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Admin</a>
+                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                  <i class="fasl fa-gear me-1"></i>Admin
+                </a>
                 <ul class="dropdown-menu">
                   <% if current_user.admin? %>
-                    <li><%= link_to "Dashboard", admin_root_path, class: "dropdown-item" %></li>
-                    <li><%= link_to "Users", admin_users_path, class: "dropdown-item" %></li>
+                    <li>
+                      <%= link_to admin_root_path, class: "dropdown-item" do %>
+                        <i class="fasl fa-gauge me-2"></i>Dashboard
+                      <% end %>
+                    </li>
+                    <li>
+                      <%= link_to admin_users_path, class: "dropdown-item" do %>
+                        <i class="fasl fa-users me-2"></i>Users
+                      <% end %>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
                   <% end %>
-                  <li><%= link_to "Reviewed Readings", admin_readings_path, class: "dropdown-item" %></li>
+                  <li>
+                    <%= link_to admin_readings_path, class: "dropdown-item" do %>
+                      <i class="fasl fa-book-open me-2"></i>Reviewed Readings
+                    <% end %>
+                  </li>
                 </ul>
               </li>
             <% end %>
@@ -59,15 +81,21 @@
                 <span class="nav-link text-light opacity-75"><%= current_user.email %></span>
               </li>
               <li class="nav-item">
-                <%= button_to "Sign Out", sign_out_path, method: :delete,
-                      class: "btn btn-outline-light btn-sm my-1" %>
+                <%= button_to sign_out_path, method: :delete,
+                      class: "btn btn-outline-light btn-sm my-1" do %>
+                  <i class="fasl fa-arrow-right-from-bracket me-1"></i>Sign Out
+                <% end %>
               </li>
             <% else %>
               <li class="nav-item">
-                <%= link_to "Sign In", sign_in_path, class: "nav-link" %>
+                <%= link_to sign_in_path, class: "nav-link" do %>
+                  <i class="fasl fa-arrow-right-to-bracket me-1"></i>Sign In
+                <% end %>
               </li>
               <li class="nav-item">
-                <%= link_to "Sign Up", sign_up_path, class: "btn btn-primary btn-sm my-1 ms-2" %>
+                <%= link_to sign_up_path, class: "btn btn-primary btn-sm my-1 ms-2" do %>
+                  <i class="fasl fa-user-plus me-1"></i>Sign Up
+                <% end %>
               </li>
             <% end %>
           </ul>
@@ -75,21 +103,31 @@
       </div>
     </nav>
 
-    <div class="container">
-      <% if notice.present? %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= notice %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      <% end %>
-      <% if alert.present? %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <%= alert %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      <% end %>
+    <main class="app-main">
+      <div class="container">
+        <% if notice.present? %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fasl fa-circle-check me-2"></i><%= notice %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        <% end %>
+        <% if alert.present? %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fasl fa-circle-exclamation me-2"></i><%= alert %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        <% end %>
 
-      <%= yield %>
-    </div>
+        <%= yield %>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container text-center">
+        <i class="fasl fa-books"></i>
+        <span class="site-footer-brand ms-2">Community Bookshelf</span>
+        <div class="mt-1">A place for readers to share their shelves</div>
+      </div>
+    </footer>
   </body>
 </html>
