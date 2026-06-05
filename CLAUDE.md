@@ -12,7 +12,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **External API**: Open Library (book search + cover images via Faraday)
 - **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
 - **Testing**: Minitest + Capybara (system tests)
-- **CI**: GitHub Actions (Brakeman, bundler-audit, RuboCop, full test suite vs PostgreSQL)
+- **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL)
 - **Deployment**: Docker + Kamal + Thruster
 
 ## Setup
@@ -34,8 +34,9 @@ bin/rails db:migrate                    # run pending migrations
 bin/rails db:rollback                   # undo last migration
 bin/rails db:seed                       # seed roles + users
 
-bundle exec rubocop                     # lint
-bundle exec rubocop -a                  # auto-correct safe offenses
+bin/rubocop                             # lint (StandardRB via standard + standard-rails)
+bin/rubocop -a                          # auto-correct safe offenses
+bin/rubocop -A                          # auto-correct all offenses (includes unsafe)
 bundle exec brakeman                    # security scan
 
 yarn build                              # compile JS

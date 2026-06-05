@@ -1,5 +1,5 @@
 class ReadingsController < ApplicationController
-  before_action :set_reading, only: %i[ show edit update destroy ]
+  before_action :set_reading, only: %i[show edit update destroy]
 
   def index
     @readings = current_user.readings
@@ -43,11 +43,12 @@ class ReadingsController < ApplicationController
   end
 
   private
-    def set_reading
-      @reading = Reading.find(params.expect(:id))
-    end
 
-    def reading_params
-      params.expect(reading: [ :user_id, :book_id, :status, :rating, :review ])
-    end
+  def set_reading
+    @reading = Reading.find(params.expect(:id))
+  end
+
+  def reading_params
+    params.expect(reading: [:user_id, :book_id, :status, :rating, :review])
+  end
 end

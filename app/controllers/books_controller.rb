@@ -1,6 +1,6 @@
 class BooksController < ApplicationController
-  skip_before_action :require_login, only: [ :index, :show ]
-  before_action :set_book, only: %i[ show edit update destroy ]
+  skip_before_action :require_login, only: [:index, :show]
+  before_action :set_book, only: %i[show edit update destroy]
 
   def index
     @books = policy_scope(Book)
@@ -46,11 +46,12 @@ class BooksController < ApplicationController
   end
 
   private
-    def set_book
-      @book = Book.find(params.expect(:id))
-    end
 
-    def book_params
-      params.expect(book: [ :title, :author, :cover_url, :added_by_id ])
-    end
+  def set_book
+    @book = Book.find(params.expect(:id))
+  end
+
+  def book_params
+    params.expect(book: [:title, :author, :cover_url, :added_by_id])
+  end
 end

@@ -1,8 +1,8 @@
 class ReadingPolicy < ApplicationPolicy
-  def show?    = record.user == user || user&.moderator_or_above?
-  def edit?    = !record.deleted? && (record.user == user || user&.moderator_or_above?)
-  def create?  = user.present?
-  def update?  = !record.deleted? && (record.user == user || user&.moderator_or_above?)
+  def show? = record.user == user || user&.moderator_or_above?
+  def edit? = !record.deleted? && (record.user == user || user&.moderator_or_above?)
+  def create? = user.present?
+  def update? = !record.deleted? && (record.user == user || user&.moderator_or_above?)
   def destroy? = !record.deleted? && user&.moderator_or_above?
 
   class Scope < ApplicationPolicy::Scope

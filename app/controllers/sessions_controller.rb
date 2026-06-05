@@ -1,5 +1,6 @@
 class SessionsController < Clearance::SessionsController
   # Custom Clearance Session handling
+
   private
 
   def url_after_create

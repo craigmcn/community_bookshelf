@@ -6,11 +6,11 @@ class OpenLibraryService
     return [] if query.blank?
 
     conn = Faraday.new(url: BASE_URL)
-    response = conn.get("/search.json", { q: query, limit: 10, fields: "title,author_name,cover_i" })
+    response = conn.get("/search.json", {q: query, limit: 10, fields: "title,author_name,cover_i"})
     data = JSON.parse(response.body)
 
     data["docs"].filter_map do |doc|
-      next unless doc["title"].present?
+      next if doc["title"].blank?
 
       {
         title: doc["title"],

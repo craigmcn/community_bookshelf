@@ -20,7 +20,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "admin can update a user role" do
     sign_in_as users(:admin)
-    patch admin_user_url(users(:member)), params: { user: { role_ids: [ roles(:moderator).id ] } }
+    patch admin_user_url(users(:member)), params: {user: {role_ids: [roles(:moderator).id]}}
     assert_redirected_to admin_users_path
     assert users(:member).reload.moderator?
   end
