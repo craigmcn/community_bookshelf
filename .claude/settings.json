@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bin/rails test *)"
+      "Bash(bin/rails test*)",
+      "Bash(bin/rails routes*)",
+      "Bash(bin/rails db:migrate*)",
+      "Bash(bin/rails db:rollback*)",
+      "Bash(bin/rails db:schema:dump*)",
+      "Bash(bin/rails db:seed*)",
+      "Bash(bin/rails stats*)",
+      "Bash(bundle exec rubocop*)",
+      "Bash(bundle exec brakeman*)",
+      "Bash(bundle exec bundler-audit*)",
+      "Bash(yarn build*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)"
     ]
   }
 }

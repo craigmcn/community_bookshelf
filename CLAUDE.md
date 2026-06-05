@@ -1,0 +1,138 @@
+# Community Bookshelf
+
+A Rails 8 community reading-list app where members track books, log readings, and write reviews. Moderators/admins manage content via a scoped admin dashboard.
+
+## Tech Stack
+
+- **Ruby** 4.0.5 / **Rails** 8.1.3
+- **Database**: PostgreSQL
+- **Authentication**: Clearance gem
+- **Authorization**: Pundit (policy classes)
+- **Frontend**: Hotwire (Turbo + Stimulus), Bootstrap 5, esbuild + Sass via propshaft
+- **External API**: Open Library (book search + cover images via Faraday)
+- **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
+- **Testing**: Minitest + Capybara (system tests)
+- **CI**: GitHub Actions (Brakeman, bundler-audit, RuboCop, full test suite vs PostgreSQL)
+- **Deployment**: Docker + Kamal + Thruster
+
+## Setup
+
+```sh
+bin/setup          # install deps, create/migrate DB, seed
+bin/dev            # start web + esbuild watch + CSS watch (via Procfile.dev)
+```
+
+## Common Commands
+
+```sh
+bin/rails test                          # full test suite
+bin/rails test test/models/user_test.rb # single file
+bin/rails test:system                   # Capybara system tests
+
+bin/rails routes                        # list all routes
+bin/rails db:migrate                    # run pending migrations
+bin/rails db:rollback                   # undo last migration
+bin/rails db:seed                       # seed roles + users
+
+bundle exec rubocop                     # lint
+bundle exec rubocop -a                  # auto-correct safe offenses
+bundle exec brakeman                    # security scan
+
+yarn build                              # compile JS
+yarn build:css                          # compile Sass
+```
+
+## Domain Model
+
+### Core Tables
+- **books** — `title`, `author`, `cover_url`, `added_by_id` (FK → users)
+- **readings** — `user_id`, `book_id`, `status` (enum), `rating` (enum), `review`, `deleted_at` (soft delete)
+- **users** — Clearance authentication (email, encrypted_password, tokens)
+- **roles** — `name`: `member | moderator | admin`
+- **role_assignments** — join table users ↔ roles (users can hold multiple roles)
+
+### Enums
+```ruby
+# Reading#status
+want_to_read: 0, reading: 1, finished: 2
+
+# Reading#rating
+one: 1, two: 2, three: 3, four: 4, five: 5
+```
+
+### Soft Deletes
+Readings use `deleted_at` for soft deletes. Default scopes exclude deleted records; use `Reading.unscoped` or `with_deleted` if you need them.
+
+## Authentication & Authorization
+
+### Clearance
+- `ApplicationController` includes `Clearance::Controller`
+- Use `require_login` before_action to protect routes
+- `current_user` is always available (nil if signed out)
+- Test helper: `sign_in_as(user)` (defined in test_helper.rb)
+- Test fixture password: `"correct-horse-shelf"` (all fixture users)
+
+### Pundit
+- `ApplicationController` includes `Pundit::Authorization` and calls `verify_authorized`
+- One policy per model in `app/policies/` — all default to `false`
+- Roles checked via `current_user.member?`, `.moderator?`, `.admin?`, `.moderator_or_above?`
+- Pundit errors are rescued in ApplicationController (renders 403)
+
+### Role Hierarchy
+```
+admin > moderator > member (default for new users)
+```
+Users can hold multiple roles simultaneously. Helper methods on User:
+- `member?` / `moderator?` / `admin?` — checks for that specific role
+- `moderator_or_above?` — moderator OR admin
+
+## Routes
+
+```
+GET  /books              BooksController#index       (public)
+GET  /books/:id          BooksController#show        (public)
+POST /books              BooksController#create      (member+)
+PATCH /books/:id         BooksController#update      (moderator+)
+DELETE /books/:id        BooksController#destroy     (moderator+)
+
+resources :readings      ReadingsController           (owner or moderator+)
+
+GET  /book_search        BookSearchController#index   (Turbo Frame search)
+
+namespace :admin
+  /admin/dashboard       AdminDashboardController     (moderator+)
+  /admin/readings        AdminReadingsController      (moderator+)
+  /admin/users           AdminUsersController         (admin only)
+```
+
+## Testing Conventions
+
+- **Framework**: Minitest (test/unit style, not RSpec)
+- **Fixtures** over factories — all fixtures in `test/fixtures/`
+- **Parallel** test execution (parallel workers = CPU count)
+- Controller tests use `sign_in_as(users(:member))` / `sign_in_as(users(:admin))`
+- Always test the three permission tiers: unauthenticated, member, moderator/admin
+- System tests use Capybara + Selenium
+
+### Fixture Users
+| Fixture | Role | Password |
+|---|---|---|
+| `users(:member)` | member | correct-horse-shelf |
+| `users(:moderator)` | moderator | correct-horse-shelf |
+| `users(:admin)` | admin | correct-horse-shelf |
+
+## Key Patterns
+
+### Adding a new policy check
+1. Add method to `app/policies/<model>_policy.rb`
+2. Call `authorize @record` (or `authorize @record, :custom_action?`) in controller
+3. Add fixture-based tests in `test/controllers/<model>s_controller_test.rb`
+
+### Admin-only features
+Inherit from `Admin::BaseController` — it enforces `moderator_or_above?` and provides `require_admin!`.
+
+### Open Library integration
+`OpenLibraryService.search(query)` returns an array of hashes with `:title`, `:author`, `:cover_url`. The `BookSearchController` serves results into a Turbo Frame (`#book-search-results`). The Stimulus controller (`book_search_controller.js`) debounces input at 300ms.
+
+### Asset builds
+Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` running). Compiled output lands in `app/assets/builds/`.
