@@ -1,6 +1,6 @@
 # Community Bookshelf
 
-A shared reading list app built in Rails 8. Users log books they've read, rate them, and see what others are reading. Admins manage users and moderate content.
+A shared reading list app built in Rails 8. Users log books they've read, rate them, and see what others are reading. Moderators and admins manage content.
 
 Built as a learning exercise to explore Rails auth/authz patterns before rebuilding in Niiwin. See [`doc/Community Bookshelf.md`](doc/Community%20Bookshelf.md) for the full spec and [`doc/build_log.md`](doc/build_log.md) for a step-by-step build history.
 
@@ -12,6 +12,7 @@ Built as a learning exercise to explore Rails auth/authz patterns before rebuild
 - **Hotwire** (Turbo + Stimulus)
 - **Clearance** — authentication
 - **Pundit** — authorization
+- **Faraday** — Open Library API integration
 
 ## Setup
 
@@ -32,9 +33,9 @@ Roles are stored as an integer enum on `User` (`member: 0`, `moderator: 1`, `adm
 
 | Role | Can do |
 |------|--------|
-| Member | Log and manage their own readings |
-| Moderator | Edit or delete any book entry |
-| Admin | Everything, including user role assignment |
+| Member | Log and edit their own readings; view all books and community shelves |
+| Moderator | All of the above, plus edit/delete any book or reading; access the review moderation view at `/admin/readings` |
+| Admin | Everything, including user role assignment and the admin dashboard |
 
 Promote a user in the console:
 
@@ -55,10 +56,22 @@ Clearance handles sign-up, sign-in, sign-out, and password reset. `ApplicationCo
 Pundit policies live in `app/policies/`. The role enum drives all decisions:
 
 - `BookPolicy` — index/show public; create for any signed-in user; update/destroy for moderator+
-- `ReadingPolicy` — create for any signed-in user; update/destroy for record owner or admin
+- `ReadingPolicy` — create/show for any signed-in user; update for owner or moderator+; destroy (soft delete) for moderator+ only; edit blocked on already-deleted records
+
+`ReadingPolicy::Scope` returns all readings for moderator+, own readings only for members.
 
 `Pundit::NotAuthorizedError` is rescued in `ApplicationController` and surfaces as a flash alert.
 
 ## Admin
 
-`Admin::BaseController` enforces `require_admin` for all routes under `/admin`. The dashboard shows site stats and the most-read books. The users index allows role assignment.
+`Admin::BaseController` enforces `require_moderator_or_above` for all routes under `/admin`. Individual controllers add `require_admin` where full admin access is needed.
+
+| Route | Access |
+|-------|--------|
+| `/admin` — dashboard with site stats and most-read books | Admin only |
+| `/admin/users` — user list with role assignment | Admin only |
+| `/admin/readings` — reviewed readings with edit/delete actions | Moderator+ |
+
+## Open Library integration
+
+The book search at `/book_search` queries the Open Library API via `OpenLibraryService` and returns matching titles, authors, and cover images. Results populate the new-book form without a page reload (Stimulus + Turbo Frame).
