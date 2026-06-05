@@ -2,75 +2,54 @@ class BooksController < ApplicationController
   skip_before_action :require_login, only: [ :index, :show ]
   before_action :set_book, only: %i[ show edit update destroy ]
 
-  # GET /books or /books.json
   def index
     @books = policy_scope(Book)
   end
 
-  # GET /books/1 or /books/1.json
   def show
     authorize @book
     @user_reading = current_user&.readings&.find_by(book: @book)
   end
 
-  # GET /books/new
   def new
     @book = Book.new
   end
 
-  # GET /books/1/edit
   def edit
     authorize @book
   end
 
-  # POST /books or /books.json
   def create
     @book = Book.new(book_params)
     authorize @book
 
-    respond_to do |format|
-      if @book.save
-        format.html { redirect_to @book, notice: "Book was successfully created." }
-        format.json { render :show, status: :created, location: @book }
-      else
-        format.html { render :new, status: :unprocessable_content }
-        format.json { render json: @book.errors, status: :unprocessable_content }
-      end
+    if @book.save
+      redirect_to @book, notice: "Book was successfully created."
+    else
+      render :new, status: :unprocessable_content
     end
   end
 
-  # PATCH/PUT /books/1 or /books/1.json
   def update
     authorize @book
-    respond_to do |format|
-      if @book.update(book_params)
-        format.html { redirect_to @book, notice: "Book was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @book }
-      else
-        format.html { render :edit, status: :unprocessable_content }
-        format.json { render json: @book.errors, status: :unprocessable_content }
-      end
+    if @book.update(book_params)
+      redirect_to @book, notice: "Book was successfully updated.", status: :see_other
+    else
+      render :edit, status: :unprocessable_content
     end
   end
 
-  # DELETE /books/1 or /books/1.json
   def destroy
     authorize @book
     @book.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to books_path, notice: "Book was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
-    end
+    redirect_to books_path, notice: "Book was successfully destroyed.", status: :see_other
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
     def set_book
       @book = Book.find(params.expect(:id))
     end
 
-    # Only allow a list of trusted parameters through.
     def book_params
       params.expect(book: [ :title, :author, :cover_url, :added_by_id ])
     end
