@@ -1,0 +1,8 @@
+member:
+  name: member
+
+moderator:
+  name: moderator
+
+admin:
+  name: admin

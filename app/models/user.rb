@@ -18,6 +18,10 @@ class User < ApplicationRecord
     roles.exists?(name: "moderator")
   end
 
+  def member?
+    !admin? && !moderator?
+  end
+
   def moderator_or_above?
     moderator? || admin?
   end
