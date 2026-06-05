@@ -1,21 +1,27 @@
-<% content_for :title, "Edit Role — #{@user.email}" %>
+<% content_for :title, "Edit Roles — #{@user.email}" %>
 
 <div class="row justify-content-center">
   <div class="col-md-5">
     <div class="card shadow-sm">
       <div class="card-body p-4">
-        <h2 class="card-title mb-1">Edit Role</h2>
+        <h2 class="card-title mb-1">Edit Roles</h2>
         <p class="text-muted mb-4"><%= @user.email %></p>
 
         <%= form_with(model: [:admin, @user]) do |form| %>
           <div class="mb-4">
-            <%= form.label :role, class: "form-label" %>
-            <%= form.select :role, User.roles.keys.map { |r| [r.capitalize, r] },
-                  {}, { class: "form-select" } %>
+            <label class="form-label">Roles</label>
+            <% @roles.each do |role| %>
+              <div class="form-check">
+                <%= check_box_tag "user[role_ids][]", role.id,
+                      @user.roles.include?(role),
+                      id: "role_#{role.id}", class: "form-check-input" %>
+                <%= label_tag "role_#{role.id}", role.name.capitalize, class: "form-check-label" %>
+              </div>
+            <% end %>
           </div>
 
           <div class="d-flex gap-2">
-            <%= form.submit "Update Role", class: "btn btn-primary" %>
+            <%= form.submit "Update Roles", class: "btn btn-primary" %>
             <%= link_to "Cancel", admin_users_path, class: "btn btn-outline-secondary" %>
           </div>
         <% end %>

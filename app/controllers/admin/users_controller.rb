@@ -2,19 +2,17 @@ class Admin::UsersController < Admin::BaseController
   before_action :require_admin
 
   def index
-    @users = User.all.order(:email)
+    @users = User.all.order(:email).includes(:roles)
   end
 
   def edit
     @user = User.find(params[:id])
+    @roles = Role.all.order(:name)
   end
 
   def update
     @user = User.find(params[:id])
-    if @user.update(role: params[:user][:role])
-      redirect_to admin_users_path, notice: "Role updated."
-    else
-      render :edit, status: :unprocessable_entity
-    end
+    @user.roles = Role.where(id: params.dig(:user, :role_ids) || [])
+    redirect_to admin_users_path, notice: "Roles updated."
   end
 end

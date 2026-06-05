@@ -21,29 +21,42 @@ bundle install
 yarn install
 
 cp .env.example .env        # or create .env with PORT=3020
-rails db:create db:migrate
+rails db:create db:migrate db:seed
 bin/dev
 ```
 
 Visit `http://localhost:3000`. (Or PORT defined in `.env`)
 
+### Seed accounts
+
+All seed accounts use the password `correct-horse-shelf`.
+
+| Email | Roles |
+|-------|-------|
+| `admin@communitybookshelf.org` | Admin, Moderator |
+| `moderator@communitybookshelf.org` | Moderator |
+| `alice@example.com` | Member |
+| `bob@example.com` | Member |
+| `carol@example.com` | Member |
+
 ## Roles
 
-Roles are stored as an integer enum on `User` (`member: 0`, `moderator: 1`, `admin: 2`). Every new user starts as `member`.
+Roles are stored in a `roles` table with a `role_assignments` join table — users can hold multiple roles simultaneously. Admins and moderators always have member-level permissions without needing an explicit member role assignment.
 
 | Role | Can do |
 |------|--------|
 | Member | Log and edit their own readings; view all books and community shelves |
-| Moderator | All of the above, plus edit/delete any book or reading; access the review moderation view at `/admin/readings` |
+| Moderator | All member permissions, plus edit/delete any book or reading; access the review moderation view at `/admin/readings` |
 | Admin | Everything, including user role assignment and the admin dashboard |
 
-Promote a user in the console:
+Assign a role in the console:
 
 ```ruby
-User.find_by(email: "you@example.com").admin!
+user = User.find_by(email: "you@example.com")
+user.roles << Role.find_by(name: "admin")
 ```
 
-Or via the admin dashboard at `/admin`.
+Or via the admin dashboard at `/admin/users`.
 
 ## Auth
 
@@ -53,7 +66,7 @@ Clearance handles sign-up, sign-in, sign-out, and password reset. `ApplicationCo
 
 ## Authorization
 
-Pundit policies live in `app/policies/`. The role enum drives all decisions:
+Pundit policies live in `app/policies/`. Role checks use `admin?`, `moderator?`, and `moderator_or_above?` on `User`, which query the roles association:
 
 - `BookPolicy` — index/show public; create for any signed-in user; update/destroy for moderator+
 - `ReadingPolicy` — create/show for any signed-in user; update for owner or moderator+; destroy (soft delete) for moderator+ only; edit blocked on already-deleted records
