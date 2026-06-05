@@ -7,7 +7,7 @@ class AddClearanceToUsers < ActiveRecord::Migration[8.1]
     end
     add_index :users, :confirmation_token, unique: true
     add_index :users, :remember_token, unique: true
-    Clearance.configuration.user_model.where(remember_token: nil).each do |user|
+    Clearance.configuration.user_model.where(remember_token: nil).find_each do |user|
       user.update_columns(remember_token: Clearance::Token.new)
     end
   end

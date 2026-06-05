@@ -4,17 +4,17 @@ Rails.application.routes.draw do
   get "book_search", to: "book_search#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  get "up" => "rails/health#show", as: :rails_health_check
+  get "up" => "rails/health#show", :as => :rails_health_check
 
   root "readings#index"
 
-  resources :passwords, controller: "clearance/passwords", only: [ :new, :create, :edit, :update ]
-  resource  :session,   controller: "sessions",  only: [ :new, :create, :destroy ]
-  resources :users,     controller: "clearance/users",     only: [ :new, :create ]
+  resources :passwords, controller: "clearance/passwords", only: [:new, :create, :edit, :update]
+  resource :session, controller: "sessions", only: [:new, :create, :destroy]
+  resources :users, controller: "clearance/users", only: [:new, :create]
 
   namespace :admin do
     root "dashboard#index"
-    resources :users, only: [ :index, :edit, :update ]
-    resources :readings, only: [ :index ]
+    resources :users, only: [:index, :edit, :update]
+    resources :readings, only: [:index]
   end
 end

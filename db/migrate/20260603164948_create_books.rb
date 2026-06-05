@@ -4,7 +4,7 @@ class CreateBooks < ActiveRecord::Migration[8.1]
       t.string :title
       t.string :author
       t.string :cover_url
-      t.references :added_by, null: false, foreign_key: { to_table: :users }
+      t.references :added_by, null: false, foreign_key: {to_table: :users}
 
       t.timestamps
     end

@@ -6,6 +6,6 @@ class CreateRoleAssignments < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :role_assignments, [ :user_id, :role_id ], unique: true
+    add_index :role_assignments, [:user_id, :role_id], unique: true
   end
 end
