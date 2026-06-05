@@ -1,14 +1,11 @@
 member:
   email: member@example.com
   encrypted_password: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
-  role: 0
 
 moderator:
   email: moderator@example.com
   encrypted_password: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
-  role: 1
 
 admin:
   email: admin@example.com
   encrypted_password: <%= BCrypt::Password.create("password", cost: BCrypt::Engine::MIN_COST) %>
-  role: 2

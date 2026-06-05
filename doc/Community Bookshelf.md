@@ -4,9 +4,11 @@ A shared reading list app where users log books they've read, rate them, and see
 
 ## Core models
 
-1. **User** — email, password (via Clearance), role enum (`member: 0`, `moderator: 1`, `admin: 2`)
-2. **Book** — title, author, cover_url, added_by (User)
-3. **Reading** — user, book, status (`want_to_read` / `reading` / `finished`), rating (1–5), review (text), deleted_at (soft delete timestamp)
+1. **User** — email, password (via Clearance); roles via `Role` join table
+2. **Role** — name (`admin` / `moderator` / `member`)
+3. **RoleAssignment** — user_id, role_id (join table; unique on the pair)
+4. **Book** — title, author, cover_url, added_by (User)
+5. **Reading** — user, book, status (`want_to_read` / `reading` / `finished`), rating (1–5), review (text), deleted_at (soft delete timestamp)
 
 ## Features by concern
 
@@ -19,12 +21,14 @@ A shared reading list app where users log books they've read, rate them, and see
 
 ### Roles
 
-Stored as an integer enum on `User`. Every new user defaults to `member`. The `moderator_or_above?` helper returns true for both `moderator` and `admin`.
+Stored in a `roles` table with a `role_assignments` join table. Users can hold multiple roles simultaneously. Admins and moderators always have member-level permissions without needing an explicit member role assignment.
+
+The `moderator_or_above?` helper on `User` returns true for both `moderator` and `admin`. `admin?` and `moderator?` are explicit instance methods that query the roles association.
 
 | Role | Permissions |
 |------|-------------|
 | Member | Log and edit their own readings; view all books and community shelves |
-| Moderator | All of the above, plus edit/delete any book or reading; access `/admin/readings` |
+| Moderator | All member permissions, plus edit/delete any book or reading; access `/admin/readings` |
 | Admin | Full access including user role management and the admin dashboard |
 
 ### Authorization (Pundit)
@@ -87,7 +91,7 @@ Policies live in `app/policies/`. `ApplicationController` rescues `Pundit::NotAu
 1. `clearance` — authentication (sessions, password reset, sign-up/sign-out)
 2. `pundit` — authorization (role-based policies, `Pundit::NotAuthorizedError` rescue in `ApplicationController`)
 3. Namespaced `/admin` routes with `Admin::BaseController` enforcing `require_moderator_or_above`; dashboard and users routes additionally enforce `require_admin`
-4. Enum-based role checking in `BookPolicy` and `ReadingPolicy`; `moderator_or_above?` helper on `User`
+4. Table-based roles via `Role` + `RoleAssignment`; `admin?`, `moderator?`, and `moderator_or_above?` are explicit methods on `User` that query the roles association
 5. Custom `SessionsController < Clearance::SessionsController` for role-based redirect after sign-in
 6. Soft delete on `Reading` via `deleted_at` timestamp; policy blocks re-editing or re-deleting soft-deleted records
 7. `OpenLibraryService` + `BookSearchController` for live book search via the Open Library API

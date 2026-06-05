@@ -1,0 +1,11 @@
+member_member:
+  user: member
+  role: member
+
+moderator_moderator:
+  user: moderator
+  role: moderator
+
+admin_admin:
+  user: admin
+  role: admin
