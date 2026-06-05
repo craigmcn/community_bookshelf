@@ -53,10 +53,10 @@ class ReadingsController < ApplicationController
   # DELETE /readings/1 or /readings/1.json
   def destroy
     authorize @reading
-    @reading.destroy!
+    @reading.soft_delete
 
     respond_to do |format|
-      format.html { redirect_to readings_path, notice: "Reading was successfully destroyed.", status: :see_other }
+      format.html { redirect_to readings_path, notice: "Reading was removed.", status: :see_other }
       format.json { head :no_content }
     end
   end

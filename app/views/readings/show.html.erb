@@ -2,7 +2,12 @@
 
 <div class="card">
   <div class="card-body">
-    <h2 class="card-title"><%= @reading.book.title %></h2>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h2 class="card-title mb-0"><%= @reading.book.title %></h2>
+      <% if @reading.deleted? %>
+        <span class="badge bg-danger">deleted</span>
+      <% end %>
+    </div>
     <p class="text-muted"><%= @reading.book.author %></p>
 
     <dl class="row mt-3">
@@ -19,11 +24,19 @@
     </dl>
 
     <div class="d-flex gap-2 mt-3">
-      <%= link_to "Back to Shelf", readings_path, class: "btn btn-outline-secondary" %>
-      <%= link_to "Edit", edit_reading_path(@reading), class: "btn btn-outline-primary" %>
-      <%= button_to "Delete", @reading, method: :delete,
-            class: "btn btn-outline-danger",
-            form: { data: { turbo_confirm: "Remove this reading?" } } %>
+      <% if current_user&.moderator_or_above? %>
+        <%= link_to "Back to Reviewed Readings", admin_readings_path, class: "btn btn-outline-secondary" %>
+      <% else %>
+        <%= link_to "Back to Shelf", readings_path, class: "btn btn-outline-secondary" %>
+      <% end %>
+      <% if policy(@reading).edit? %>
+        <%= link_to "Edit", edit_reading_path(@reading), class: "btn btn-outline-primary" %>
+      <% end %>
+      <% if policy(@reading).destroy? %>
+        <%= button_to "Delete", @reading, method: :delete,
+              class: "btn btn-outline-danger",
+              form: { data: { turbo_confirm: "Remove this reading?" } } %>
+      <% end %>
     </div>
   </div>
 </div>

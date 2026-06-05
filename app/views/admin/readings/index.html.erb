@@ -1,0 +1,54 @@
+<% content_for :title, "Reviewed Readings" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Reviewed Readings</h1>
+  <span class="badge bg-secondary fs-6"><%= @readings.size %> with reviews</span>
+</div>
+
+<% if @readings.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Member</th>
+          <th>Book</th>
+          <th>Status</th>
+          <th>Rating</th>
+          <th>Review</th>
+          <th>Updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @readings.each do |reading| %>
+          <tr>
+            <td class="text-muted small"><%= reading.user.email %></td>
+            <td>
+              <%= link_to reading.book.title, reading.book, class: "text-decoration-none fw-semibold" %>
+              <% if reading.deleted? %>
+                <span class="badge bg-danger ms-1">deleted</span>
+              <% end %>
+            </td>
+            <td><span class="badge bg-secondary"><%= reading.status.humanize %></span></td>
+            <td><%= reading.rating&.humanize || "—" %></td>
+            <td class="text-muted"><%= truncate(reading.review, length: 100) %></td>
+            <td class="text-muted small"><%= reading.updated_at.strftime("%b %-d, %Y") %></td>
+            <td class="d-flex gap-1">
+              <%= link_to "Show", reading_path(reading), class: "btn btn-sm btn-outline-secondary" %>
+              <% unless reading.deleted? %>
+                <%= link_to "Edit", edit_reading_path(reading), class: "btn btn-sm btn-outline-primary" %>
+                <%= button_to "Delete", reading_path(reading), method: :delete,
+                      class: "btn btn-sm btn-outline-danger",
+                      form: { data: { turbo_confirm: "Remove this reading?" } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <p class="fs-5">No reviewed readings yet.</p>
+  </div>
+<% end %>

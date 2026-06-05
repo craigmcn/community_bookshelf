@@ -6,4 +6,12 @@ class Reading < ApplicationRecord
   enum :rating, { one: 1, two: 2, three: 3, four: 4, five: 5 }
 
   validates :status, presence: true
+
+  def soft_delete
+    update!(deleted_at: Time.current)
+  end
+
+  def deleted?
+    deleted_at.present?
+  end
 end

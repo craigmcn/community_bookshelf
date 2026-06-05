@@ -31,11 +31,20 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "finished", @reading.reload.status
   end
 
-  test "member can destroy their own reading" do
+  test "member cannot destroy a reading" do
     sign_in_as users(:member)
-    assert_difference "Reading.count", -1 do
+    assert_no_difference "Reading.count" do
+      delete reading_url(@reading)
+    end
+    assert_nil @reading.reload.deleted_at
+  end
+
+  test "moderator can soft-delete a reading" do
+    sign_in_as users(:moderator)
+    assert_no_difference "Reading.count" do
       delete reading_url(@reading)
     end
     assert_redirected_to readings_url
+    assert_not_nil @reading.reload.deleted_at
   end
 end

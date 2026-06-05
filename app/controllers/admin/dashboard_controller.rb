@@ -1,4 +1,6 @@
 class Admin::DashboardController < Admin::BaseController
+  before_action :require_admin
+
   def index
     @total_users   = User.count
     @total_books   = Book.count

@@ -7,4 +7,8 @@ class User < ApplicationRecord
   enum :role, { member: 0, moderator: 1, admin: 2 }, default: :member
 
   validates :email, presence: true, uniqueness: true
+
+  def moderator_or_above?
+    moderator? || admin?
+  end
 end
