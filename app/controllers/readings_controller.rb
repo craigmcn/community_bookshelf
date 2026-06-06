@@ -46,7 +46,7 @@ class ReadingsController < ApplicationController
   private
 
   def set_reading
-    @reading = Reading.find(params.expect(:id))
+    @reading = Reading.with_deleted.find(params.expect(:id))
   end
 
   def reading_params
