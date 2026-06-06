@@ -5,15 +5,30 @@
       <span class="badge bg-danger ms-1">deleted</span>
     <% end %>
   </td>
-  <td><span class="badge bg-secondary"><%= reading.status.humanize %></span></td>
+  <td>
+    <%
+      status_icon = case reading.status
+                    when "want_to_read" then "fa-bookmark"
+                    when "reading"      then "fa-book-open-reader"
+                    when "finished"     then "fa-circle-check"
+                    end
+    %>
+    <span class="badge badge-status-<%= reading.status.tr('_', '-') %>">
+      <i class="fasl <%= status_icon %> me-1"></i><%= reading.status.humanize %>
+    </span>
+  </td>
   <td><%= reading.rating&.humanize || "—" %></td>
   <td class="text-muted"><%= truncate(reading.review, length: 80) %></td>
-  <td class="d-flex">
+  <td class="text-nowrap">
     <% unless reading.deleted? %>
-      <%= link_to "Edit", edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary" %>
-      <%= button_to "Delete", reading, method: :delete,
+      <%= link_to edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary" do %>
+        <i class="fasl fa-pen-to-square"></i>
+      <% end %>
+      <%= button_to reading, method: :delete,
             class: "btn btn-sm btn-outline-danger ms-1",
-            form: { data: { turbo_confirm: "Remove this reading?" } } %>
+            form: { data: { turbo_confirm: "Remove this reading?" } } do %>
+        <i class="fasl fa-trash-can"></i>
+      <% end %>
     <% end %>
   </td>
 </tr>

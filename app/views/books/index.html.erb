@@ -3,7 +3,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1 class="mb-0">Books</h1>
   <% if signed_in? %>
-    <%= link_to "Add a Book", new_book_path, class: "btn btn-primary" %>
+    <%= link_to new_book_path, class: "btn btn-primary" do %>
+      <i class="fasl fa-plus me-1"></i>Add a Book
+    <% end %>
   <% end %>
 </div>
 
@@ -11,7 +13,7 @@
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
     <% @books.each do |book| %>
       <div class="col">
-        <%= link_to book, class: "text-decoration-none text-dark" do %>
+        <%= link_to book, class: "text-decoration-none text-dark", data: { turbo_prefetch: false } do %>
           <%= render book %>
         <% end %>
       </div>
@@ -19,9 +21,12 @@
   </div>
 <% else %>
   <div class="text-center text-muted py-5">
+    <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>
     <p class="fs-5">No books yet.</p>
     <% if signed_in? %>
-      <%= link_to "Add the first one", new_book_path, class: "btn btn-primary" %>
+      <%= link_to new_book_path, class: "btn btn-primary" do %>
+        <i class="fasl fa-plus me-1"></i>Add the first one
+      <% end %>
     <% end %>
   </div>
 <% end %>

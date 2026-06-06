@@ -1,2 +1,145 @@
+// ── Forest/natural brand palette (Bootstrap variable overrides) ────────────
+$primary:   #2D6A4F;
+$secondary: #52B788;
+$success:   #40916C;
+$dark:      #1B2E24;
+$light:     #F0F7F4;
+
+$body-bg:    #F0F7F4;
+$body-color: #1B2E24;
+$link-color: $primary;
+
+$border-radius:    0.5rem;
+$border-radius-sm: 0.375rem;
+$border-radius-lg: 0.75rem;
+
+$card-border-color: rgba(45, 106, 79, 0.15);
+
+// ── Dark mode — follow system preference, no JS toggle needed ─────────────
+$color-mode-type:            'media-query';
+
+$body-bg-dark:               #0d1a14;
+$body-color-dark:            #cde8d7;
+$body-secondary-bg-dark:     #152b1e;
+$body-tertiary-bg-dark:      #122618;
+$border-color-dark:          rgba(82, 183, 136, 0.2);
+$link-color-dark:            #74C69D;
+
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons';
+
+// ── Layout ────────────────────────────────────────────────────────────────
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+// ── Navbar ────────────────────────────────────────────────────────────────
+
+.navbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+
+  .navbar-brand {
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    gap: 0.5rem;
+
+    .fasl { font-size: 1.3em; opacity: 0.9; }
+  }
+
+  .nav-link .fasl { opacity: 0.8; }
+  .dropdown-item .fasl { opacity: 0.75; width: 1.1em; }
+}
+
+// ── Book cover placeholder ─────────────────────────────────────────────────
+
+.book-placeholder {
+  background: linear-gradient(160deg, #40916C 0%, #2D6A4F 100%);
+  border-radius: $border-radius $border-radius 0 0;
+
+  &.book-placeholder-lg {
+    border-radius: $border-radius;
+  }
+}
+
+// ── Book cards ────────────────────────────────────────────────────────────
+
+a:hover .card,
+a:focus .card {
+  box-shadow: 0 6px 20px rgba(45, 106, 79, 0.18);
+  transform: translateY(-2px);
+}
+
+.card {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+// ── Status badges ─────────────────────────────────────────────────────────
+
+.badge-status-want-to-read {
+  background-color: #D8F3DC !important;
+  color: #1B4332 !important;
+}
+
+.badge-status-reading {
+  background-color: #52B788 !important;
+  color: #1B4332 !important;
+}
+
+.badge-status-finished {
+  background-color: #2D6A4F !important;
+  color: #fff !important;
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────
+
+.site-footer {
+  background-color: #1B2E24;
+  color: rgba(240, 247, 244, 0.6);
+  padding: 1.75rem 0;
+  font-size: 0.85rem;
+
+  .site-footer-brand {
+    color: rgba(240, 247, 244, 0.9);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .fasl { font-size: 1.4em; opacity: 0.7; }
+}
+
+// ── Custom dark mode overrides ────────────────────────────────────────────
+
+@media (prefers-color-scheme: dark) {
+  .badge-status-want-to-read {
+    background-color: #1B4332 !important;
+    color: #B7E4C7 !important;
+  }
+
+  .badge-status-reading {
+    background-color: #2D6A4F !important;
+    color: #D8F3DC !important;
+  }
+
+  .badge-status-finished {
+    background-color: #52B788 !important;
+    color: #1B2E24 !important;
+  }
+
+  a:hover .card,
+  a:focus .card {
+    box-shadow: 0 6px 20px rgba(82, 183, 136, 0.12);
+  }
+
+  .site-footer {
+    background-color: #0a1510;
+  }
+}

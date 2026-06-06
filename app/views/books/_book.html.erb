@@ -1,9 +1,9 @@
 <div class="card h-100" id="<%= dom_id book %>">
   <% if book.cover_url.present? %>
-    <%= image_tag book.cover_url, class: "card-img-top", style: "object-fit: cover; height: 200px;", alt: book.title %>
+    <%= image_tag book.cover_url, class: "card-img-top", style: "object-fit: cover; height: 200px;", alt: book.title, loading: "lazy" %>
   <% else %>
-    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-      <span class="text-white fs-1">📚</span>
+    <div class="book-placeholder d-flex align-items-center justify-content-center" style="height: 200px;">
+      <i class="fasl fa-book-open-cover fa-3x text-white opacity-50"></i>
     </div>
   <% end %>
   <div class="card-body">
