@@ -17,13 +17,24 @@
       <i class="fasl <%= status_icon %> me-1"></i><%= reading.status.humanize %>
     </span>
   </td>
-  <td><%= reading.rating&.humanize || "—" %></td>
+  <td>
+    <% if reading.rating %>
+      <span class="visually-hidden"><%= reading.rating.humanize %></span>
+      <% Reading.ratings[reading.rating].times do %>
+        <i class="fasl fa-star text-warning" aria-hidden="true"></i>
+      <% end %>
+    <% else %>
+      —
+    <% end %>
+  </td>
   <td class="text-muted"><%= truncate(reading.review, length: 80) %></td>
-  <td class="text-nowrap">
-    <% unless reading.deleted? %>
+  <td class="d-flex">
+    <% if policy(reading).edit? %>
       <%= link_to edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary" do %>
         <i class="fasl fa-pen-to-square"></i>
       <% end %>
+    <% end %>
+    <% if policy(reading).destroy? %>
       <%= button_to reading, method: :delete,
             class: "btn btn-sm btn-outline-danger ms-1",
             form: { data: { turbo_confirm: "Remove this reading?" } } do %>

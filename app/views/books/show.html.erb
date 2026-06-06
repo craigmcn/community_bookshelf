@@ -67,7 +67,16 @@
                 <%= reading.status.humanize %>
               </span>
             </td>
-            <td><%= reading.rating&.humanize || "—" %></td>
+            <td>
+              <% if reading.rating %>
+                <span class="visually-hidden"><%= reading.rating.humanize %></span>
+                <% Reading.ratings[reading.rating].times do %>
+                  <i class="fasl fa-star text-warning" aria-hidden="true"></i>
+                <% end %>
+              <% else %>
+                —
+              <% end %>
+            </td>
             <td><%= truncate(reading.review, length: 100) %></td>
           </tr>
         <% end %>

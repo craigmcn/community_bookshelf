@@ -30,17 +30,28 @@
               <% end %>
             </td>
             <td><span class="badge bg-secondary"><%= reading.status.humanize %></span></td>
-            <td><%= reading.rating&.humanize || "—" %></td>
+            <td class="text-nowrap">
+              <% if reading.rating %>
+                <span class="visually-hidden"><%= reading.rating.humanize %></span>
+                <% Reading.ratings[reading.rating].times do %>
+                  <i class="fasl fa-star text-warning" aria-hidden="true"></i>
+                <% end %>
+              <% else %>
+                —
+              <% end %>
+            </td>
             <td class="text-muted"><%= truncate(reading.review, length: 100) %></td>
             <td class="text-muted small"><%= reading.updated_at.strftime("%b %-d, %Y") %></td>
-            <td class="d-flex gap-1">
-              <%= link_to "Show", reading_path(reading), class: "btn btn-sm btn-outline-secondary" %>
-              <% unless reading.deleted? %>
-                <%= link_to "Edit", edit_reading_path(reading), class: "btn btn-sm btn-outline-primary" %>
-                <%= button_to "Delete", reading_path(reading), method: :delete,
-                      class: "btn btn-sm btn-outline-danger",
-                      form: { data: { turbo_confirm: "Remove this reading?" } } %>
-              <% end %>
+            <td>
+              <div class="d-flex gap-1">
+                <%= link_to "Show", reading_path(reading), class: "btn btn-sm btn-outline-secondary" %>
+                <% unless reading.deleted? %>
+                  <%= link_to "Edit", edit_reading_path(reading), class: "btn btn-sm btn-outline-primary" %>
+                  <%= button_to "Delete", reading_path(reading), method: :delete,
+                        class: "btn btn-sm btn-outline-danger",
+                        form: { data: { turbo_confirm: "Remove this reading?" } } %>
+                <% end %>
+              </div>
             </td>
           </tr>
         <% end %>

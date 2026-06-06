@@ -24,7 +24,7 @@
 
   <div class="mb-3">
     <%= form.label :rating, class: "form-label" %>
-    <%= form.select :rating, Reading.ratings.keys.map { |r| [r.humanize, r] },
+    <%= form.select :rating, Reading.ratings.keys.map { |r| ["#{"☆" * Reading.ratings[r]} #{r.humanize}", r] },
           { include_blank: "No rating" }, { class: "form-select" } %>
   </div>
 
