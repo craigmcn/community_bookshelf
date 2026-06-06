@@ -19,14 +19,14 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
   test "member can create a reading" do
     sign_in_as users(:member)
     assert_difference "Reading.count" do
-      post readings_url, params: {reading: {user_id: users(:member).id, book_id: books(:two).id, status: :reading}}
+      post readings_url, params: {reading: {book_id: books(:two).id, status: :reading}}
     end
     assert_redirected_to reading_url(Reading.last)
   end
 
   test "member can update their own reading" do
     sign_in_as users(:member)
-    patch reading_url(@reading), params: {reading: {status: :finished, user_id: @reading.user_id, book_id: @reading.book_id}}
+    patch reading_url(@reading), params: {reading: {status: :finished, book_id: @reading.book_id}}
     assert_redirected_to reading_url(@reading)
     assert_equal "finished", @reading.reload.status
   end
@@ -41,7 +41,7 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
 
   test "moderator can soft-delete a reading" do
     sign_in_as users(:moderator)
-    assert_no_difference "Reading.count" do
+    assert_no_difference "Reading.unscoped.count" do
       delete reading_url(@reading)
     end
     assert_redirected_to readings_url

@@ -20,7 +20,7 @@ class BooksController < ApplicationController
   end
 
   def create
-    @book = Book.new(book_params)
+    @book = Book.new(book_params.merge(added_by: current_user))
     authorize @book
 
     if @book.save
@@ -52,6 +52,6 @@ class BooksController < ApplicationController
   end
 
   def book_params
-    params.expect(book: [:title, :author, :cover_url, :added_by_id])
+    params.expect(book: [:title, :author, :cover_url])
   end
 end

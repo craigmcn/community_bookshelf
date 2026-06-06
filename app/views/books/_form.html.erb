@@ -1,5 +1,4 @@
 <%= form_with(model: book, class: "needs-validation", html: { data: { controller: "book-search" } }) do |form| %>
-  <%= form.hidden_field :added_by_id, value: current_user.id %>
   <%= form.hidden_field :title, data: { book_search_target: "hiddenTitle" } %>
   <%= form.hidden_field :author, data: { book_search_target: "hiddenAuthor" } %>
   <%= form.hidden_field :cover_url, data: { book_search_target: "hiddenCoverUrl" } %>
