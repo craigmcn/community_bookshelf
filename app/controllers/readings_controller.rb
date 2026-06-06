@@ -18,7 +18,8 @@ class ReadingsController < ApplicationController
   end
 
   def create
-    @reading = Reading.new(reading_params)
+    @reading = Reading.new(reading_params.merge(user_id: current_user.id))
+    authorize @reading
 
     if @reading.save
       redirect_to @reading, notice: "Reading was successfully created."
@@ -45,10 +46,10 @@ class ReadingsController < ApplicationController
   private
 
   def set_reading
-    @reading = Reading.find(params.expect(:id))
+    @reading = Reading.with_deleted.find(params.expect(:id))
   end
 
   def reading_params
-    params.expect(reading: [:user_id, :book_id, :status, :rating, :review])
+    params.expect(reading: [:book_id, :status, :rating, :review])
   end
 end

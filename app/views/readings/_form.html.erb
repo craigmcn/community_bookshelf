@@ -1,6 +1,4 @@
 <%= form_with(model: reading) do |form| %>
-  <%= form.hidden_field :user_id, value: current_user.id %>
-
   <% if reading.errors.any? %>
     <div class="alert alert-danger">
       <strong><%= pluralize(reading.errors.count, "error") %> prevented this reading from being saved:</strong>

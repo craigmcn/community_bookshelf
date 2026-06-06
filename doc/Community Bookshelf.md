@@ -56,7 +56,7 @@ Policies live in `app/policies/`. `ApplicationController` rescues `Pundit::NotAu
 
 ### Soft delete
 
-`Reading#soft_delete` stamps `deleted_at` with the current time. Deleted readings remain in the database and are visible to admins in the review moderation view (with a "deleted" badge), but cannot be edited or deleted again.
+`Reading#soft_delete` stamps `deleted_at` with the current time. A `default_scope` on `Reading` excludes soft-deleted records from all standard queries. Deleted readings remain in the database but are hidden from public pages, and member shelves. They cannot be edited or deleted again. Use `Reading.with_deleted` (named scope) or `Reading.unscoped` to query across all records.
 
 ### Authorized views
 
@@ -84,7 +84,7 @@ Policies live in `app/policies/`. `ApplicationController` rescues `Pundit::NotAu
 
 **Users** lists all users with a role-assignment edit form.
 
-**Readings (review moderation)** lists all readings that have a review text, ordered by last updated, with edit and soft-delete actions. Soft-deleted readings are shown with a "deleted" badge; edit/delete buttons are hidden for them.
+**Readings (review moderation)** lists all active (non-deleted) readings that have a review text, ordered by last updated, with edit and soft-delete actions.
 
 ## Rails implementation
 
