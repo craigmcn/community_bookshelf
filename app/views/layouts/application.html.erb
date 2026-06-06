@@ -35,15 +35,11 @@
         <div class="collapse navbar-collapse" id="navbarMain">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <%= link_to books_path, class: "nav-link" do %>
-                <i class="fasl fa-book-open me-1"></i>Books
-              <% end %>
+              <%= link_to "Books", books_path, class: "nav-link" %>
             </li>
             <% if signed_in? %>
               <li class="nav-item">
-                <%= link_to readings_path, class: "nav-link" do %>
-                  <i class="fasl fa-bookmark me-1"></i>My Shelf
-                <% end %>
+                <%= link_to "My Shelf", readings_path, class: "nav-link" %>
               </li>
             <% end %>
             <% if current_user&.moderator_or_above? %>
@@ -83,7 +79,8 @@
               <li class="nav-item">
                 <%= button_to sign_out_path, method: :delete,
                       class: "btn btn-outline-light btn-sm my-1" do %>
-                  <i class="fasl fa-arrow-right-from-bracket me-1"></i>Sign Out
+                  <i class="fasl fa-arrow-right-from-bracket"></i>
+                  <span class="visually-hidden">Sign Out</span>
                 <% end %>
               </li>
             <% else %>
