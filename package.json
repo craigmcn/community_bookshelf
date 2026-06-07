@@ -7,12 +7,14 @@
   },
   "scripts": {
     "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets",
+    "build:css:fonts": "sass ./app/assets/stylesheets/fonts.scss:./app/assets/builds/fonts.css --no-source-map --style=compressed",
     "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --style=compressed --load-path=node_modules",
     "build:css:prefix": "postcss ./app/assets/builds/application.css --output=./app/assets/builds/application.css",
-    "build:css": "yarn build:css:compile && yarn build:css:prefix",
+    "build:css": "yarn build:css:fonts && yarn build:css:compile && yarn build:css:prefix",
     "watch:css": "nodemon --watch ./app/assets/stylesheets/ --ext scss --exec \"yarn build:css\""
   },
   "dependencies": {
+    "@fontsource/outfit": "^5.2.8",
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.23",
     "@popperjs/core": "^2.11.8",

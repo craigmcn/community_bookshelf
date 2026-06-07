@@ -26,7 +26,6 @@ $border-color-dark:          rgba(82, 183, 136, 0.2);
 $link-color-dark:            #74C69D;
 
 // Typography overrides (must be before Bootstrap import)
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;500;600&display=swap');
 $font-family-sans-serif: system-ui, sans-serif;
 $headings-font-family: Outfit, Futura, Avenir, 'Century Gothic', Candara, $font-family-sans-serif;
 
