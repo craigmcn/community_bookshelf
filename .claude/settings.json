@@ -16,7 +16,8 @@
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git show*)",
-      "Bash(git branch*)"
+      "Bash(git branch*)",
+      "Bash(gh pr view*)"
     ]
   }
 }
