@@ -25,6 +25,11 @@ $body-tertiary-bg-dark:      #122618;
 $border-color-dark:          rgba(82, 183, 136, 0.2);
 $link-color-dark:            #74C69D;
 
+// Typography overrides (must be before Bootstrap import)
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;500;600&display=swap');
+$font-family-sans-serif: system-ui, sans-serif;
+$headings-font-family: Outfit, Futura, Avenir, 'Century Gothic', Candara, $font-family-sans-serif;
+
 @import 'bootstrap/scss/bootstrap';
 
 // ── Layout ────────────────────────────────────────────────────────────────
@@ -47,6 +52,7 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 
   .navbar-brand {
+    font-family: $headings-font-family;
     font-size: 1.05rem;
     letter-spacing: -0.01em;
     gap: 0.5rem;
