@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Boots a Rails server against a freshly-seeded test database for Playwright e2e runs.
+set -e
+
+cd "$(dirname "$0")/.."
+
+yarn build
+yarn build:css
+
+RAILS_ENV=test bin/rails db:test:prepare db:fixtures:load
+
+# Fixtures are inserted directly into the DB and skip AR callbacks, so Clearance's
+# before_create remember_token generator never runs. Without a remember_token, a real
+# sign-in over HTTP can never set the auth cookie (see Clearance::Session#add_cookie_to_headers) —
+# backfill it here so Playwright can actually sign in as a fixture user.
+RAILS_ENV=test bin/rails runner '
+  User.where(remember_token: [nil, ""]).find_each { |u| u.update_columns(remember_token: SecureRandom.hex(20)) }
+'
+
+export OPEN_LIBRARY_STUB=1
+exec env RAILS_ENV=test bin/rails server -p "${PORT:-3000}"
