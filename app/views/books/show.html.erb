@@ -42,6 +42,18 @@
         <% end %>
       <% end %>
     </div>
+
+    <% if @book.description.present? %>
+      <p class="mt-4"><%= @book.description %></p>
+    <% end %>
+
+    <% if @book.subjects.any? %>
+      <div class="d-flex flex-wrap gap-1 mt-2">
+        <% @book.subjects.each do |subject| %>
+          <span class="badge text-bg-secondary"><%= subject %></span>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>
 

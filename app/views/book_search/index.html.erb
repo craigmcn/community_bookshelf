@@ -10,7 +10,8 @@
                 data-action="book-search#selectBook"
                 data-book-search-title-param="<%= result[:title] %>"
                 data-book-search-author-param="<%= result[:author] %>"
-                data-book-search-cover-url-param="<%= result[:cover_url] %>">
+                data-book-search-cover-url-param="<%= result[:cover_url] %>"
+                data-book-search-open-library-key-param="<%= result[:open_library_key] %>">
           <% if result[:cover_url] %>
             <img src="<%= result[:cover_url] %>" style="height:50px; width:35px; object-fit:cover; flex-shrink:0;" alt="">
           <% else %>

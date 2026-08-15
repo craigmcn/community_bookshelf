@@ -1,4 +1,5 @@
 require "test_helper"
+require "webmock/minitest"
 
 class BooksControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -34,6 +35,25 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
       post books_url, params: {book: {title: "New Book", author: "Some Author", added_by_id: users(:member).id, cover_url: ""}}
     end
     assert_redirected_to book_url(Book.last)
+  end
+
+  test "member creating a book with an open_library_key pulls in description and subjects" do
+    stub_request(:get, "https://openlibrary.org/works/OL468431W.json")
+      .to_return(
+        status: 200,
+        headers: {"Content-Type" => "application/json"},
+        body: {description: "A novel about the American Dream.", subjects: ["Fiction", "Classics"]}.to_json
+      )
+
+    sign_in_as users(:member)
+    post books_url, params: {book: {
+      title: "New Book", author: "Some Author", added_by_id: users(:member).id, cover_url: "",
+      open_library_key: "/works/OL468431W"
+    }}
+
+    book = Book.last
+    assert_equal "A novel about the American Dream.", book.description
+    assert_equal ["Fiction", "Classics"], book.subjects
   end
 
   test "member cannot update a book" do

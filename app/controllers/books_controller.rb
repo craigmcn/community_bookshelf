@@ -23,6 +23,10 @@ class BooksController < ApplicationController
     @book = Book.new(book_params.merge(added_by: current_user))
     authorize @book
 
+    detail = OpenLibraryService.work_detail(params.dig(:book, :open_library_key))
+    @book.description = detail[:description] if detail[:description].present?
+    @book.subjects = detail[:subjects] if detail[:subjects].present?
+
     if @book.save
       redirect_to @book, notice: "Book was successfully created."
     else
