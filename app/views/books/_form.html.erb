@@ -48,6 +48,21 @@
                  data-action="turbo:before-fetch-request->book-search#showSpinner turbo:frame-load->book-search#hideSpinner turbo:fetch-error->book-search#hideSpinner"></turbo-frame>
   </div>
 
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <%= form.label :isbn, class: "form-label" %>
+      <%= form.text_field :isbn, class: "form-control" %>
+    </div>
+    <div class="col-md-4 mb-3">
+      <%= form.label :page_count, "Page Count", class: "form-label" %>
+      <%= form.number_field :page_count, min: 1, class: "form-control" %>
+    </div>
+    <div class="col-md-4 mb-3">
+      <%= form.label :published_on, "Publish Date", class: "form-label" %>
+      <%= form.date_field :published_on, class: "form-control" %>
+    </div>
+  </div>
+
   <div class="d-flex gap-2">
     <%= form.submit class: "btn btn-primary" %>
     <%= link_to "Cancel", books_path, class: "btn btn-outline-secondary" %>
