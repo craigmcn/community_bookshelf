@@ -11,8 +11,8 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **Frontend**: Hotwire (Turbo + Stimulus), Bootstrap 5, esbuild + Sass via propshaft
 - **External API**: Open Library (book search + cover images via Faraday)
 - **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
-- **Testing**: Minitest + Capybara (system tests)
-- **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL)
+- **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
+- **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL, Playwright e2e)
 - **Deployment**: Docker + Kamal + Thruster
 
 ## Setup
@@ -41,6 +41,8 @@ bundle exec brakeman                    # security scan
 
 yarn build                              # compile JS
 yarn build:css                          # compile Sass
+
+yarn test:e2e                           # Playwright e2e (starts its own server, see below)
 ```
 
 ## Domain Model
@@ -137,3 +139,26 @@ Inherit from `Admin::BaseController` — it enforces `moderator_or_above?` and p
 
 ### Asset builds
 Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` running). Compiled output lands in `app/assets/builds/`.
+
+## Playwright e2e (cross-app parity)
+
+`yarn test:e2e` runs the Playwright suite in `e2e/`. `playwright.config.js`'s `webServer`
+boots `bin/e2e_server`, which builds JS/CSS, resets the test DB (`db:test:prepare
+db:fixtures:load`), backfills `remember_token` for fixture users (fixtures skip AR
+callbacks, so Clearance's `before_create` token generator never runs — without this,
+a real browser sign-in can never authenticate), and starts Rails on port 3000 in
+`RAILS_ENV=test` with `OPEN_LIBRARY_STUB=1`. That env var makes
+`config/initializers/open_library_stub.rb` register a WebMock stub for
+`openlibrary.org/search.json` so book search doesn't depend on the live API.
+
+These specs are one half of a shared parity contract also implemented in
+`bookshelf-islands` (same scenarios, React-island UI instead of Turbo Frames/native
+selects) and, against a real backend, in `bookshelf-spa`/`bookshelf-api`. Same fixture
+data across all four repos (`member@example.com` / `moderator@example.com` /
+`admin@example.com`, password `correct-horse-shelf`, books "The Great Gatsby"/"1984") —
+keep spec *outcomes* aligned across repos when adding new scenarios here.
+
+Runs single-worker/serial (`e2e` tests mutate a shared Postgres DB, unlike Minitest's
+per-test fixtures — there's no transaction rollback between Playwright tests). Tests
+that change fixture-owned state revert it before finishing (see the role-edit test in
+`e2e/admin.spec.js`) so re-running the suite against the same DB stays idempotent.

@@ -74,4 +74,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # Stubs the Open Library HTTP call when booting the server for Playwright e2e runs
+  gem "webmock", require: false
 end
