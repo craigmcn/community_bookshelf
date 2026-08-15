@@ -3,9 +3,9 @@ if ENV["OPEN_LIBRARY_STUB"] == "1"
   WebMock.enable!
   WebMock.allow_net_connect!
 
-  include WebMock::API
+  webmock = Object.new.extend(WebMock::API)
 
-  stub_request(:get, /openlibrary\.org\/search\.json/).to_return do |request|
+  webmock.stub_request(:get, /openlibrary\.org\/search\.json/).to_return do |request|
     query = Rack::Utils.parse_nested_query(request.uri.query)["q"].to_s.downcase
 
     docs = [
