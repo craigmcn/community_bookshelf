@@ -21,6 +21,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_200901) do
     t.datetime "created_at", null: false
     t.text "description"
     t.string "subjects", default: [], null: false, array: true
+    t.string "isbn"
+    t.integer "page_count"
+    t.date "published_on"
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["added_by_id"], name: "index_books_on_added_by_id"

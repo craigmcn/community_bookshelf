@@ -16,6 +16,18 @@
     <p class="fs-5 text-muted"><%= @book.author %></p>
     <p class="text-muted"><small>Added by <%= @book.added_by.email %></small></p>
 
+    <ul class="list-unstyled text-muted small mb-0">
+      <% if @book.isbn.present? %>
+        <li>ISBN: <%= @book.isbn %></li>
+      <% end %>
+      <% if @book.page_count.present? %>
+        <li><%= pluralize(@book.page_count, "page") %></li>
+      <% end %>
+      <% if @book.published_on.present? %>
+        <li>Published <%= @book.published_on.strftime("%B %-d, %Y") %></li>
+      <% end %>
+    </ul>
+
     <div class="d-flex flex-wrap gap-2 mt-4">
       <%= link_to books_path, class: "btn btn-outline-secondary" do %>
         <i class="fasl fa-arrow-left me-1"></i>Back to Books

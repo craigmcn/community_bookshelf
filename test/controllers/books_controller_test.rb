@@ -95,6 +95,19 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated", @book.reload.title
   end
 
+  test "admin can update a book's isbn, page_count, and published_on" do
+    sign_in_as users(:admin)
+    patch book_url(@book), params: {book: {
+      title: @book.title, author: @book.author, added_by_id: @book.added_by_id, cover_url: @book.cover_url,
+      isbn: "978-0743273565", page_count: 180, published_on: "1925-04-10"
+    }}
+    assert_redirected_to book_url(@book)
+    @book.reload
+    assert_equal "978-0743273565", @book.isbn
+    assert_equal 180, @book.page_count
+    assert_equal Date.new(1925, 4, 10), @book.published_on
+  end
+
   test "admin can destroy a book" do
     sign_in_as users(:admin)
     assert_difference "Book.count", -1 do
