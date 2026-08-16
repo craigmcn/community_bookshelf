@@ -23,7 +23,7 @@ class BooksController < ApplicationController
     @book = Book.new(book_params.merge(added_by: current_user))
     authorize @book
 
-    detail = OpenLibraryService.work_detail(params.dig(:book, :open_library_key))
+    detail = OpenLibraryService.work_detail(@book.open_library_key)
     @book.description = detail[:description] if detail[:description].present?
     @book.subjects = detail[:subjects] if detail[:subjects].present?
 
@@ -56,6 +56,6 @@ class BooksController < ApplicationController
   end
 
   def book_params
-    params.expect(book: [:title, :author, :cover_url])
+    params.expect(book: [:title, :author, :cover_url, :open_library_key])
   end
 end

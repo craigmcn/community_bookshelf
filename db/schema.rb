@@ -20,9 +20,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_200901) do
     t.string "cover_url"
     t.datetime "created_at", null: false
     t.text "description"
-    t.string "isbn"
-    t.integer "page_count"
-    t.date "published_on"
     t.string "subjects", default: [], null: false, array: true
     t.string "title"
     t.datetime "updated_at", null: false
