@@ -1,5 +1,6 @@
 class Book < ApplicationRecord
   belongs_to :added_by, class_name: "User"
+  belongs_to :series, optional: true
   has_many :readings, dependent: :destroy
 
   # Transient — carries the selected Open Library search result's work key from

@@ -29,6 +29,12 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # Member permissions
+  test "member can view the new book form" do
+    sign_in_as users(:member)
+    get new_book_url
+    assert_response :success
+  end
+
   test "member can create a book" do
     sign_in_as users(:member)
     assert_difference "Book.count" do
@@ -88,6 +94,12 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   # Admin permissions
+  test "admin can view the edit book form" do
+    sign_in_as users(:admin)
+    get edit_book_url(@book)
+    assert_response :success
+  end
+
   test "admin can update a book" do
     sign_in_as users(:admin)
     patch book_url(@book), params: {book: {title: "Updated", author: @book.author, added_by_id: @book.added_by_id, cover_url: @book.cover_url}}
