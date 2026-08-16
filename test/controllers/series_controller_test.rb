@@ -28,6 +28,18 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # Member permissions
+  test "member cannot view the new series form" do
+    sign_in_as users(:member)
+    get new_series_url
+    assert_response :redirect
+  end
+
+  test "member cannot view the edit series form" do
+    sign_in_as users(:member)
+    get edit_series_url(@series)
+    assert_response :redirect
+  end
+
   test "member cannot create a series" do
     sign_in_as users(:member)
     assert_no_difference "Series.count" do

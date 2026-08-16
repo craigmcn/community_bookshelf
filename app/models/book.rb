@@ -11,4 +11,12 @@ class Book < ApplicationRecord
 
   validates :title, :author, presence: true
   validates :page_count, numericality: {only_integer: true, greater_than: 0}, allow_nil: true
+
+  before_validation :clear_series_position_without_series
+
+  private
+
+  def clear_series_position_without_series
+    self.series_position = nil if series_id.blank?
+  end
 end

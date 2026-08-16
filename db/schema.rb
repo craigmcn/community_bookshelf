@@ -64,7 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_175557) do
 
   create_table "series", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "name"
+    t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_series_on_name", unique: true
   end

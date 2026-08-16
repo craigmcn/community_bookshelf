@@ -3,7 +3,7 @@ class SeriesController < ApplicationController
   before_action :set_series, only: %i[show edit update destroy]
 
   def index
-    @series = policy_scope(Series).order(:name)
+    @series = policy_scope(Series).includes(:books).order(:name)
   end
 
   def show
@@ -13,6 +13,7 @@ class SeriesController < ApplicationController
 
   def new
     @series = Series.new
+    authorize @series
   end
 
   def edit
