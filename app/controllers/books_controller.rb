@@ -3,7 +3,7 @@ class BooksController < ApplicationController
   before_action :set_book, only: %i[show edit update destroy]
 
   def index
-    @books = policy_scope(Book)
+    @books = policy_scope(Book).includes(:added_by)
   end
 
   def show

@@ -62,6 +62,11 @@ group :development, :test do
   gem "standard-rails", require: false
 end
 
+group :development, :test do
+  # Flags N+1 queries and unused eager loads; raises in test so CI catches them
+  gem "bullet"
+end
+
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
