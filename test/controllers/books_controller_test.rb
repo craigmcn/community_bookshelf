@@ -17,6 +17,25 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "books index filters by tag" do
+    tagged_book = books(:one)
+    tagged_book.update!(tag_list: "fantasy")
+    untagged_book = books(:two)
+
+    get books_url(tag: "fantasy")
+
+    assert_response :success
+    assert_includes @response.body, tagged_book.title
+    assert_not_includes @response.body, untagged_book.title
+  end
+
+  test "books index shows no results for an unknown tag" do
+    get books_url(tag: "does-not-exist")
+    assert_response :success
+    assert_not_includes @response.body, books(:one).title
+    assert_not_includes @response.body, books(:two).title
+  end
+
   # Auth wall
   test "guest is redirected to sign in for new" do
     get new_book_url
@@ -71,6 +90,17 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_content
     assert_select "input[name=?][value=?]", "book[open_library_key]", "/works/OL468431W"
+  end
+
+  test "member can set tags when creating a book" do
+    sign_in_as users(:member)
+    assert_difference "Book.count" do
+      post books_url, params: {book: {
+        title: "New Book", author: "Some Author", added_by_id: users(:member).id, cover_url: "",
+        tag_list: "Fantasy, coming-of-age"
+      }}
+    end
+    assert_equal ["coming-of-age", "fantasy"], Book.last.tags.order(:name).pluck(:name)
   end
 
   test "member cannot update a book" do

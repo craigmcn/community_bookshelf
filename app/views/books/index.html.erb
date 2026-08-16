@@ -9,7 +9,22 @@
   <% end %>
 </div>
 
-<% if @books.any? %>
+<% if @tags.any? %>
+  <div class="d-flex flex-wrap align-items-center gap-1 mb-4">
+    <span class="text-muted small me-1">Browse by tag:</span>
+    <% @tags.each do |tag| %>
+      <%= link_to tag.name, books_path(tag: tag.name),
+            class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
+    <% end %>
+    <% if @tag %>
+      <%= link_to "Clear filter", books_path, class: "small ms-1" %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if params[:tag].present? && @tag.nil? %>
+  <p class="text-muted">No books tagged "<%= params[:tag] %>".</p>
+<% elsif @books.any? %>
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
     <% @books.each do |book| %>
       <div class="col">
