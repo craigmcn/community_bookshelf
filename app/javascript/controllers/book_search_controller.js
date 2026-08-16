@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "query", "results", "spinner",
-    "hiddenTitle", "hiddenAuthor", "hiddenCoverUrl",
+    "hiddenTitle", "hiddenAuthor", "hiddenCoverUrl", "hiddenOpenLibraryKey",
     "searchSection", "selectionPreview",
     "previewTitle", "previewAuthor", "previewCover",
     "errors"
@@ -43,10 +43,11 @@ export default class extends Controller {
   }
 
   selectBook(event) {
-    const { title, author, coverUrl } = event.params
+    const { title, author, coverUrl, openLibraryKey } = event.params
     this.hiddenTitleTarget.value = title
     this.hiddenAuthorTarget.value = author
     this.hiddenCoverUrlTarget.value = coverUrl || ""
+    this.hiddenOpenLibraryKeyTarget.value = openLibraryKey || ""
     if (this.hasErrorsTarget) this.errorsTarget.remove()
     this.#showSelection(title, author, coverUrl)
   }
@@ -55,6 +56,7 @@ export default class extends Controller {
     this.hiddenTitleTarget.value = ""
     this.hiddenAuthorTarget.value = ""
     this.hiddenCoverUrlTarget.value = ""
+    this.hiddenOpenLibraryKeyTarget.value = ""
 
     this.selectionPreviewTarget.classList.add("d-none")
     this.searchSectionTarget.classList.remove("d-none")
