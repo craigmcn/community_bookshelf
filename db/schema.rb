@@ -62,6 +62,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.index ["name"], name: "index_roles_on_name", unique: true
   end
 
+  create_table "series", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_series_on_name", unique: true
+  end
+
   create_table "taggings", force: :cascade do |t|
     t.bigint "book_id", null: false
     t.datetime "created_at", null: false
@@ -77,13 +84,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_tags_on_name", unique: true
-  end
-  
-  create_table "series", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "name", null: false
-    t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_series_on_name", unique: true
   end
 
   create_table "users", force: :cascade do |t|
