@@ -103,6 +103,11 @@ a:focus .card {
   color: #fff !important;
 }
 
+.badge-status-dnf {
+  background-color: #E9ECEF !important;
+  color: #495057 !important;
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────
 
 .site-footer {
@@ -136,6 +141,11 @@ a:focus .card {
   .badge-status-finished {
     background-color: #52B788 !important;
     color: #1B2E24 !important;
+  }
+
+  .badge-status-dnf {
+    background-color: #343A40 !important;
+    color: #CED4DA !important;
   }
 
   a:hover .card,
