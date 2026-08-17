@@ -23,13 +23,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.string "isbn"
     t.integer "page_count"
     t.date "published_on"
-    t.bigint "series_id"
-    t.integer "series_position"
     t.string "subjects", default: [], null: false, array: true
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["added_by_id"], name: "index_books_on_added_by_id"
-    t.index ["series_id"], name: "index_books_on_series_id"
   end
 
   create_table "readings", force: :cascade do |t|
@@ -62,13 +59,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.index ["name"], name: "index_roles_on_name", unique: true
   end
 
-  create_table "series", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "name"
-    t.datetime "updated_at", null: false
-    t.index ["name"], name: "index_series_on_name", unique: true
-  end
-
   create_table "taggings", force: :cascade do |t|
     t.bigint "book_id", null: false
     t.datetime "created_at", null: false
@@ -81,7 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
 
   create_table "tags", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "name"
+    t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_tags_on_name", unique: true
   end
@@ -98,7 +88,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.index ["remember_token"], name: "index_users_on_remember_token", unique: true
   end
 
-  add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"
   add_foreign_key "readings", "books"
   add_foreign_key "readings", "users"

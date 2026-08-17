@@ -33,7 +33,19 @@ class Book < ApplicationRecord
 
   def sync_tags
     names = @tag_list.to_s.split(",").filter_map { |name| name.strip.downcase.presence }.uniq
-    self.tags = names.map { |name| Tag.find_or_create_by(name: name) }
+    self.tags = names.map { |name| find_or_create_tag(name) }
     @tag_list = nil
+  end
+
+  # find_or_create_by finds first, so it's correct for the common case where the
+  # tag already exists. Under concurrent writes two requests can both miss that
+  # find and race on the unique index; the rescue handles that without regressing
+  # to create_or_find_by's behavior, which returns an invalid, unsaved record
+  # (not the existing one) when Tag's own uniqueness validation — not a DB
+  # conflict — is what catches the duplicate.
+  def find_or_create_tag(name)
+    Tag.find_or_create_by(name: name)
+  rescue ActiveRecord::RecordNotUnique
+    Tag.find_by!(name: name)
   end
 end
