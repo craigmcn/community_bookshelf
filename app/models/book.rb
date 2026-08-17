@@ -51,8 +51,6 @@ class Book < ApplicationRecord
     Tag.find_by!(name: name)
   end
 
-  private
-
   def clear_series_position_without_series
     self.series_position = nil if series_id.blank?
   end

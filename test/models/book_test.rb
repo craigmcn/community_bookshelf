@@ -68,7 +68,7 @@ class BookTest < ActiveSupport::TestCase
 
     assert_equal "fantasy", book.reload.tag_list
   end
-  
+
   test "clears series_position when series_id is blank" do
     book = Book.new(title: "Test", author: "Author", added_by: users(:member), series_position: 3)
     book.valid?
