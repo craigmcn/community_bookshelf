@@ -60,6 +60,9 @@ group :development, :test do
   # StandardRB — opinionated Ruby style (https://github.com/standardrb/standard)
   gem "standard", ">= 1.35.1", require: false
   gem "standard-rails", require: false
+
+  # Flags N+1 queries and unused eager loads; raises in test so CI catches them
+  gem "bullet"
 end
 
 group :development do
