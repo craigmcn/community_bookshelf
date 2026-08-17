@@ -1,0 +1,22 @@
+<%= form_with(model: shelf) do |form| %>
+  <% if shelf.errors.any? %>
+    <div class="alert alert-danger">
+      <strong><%= pluralize(shelf.errors.count, "error") %> prevented this list from being saved:</strong>
+      <ul class="mb-0 mt-1">
+        <% shelf.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :name, class: "form-label" %>
+    <%= form.text_field :name, class: "form-control", placeholder: "e.g. Favorites, 2026 TBR" %>
+  </div>
+
+  <div class="d-flex gap-2">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", shelves_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>

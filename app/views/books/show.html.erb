@@ -50,6 +50,37 @@
           <i class="fasl fa-bookmark-plus me-1"></i>Add to Shelf
         <% end %>
       <% end %>
+      <% if current_user %>
+        <div class="dropdown">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fasl fa-list-ul me-1"></i>Save to a List
+          </button>
+          <ul class="dropdown-menu">
+            <% if @user_shelves.present? %>
+              <% @user_shelves.each do |shelf| %>
+                <li>
+                  <% if @shelf_ids_with_book.include?(shelf.id) %>
+                    <span class="dropdown-item-text text-muted">
+                      <i class="fasl fa-check me-1"></i><%= shelf.name %>
+                    </span>
+                  <% else %>
+                    <%= button_to shelf_shelf_books_path(shelf, book_id: @book.id),
+                          method: :post, class: "dropdown-item" do %>
+                      <%= shelf.name %>
+                    <% end %>
+                  <% end %>
+                </li>
+              <% end %>
+              <li><hr class="dropdown-divider"></li>
+            <% end %>
+            <li>
+              <%= link_to new_shelf_path, class: "dropdown-item" do %>
+                <i class="fasl fa-plus me-1"></i>New List
+              <% end %>
+            </li>
+          </ul>
+        </div>
+      <% end %>
       <% if policy(@book).update? %>
         <%= link_to edit_book_path(@book), class: "btn btn-outline-primary" do %>
           <i class="fasl fa-pen-to-square me-1"></i>Edit

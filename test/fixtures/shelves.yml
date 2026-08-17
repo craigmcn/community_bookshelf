@@ -1,0 +1,7 @@
+one:
+  user: member
+  name: Favorites
+
+two:
+  user: moderator
+  name: Favorites

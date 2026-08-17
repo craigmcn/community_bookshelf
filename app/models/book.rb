@@ -4,6 +4,8 @@ class Book < ApplicationRecord
   has_many :readings, dependent: :destroy
   has_many :taggings, dependent: :destroy
   has_many :tags, through: :taggings
+  has_many :shelf_books, dependent: :destroy
+  has_many :shelves, through: :shelf_books
 
   # Transient — carries the selected Open Library search result's work key from
   # the form through to #create, where it's used to fetch description/subjects.

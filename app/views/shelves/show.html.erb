@@ -1,0 +1,47 @@
+<% content_for :title, @shelf.name %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0"><i class="fasl fa-list-ul me-2 opacity-75"></i><%= @shelf.name %></h1>
+  <div class="d-flex gap-2">
+    <%= link_to shelves_path, class: "btn btn-outline-secondary" do %>
+      <i class="fasl fa-arrow-left me-1"></i>Back to My Lists
+    <% end %>
+    <%= link_to edit_shelf_path(@shelf), class: "btn btn-outline-primary" do %>
+      <i class="fasl fa-pen-to-square me-1"></i>Rename
+    <% end %>
+  </div>
+</div>
+
+<% if @shelf_books.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Book</th>
+          <th>Author</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @shelf_books.each do |shelf_book| %>
+          <tr id="<%= dom_id shelf_book %>">
+            <td><%= link_to shelf_book.book.title, shelf_book.book, class: "text-decoration-none fw-semibold" %></td>
+            <td class="text-muted"><%= shelf_book.book.author %></td>
+            <td>
+              <%= button_to shelf_shelf_book_path(@shelf, shelf_book), method: :delete,
+                    class: "btn btn-sm btn-outline-danger",
+                    form: { data: { turbo_confirm: "Remove \"#{shelf_book.book.title}\" from #{@shelf.name}?" } } do %>
+                <i class="fasl fa-trash-can"></i>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <p class="fs-5">No books on this list yet.</p>
+    <%= link_to "Browse books", books_path, class: "btn btn-primary" %>
+  </div>
+<% end %>
