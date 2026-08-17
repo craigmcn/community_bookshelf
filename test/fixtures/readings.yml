@@ -4,3 +4,11 @@ one:
   status: 0
   rating: 4
   review: A great read.
+
+two:
+  user: admin
+  book: one
+  status: 2
+  rating: 5
+  review: My private thoughts on this one.
+  is_review_public: false

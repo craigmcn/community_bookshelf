@@ -17,6 +17,36 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "community readings hides a private review's text from other visitors" do
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "Review is private"
+    assert_not_includes @response.body, "My private thoughts on this one."
+    # public review from the other reading on this book still shows in full
+    assert_includes @response.body, "A great read."
+  end
+
+  test "community readings still shows status and rating for a private review" do
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, users(:admin).email
+    assert_includes @response.body, "Finished"
+  end
+
+  test "community readings shows the full review to the review's owner" do
+    sign_in_as users(:admin)
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "My private thoughts on this one."
+  end
+
+  test "community readings shows the full review to a moderator" do
+    sign_in_as users(:moderator)
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "My private thoughts on this one."
+  end
+
   test "books index filters by tag" do
     tagged_book = books(:one)
     tagged_book.update!(tag_list: "fantasy")
