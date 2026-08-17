@@ -2,7 +2,7 @@ class ReadingsController < ApplicationController
   before_action :set_reading, only: %i[show edit update destroy]
 
   def index
-    @readings = current_user.readings
+    @readings = current_user.readings.includes(:book)
   end
 
   def show
