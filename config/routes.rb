@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resources :readings
   resources :books
+  resources :series
   get "book_search", to: "book_search#index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

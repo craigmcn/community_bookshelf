@@ -23,10 +23,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.string "isbn"
     t.integer "page_count"
     t.date "published_on"
+    t.bigint "series_id"
+    t.integer "series_position"
     t.string "subjects", default: [], null: false, array: true
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["added_by_id"], name: "index_books_on_added_by_id"
+    t.index ["series_id"], name: "index_books_on_series_id"
   end
 
   create_table "readings", force: :cascade do |t|
@@ -75,6 +78,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_tags_on_name", unique: true
   end
+  
+  create_table "series", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_series_on_name", unique: true
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "confirmation_token", limit: 128
@@ -88,6 +98,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_180050) do
     t.index ["remember_token"], name: "index_users_on_remember_token", unique: true
   end
 
+  add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"
   add_foreign_key "readings", "books"
   add_foreign_key "readings", "users"

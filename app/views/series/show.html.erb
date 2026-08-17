@@ -1,0 +1,35 @@
+<% content_for :title, @series.name %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0"><%= @series.name %></h1>
+  <div class="d-flex gap-2">
+    <%= link_to series_index_path, class: "btn btn-outline-secondary" do %>
+      <i class="fasl fa-arrow-left me-1"></i>Back to Series
+    <% end %>
+    <% if policy(@series).update? %>
+      <%= link_to edit_series_path(@series), class: "btn btn-outline-primary" do %>
+        <i class="fasl fa-pen-to-square me-1"></i>Edit
+      <% end %>
+    <% end %>
+    <% if policy(@series).destroy? %>
+      <%= button_to @series, method: :delete,
+            class: "btn btn-outline-danger",
+            form: { data: { turbo_confirm: "Delete #{@series.name}?" } } do %>
+        <i class="fasl fa-trash-can me-1"></i>Delete
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<% if @books.any? %>
+  <ol class="list-group list-group-numbered">
+    <% @books.each do |book| %>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <%= link_to book.title, book, class: "text-decoration-none" %>
+        <span class="text-muted small"><%= book.author %></span>
+      </li>
+    <% end %>
+  </ol>
+<% else %>
+  <p class="text-muted">No books in this series yet.</p>
+<% end %>

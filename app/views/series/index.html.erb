@@ -1,0 +1,26 @@
+<% content_for :title, "Series" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Series</h1>
+  <% if policy(Series.new).create? %>
+    <%= link_to new_series_path, class: "btn btn-primary" do %>
+      <i class="fasl fa-plus me-1"></i>Add a Series
+    <% end %>
+  <% end %>
+</div>
+
+<% if @series.any? %>
+  <div class="list-group">
+    <% @series.each do |series| %>
+      <%= link_to series, class: "list-group-item list-group-item-action d-flex justify-content-between align-items-center" do %>
+        <%= series.name %>
+        <span class="badge text-bg-secondary rounded-pill"><%= pluralize(series.books.size, "book") %></span>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <i class="fasl fa-books fa-3x mb-3 d-block opacity-50"></i>
+    <p class="fs-5">No series yet.</p>
+  </div>
+<% end %>

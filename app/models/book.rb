@@ -1,5 +1,6 @@
 class Book < ApplicationRecord
   belongs_to :added_by, class_name: "User"
+  belongs_to :series, optional: true
   has_many :readings, dependent: :destroy
   has_many :taggings, dependent: :destroy
   has_many :tags, through: :taggings
@@ -13,6 +14,7 @@ class Book < ApplicationRecord
   validates :title, :author, presence: true
   validates :page_count, numericality: {only_integer: true, greater_than: 0}, allow_nil: true
 
+  before_validation :clear_series_position_without_series
   after_save :sync_tags, if: :tag_list_assigned?
 
   # Virtual attribute: a comma-separated string of tag names, used by the book
@@ -47,5 +49,11 @@ class Book < ApplicationRecord
     Tag.find_or_create_by(name: name)
   rescue ActiveRecord::RecordNotUnique
     Tag.find_by!(name: name)
+  end
+
+  private
+
+  def clear_series_position_without_series
+    self.series_position = nil if series_id.blank?
   end
 end
