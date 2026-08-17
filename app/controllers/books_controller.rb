@@ -4,6 +4,12 @@ class BooksController < ApplicationController
 
   def index
     @books = policy_scope(Book).includes(:added_by)
+    @tags = Tag.order(:name)
+
+    if params[:tag].present?
+      @tag = Tag.find_by(name: params[:tag].to_s.strip.downcase)
+      @books = @tag ? @books.joins(:tags).where(tags: {id: @tag.id}) : @books.none
+    end
   end
 
   def show
@@ -56,6 +62,6 @@ class BooksController < ApplicationController
   end
 
   def book_params
-    params.expect(book: [:title, :author, :cover_url, :isbn, :page_count, :published_on, :open_library_key, :series_id, :series_position])
+    params.expect(book: [:title, :author, :cover_url, :isbn, :page_count, :published_on, :open_library_key, :series_id, :series_position, :tag_list])
   end
 end

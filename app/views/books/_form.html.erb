@@ -76,6 +76,12 @@
     </div>
   </div>
 
+  <div class="mb-3">
+    <%= form.label :tag_list, "Tags", class: "form-label" %>
+    <%= form.text_field :tag_list, class: "form-control", placeholder: "fantasy, coming-of-age, ..." %>
+    <div class="form-text">Comma-separated.</div>
+  </div>
+
   <div class="d-flex gap-2">
     <%= form.submit class: "btn btn-primary" %>
     <%= link_to "Cancel", books_path, class: "btn btn-outline-secondary" %>
