@@ -14,7 +14,7 @@ class BooksController < ApplicationController
 
   def show
     authorize @book
-    @user_reading = current_user&.readings&.find_by(book: @book)
+    @user_readings = current_user&.readings&.where(book: @book)&.order(created_at: :desc) || Reading.none
   end
 
   def new

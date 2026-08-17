@@ -41,13 +41,9 @@
       <%= link_to books_path, class: "btn btn-outline-secondary" do %>
         <i class="fasl fa-arrow-left me-1"></i>Back to Books
       <% end %>
-      <% if @user_reading %>
-        <%= link_to @user_reading, class: "btn btn-success" do %>
-          <i class="fasl fa-bookmark me-1"></i>View on Shelf
-        <% end %>
-      <% elsif current_user %>
+      <% if current_user %>
         <%= link_to new_reading_path(book_id: @book.id), class: "btn btn-primary" do %>
-          <i class="fasl fa-bookmark-plus me-1"></i>Add to Shelf
+          <i class="fasl fa-bookmark-plus me-1"></i><%= @user_readings.any? ? "Log a Re-read" : "Add to Shelf" %>
         <% end %>
       <% end %>
       <% if policy(@book).update? %>
@@ -85,6 +81,50 @@
     <% end %>
   </div>
 </div>
+
+<% if @user_readings.any? %>
+  <hr class="my-4">
+  <h3><i class="fasl fa-bookmark me-2 opacity-75"></i>Your Readings of This Book</h3>
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Rating</th>
+          <th>Review</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @user_readings.each do |reading| %>
+          <tr>
+            <td>
+              <span class="badge badge-status-<%= reading.status.tr('_', '-') %>">
+                <%= reading.status.humanize %>
+              </span>
+            </td>
+            <td>
+              <% if reading.rating %>
+                <span class="visually-hidden"><%= reading.rating.humanize %></span>
+                <% Reading.ratings[reading.rating].times do %>
+                  <i class="fasl fa-star text-warning" aria-hidden="true"></i>
+                <% end %>
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td><%= truncate(reading.review, length: 100) %></td>
+            <td>
+              <%= link_to reading, class: "btn btn-sm btn-outline-success" do %>
+                <i class="fasl fa-eye"></i>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
 
 <% if @book.readings.any? %>
   <hr class="my-4">
