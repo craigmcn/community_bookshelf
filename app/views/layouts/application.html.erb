@@ -37,6 +37,9 @@
             <li class="nav-item">
               <%= link_to "Books", books_path, class: "nav-link" %>
             </li>
+            <li class="nav-item">
+              <%= link_to "Series", series_index_path, class: "nav-link" %>
+            </li>
             <% if signed_in? %>
               <li class="nav-item">
                 <%= link_to "My Shelf", readings_path, class: "nav-link" %>

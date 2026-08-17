@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_200901) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_175557) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,13 +20,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_200901) do
     t.string "cover_url"
     t.datetime "created_at", null: false
     t.text "description"
-    t.string "subjects", default: [], null: false, array: true
     t.string "isbn"
     t.integer "page_count"
     t.date "published_on"
+    t.bigint "series_id"
+    t.integer "series_position"
+    t.string "subjects", default: [], null: false, array: true
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["added_by_id"], name: "index_books_on_added_by_id"
+    t.index ["series_id"], name: "index_books_on_series_id"
   end
 
   create_table "readings", force: :cascade do |t|
@@ -59,6 +62,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_200901) do
     t.index ["name"], name: "index_roles_on_name", unique: true
   end
 
+  create_table "series", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_series_on_name", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "confirmation_token", limit: 128
     t.datetime "created_at", null: false
@@ -71,6 +81,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_200901) do
     t.index ["remember_token"], name: "index_users_on_remember_token", unique: true
   end
 
+  add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"
   add_foreign_key "readings", "books"
   add_foreign_key "readings", "users"
