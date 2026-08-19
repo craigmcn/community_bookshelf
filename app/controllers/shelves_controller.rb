@@ -2,12 +2,12 @@ class ShelvesController < ApplicationController
   before_action :set_shelf, only: %i[show edit update destroy]
 
   def index
-    @shelves = current_user.shelves.order(:name)
+    @shelves = current_user.shelves.includes(:shelf_books).order(:name)
   end
 
   def show
     authorize @shelf
-    @shelf_books = @shelf.shelf_books.includes(:book).sort_by { |shelf_book| shelf_book.book.title }
+    @shelf_books = @shelf.shelf_books.includes(:book).order("books.title")
   end
 
   def new

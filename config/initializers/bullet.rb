@@ -20,5 +20,10 @@ if Rails.env.local?
     # as unused — safelisted since the eager load is genuinely needed once a
     # series has more than a handful of books.
     Bullet.add_safelist type: :unused_eager_loading, class_name: "Series", association: :books
+
+    # ShelvesController#index eager-loads :shelf_books to avoid an N+1 when
+    # rendering each shelf's book count. Same low-fixture-count false positive
+    # as the Series safelist above.
+    Bullet.add_safelist type: :unused_eager_loading, class_name: "Shelf", association: :shelf_books
   end
 end
