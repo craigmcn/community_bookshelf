@@ -55,6 +55,12 @@
     <%= form.textarea :review, class: "form-control", rows: 4, placeholder: "What did you think?" %>
   </div>
 
+  <div class="mb-3 form-check">
+    <%= form.check_box :is_review_public, class: "form-check-input" %>
+    <%= form.label :is_review_public, "Visible to other members", class: "form-check-label" %>
+    <div class="form-text">Other readers will see your status and rating either way — this only controls whether your written review is visible to them.</div>
+  </div>
+
   <div class="d-flex gap-2">
     <%= form.submit class: "btn btn-primary" %>
     <%= link_to "Cancel", readings_path, class: "btn btn-outline-secondary" %>
