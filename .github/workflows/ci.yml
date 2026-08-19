@@ -71,7 +71,17 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev node-gyp
+        timeout-minutes: 3
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get update -o Acquire::Retries=3 \
+              && sudo apt-get install --no-install-recommends -y libpq-dev node-gyp \
+              && break
+            echo "apt-get attempt $i failed, retrying..."
+            sleep 10
+          done
 
       - name: Checkout code
         uses: actions/checkout@v7
@@ -104,7 +114,17 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev node-gyp
+        timeout-minutes: 3
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get update -o Acquire::Retries=3 \
+              && sudo apt-get install --no-install-recommends -y libpq-dev node-gyp \
+              && break
+            echo "apt-get attempt $i failed, retrying..."
+            sleep 10
+          done
 
       - name: Checkout code
         uses: actions/checkout@v7
