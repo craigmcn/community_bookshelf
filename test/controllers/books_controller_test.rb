@@ -25,20 +25,24 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "book show offers a re-read link even when the member already has a reading" do
+    Reading.create!(user: users(:member), book: @book, status: :reading)
+
     sign_in_as users(:member)
-    get book_url(@book) # member already has readings(:one) and readings(:reread_of_one) for @book
+    get book_url(@book) # member now has readings(:one) plus the re-read created above for @book
     assert_response :success
     assert_select "a", text: "Log a Re-read"
     assert_select "a[href=?]", new_reading_path(book_id: @book.id)
   end
 
   test "book show lists all of the current user's readings of the book" do
+    reread = Reading.create!(user: users(:member), book: @book, status: :reading)
+
     sign_in_as users(:member)
     get book_url(@book)
     assert_response :success
     assert_select "h3", text: "Your Readings of This Book"
     assert_select "a[href=?]", reading_path(readings(:one))
-    assert_select "a[href=?]", reading_path(readings(:reread_of_one))
+    assert_select "a[href=?]", reading_path(reread)
   end
 
   test "books index filters by tag" do

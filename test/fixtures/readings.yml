@@ -4,11 +4,3 @@ one:
   status: 0
   rating: 4
   review: A great read.
-
-# A re-read: same user/book pair as `one`, a separate reading record in progress.
-reread_of_one:
-  user: member
-  book: one
-  status: 1
-  rating:
-  review:
