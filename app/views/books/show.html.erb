@@ -195,7 +195,15 @@
               <% end %>
             </td>
             <td><%= reading.format.present? ? reading.format.humanize : "—" %></td>
-            <td><%= truncate(reading.review, length: 100) %></td>
+            <td>
+              <% if reading.review.blank? %>
+                —
+              <% elsif reading.is_review_public? || reading.user == current_user || current_user&.moderator_or_above? %>
+                <%= truncate(reading.review, length: 100) %>
+              <% else %>
+                <span class="text-muted fst-italic">Review is private</span>
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>

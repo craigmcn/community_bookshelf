@@ -17,6 +17,49 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "community readings hides a private review's text from other visitors" do
+    create_private_reading!
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "Review is private"
+    assert_not_includes @response.body, "My private thoughts on this one."
+    # public review from the other reading on this book still shows in full
+    assert_includes @response.body, "A great read."
+  end
+
+  test "community readings still shows status and rating for a private review" do
+    create_private_reading!
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, users(:admin).email
+    assert_includes @response.body, "Finished"
+  end
+
+  test "community readings shows the full review to the review's owner" do
+    create_private_reading!
+    sign_in_as users(:admin)
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "My private thoughts on this one."
+  end
+
+  test "community readings shows the full review to a moderator" do
+    create_private_reading!
+    sign_in_as users(:moderator)
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "My private thoughts on this one."
+  end
+
+  test "community readings hides a private review's text from a signed-in non-owner member" do
+    create_private_reading!
+    sign_in_as users(:member)
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "Review is private"
+    assert_not_includes @response.body, "My private thoughts on this one."
+  end
+
   test "book show offers Add to Shelf to a member with no reading yet" do
     sign_in_as users(:member)
     get book_url(books(:two))
@@ -184,5 +227,12 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
       delete book_url(@book)
     end
     assert_redirected_to books_url
+  end
+
+  private
+
+  def create_private_reading!
+    Reading.create!(user: users(:admin), book: @book, status: :finished, rating: :five,
+      review: "My private thoughts on this one.", is_review_public: false)
   end
 end

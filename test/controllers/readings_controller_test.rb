@@ -24,6 +24,20 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reading_url(Reading.last)
   end
 
+  test "member can create a reading with a private review" do
+    sign_in_as users(:member)
+    assert_difference "Reading.count" do
+      post readings_url, params: {reading: {book_id: books(:two).id, status: :reading, review: "Just for me", is_review_public: false}}
+    end
+    assert_not Reading.last.is_review_public?
+  end
+
+  test "member can toggle their review's privacy" do
+    sign_in_as users(:member)
+    patch reading_url(@reading), params: {reading: {status: @reading.status, book_id: @reading.book_id, is_review_public: false}}
+    assert_not @reading.reload.is_review_public?
+  end
+
   test "member can start a re-read of a book they've already read" do
     sign_in_as users(:member)
     # readings(:one) is already a member reading of books(:one); confirm a second,
