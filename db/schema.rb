@@ -36,13 +36,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_173726) do
     t.bigint "book_id", null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.date "finished_on"
+    t.integer "format"
+    t.integer "progress_percent"
     t.integer "rating"
     t.text "review"
+    t.date "started_on"
     t.integer "status"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["book_id"], name: "index_readings_on_book_id"
     t.index ["user_id"], name: "index_readings_on_user_id"
+    t.check_constraint "progress_percent IS NULL OR progress_percent >= 0 AND progress_percent <= 100", name: "readings_progress_percent_range"
   end
 
   create_table "role_assignments", force: :cascade do |t|
