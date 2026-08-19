@@ -24,6 +24,20 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reading_url(Reading.last)
   end
 
+  test "member can start a re-read of a book they've already read" do
+    sign_in_as users(:member)
+    # readings(:one) is already a member reading of books(:one); confirm a second,
+    # independent reading record for the same user/book pair can be created.
+    assert_difference "Reading.count" do
+      post readings_url, params: {reading: {book_id: @reading.book_id, status: :want_to_read}}
+    end
+    new_reading = Reading.last
+    assert_redirected_to reading_url(new_reading)
+    assert_equal @reading.book_id, new_reading.book_id
+    assert_equal users(:member).id, new_reading.user_id
+    assert_not_equal @reading.id, new_reading.id
+  end
+
   test "member can update their own reading" do
     sign_in_as users(:member)
     patch reading_url(@reading), params: {reading: {status: :finished, book_id: @reading.book_id}}

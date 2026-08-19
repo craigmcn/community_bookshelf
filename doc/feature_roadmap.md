@@ -45,7 +45,7 @@ scenarios. Each feature below is tagged:
 
 - [x] Start date / finish date on a reading `[parity: coordinated]`
 - [x] Progress tracking (current page or %) `[parity: coordinated]`
-- [ ] Re-read tracking (multiple reading records per user/book) `[parity: coordinated]`
+- [x] Re-read tracking (multiple reading records per user/book) `[parity: coordinated]`
 - [x] "Did Not Finish" (DNF) status, alongside want-to-read/reading/finished `[parity: coordinated]`
 - [x] Format field: physical / ebook / audiobook `[parity: solo]`
 - [ ] Custom shelves/collections beyond the single implicit list (e.g. "Favorites", "2026 TBR") `[parity: coordinated]`
