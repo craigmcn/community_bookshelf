@@ -51,6 +51,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "My private thoughts on this one."
   end
 
+  test "community readings hides a private review's text from a signed-in non-owner member" do
+    create_private_reading!
+    sign_in_as users(:member)
+    get book_url(@book)
+    assert_response :success
+    assert_includes @response.body, "Review is private"
+    assert_not_includes @response.body, "My private thoughts on this one."
+  end
+
   test "book show offers Add to Shelf to a member with no reading yet" do
     sign_in_as users(:member)
     get book_url(books(:two))
