@@ -50,6 +50,6 @@ class ReadingsController < ApplicationController
   end
 
   def reading_params
-    params.expect(reading: [:book_id, :status, :rating, :review])
+    params.expect(reading: [:book_id, :status, :rating, :review, :started_on, :finished_on, :progress_percent, :format])
   end
 end

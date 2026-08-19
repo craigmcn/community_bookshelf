@@ -31,6 +31,38 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "finished", @reading.reload.status
   end
 
+  test "member can set tracking fields on their own reading" do
+    sign_in_as users(:member)
+    patch reading_url(@reading), params: {reading: {
+      book_id: @reading.book_id,
+      status: :dnf,
+      format: :ebook,
+      started_on: "2026-01-01",
+      finished_on: "2026-01-15",
+      progress_percent: 42
+    }}
+    assert_redirected_to reading_url(@reading)
+    @reading.reload
+    assert_equal "dnf", @reading.status
+    assert_equal "ebook", @reading.format
+    assert_equal Date.new(2026, 1, 1), @reading.started_on
+    assert_equal Date.new(2026, 1, 15), @reading.finished_on
+    assert_equal 42, @reading.progress_percent
+  end
+
+  test "moderator can set tracking fields on any reading" do
+    sign_in_as users(:moderator)
+    patch reading_url(@reading), params: {reading: {book_id: @reading.book_id, status: :reading, progress_percent: 75}}
+    assert_redirected_to reading_url(@reading)
+    assert_equal 75, @reading.reload.progress_percent
+  end
+
+  test "guest cannot update tracking fields" do
+    patch reading_url(@reading), params: {reading: {book_id: @reading.book_id, progress_percent: 75}}
+    assert_redirected_to sign_in_path
+    assert_nil @reading.reload.progress_percent
+  end
+
   test "member cannot destroy a reading" do
     sign_in_as users(:member)
     assert_no_difference "Reading.count" do
