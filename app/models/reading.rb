@@ -14,7 +14,11 @@ class Reading < ApplicationRecord
   validate :finished_on_not_before_started_on
 
   def self.status_options
-    statuses.keys.map { |s| [(s == "dnf") ? "DNF" : s.humanize, s] }
+    statuses.keys.map { |s| [humanize_status(s), s] }
+  end
+
+  def self.humanize_status(status)
+    (status == "dnf") ? "DNF" : status.humanize
   end
 
   def soft_delete
@@ -26,7 +30,7 @@ class Reading < ApplicationRecord
   end
 
   def status_label
-    (status == "dnf") ? "DNF" : status.humanize
+    self.class.humanize_status(status)
   end
 
   private

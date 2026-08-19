@@ -50,7 +50,7 @@
             Started <%= @reading.started_on.strftime("%B %-d, %Y") %>
           <% end %>
           <% if @reading.finished_on.present? %>
-            <%= "&mdash;".html_safe if @reading.started_on.present? %> Finished <%= @reading.finished_on.strftime("%B %-d, %Y") %>
+            <% if @reading.started_on.present? %> — <% end %>Finished <%= @reading.finished_on.strftime("%B %-d, %Y") %>
           <% end %>
         </dd>
       <% end %>
@@ -58,7 +58,7 @@
       <% if @reading.progress_percent.present? %>
         <dt class="col-sm-2">Progress</dt>
         <dd class="col-sm-10">
-          <div class="progress" style="height: 1.25rem; max-width: 20rem;" role="progressbar" aria-valuenow="<%= @reading.progress_percent %>" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress" style="height: 1.25rem; max-width: 20rem;" role="progressbar" aria-label="Reading progress" aria-valuenow="<%= @reading.progress_percent %>" aria-valuemin="0" aria-valuemax="100" aria-valuetext="<%= @reading.progress_percent %>%">
             <div class="progress-bar" style="width: <%= @reading.progress_percent %>%;"><%= @reading.progress_percent %>%</div>
           </div>
         </dd>
