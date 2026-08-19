@@ -136,6 +136,7 @@
           <th>Reader</th>
           <th>Status</th>
           <th>Rating</th>
+          <th>Format</th>
           <th>Review</th>
         </tr>
       </thead>
@@ -145,8 +146,11 @@
             <td><%= reading.user.email %></td>
             <td>
               <span class="badge badge-status-<%= reading.status.tr('_', '-') %>">
-                <%= reading.status.humanize %>
+                <%= reading.status_label %>
               </span>
+              <% if reading.progress_percent.present? %>
+                <span class="text-muted small">(<%= reading.progress_percent %>%)</span>
+              <% end %>
             </td>
             <td>
               <% if reading.rating %>
@@ -158,6 +162,7 @@
                 —
               <% end %>
             </td>
+            <td><%= reading.format.present? ? reading.format.humanize : "—" %></td>
             <td><%= truncate(reading.review, length: 100) %></td>
           </tr>
         <% end %>
