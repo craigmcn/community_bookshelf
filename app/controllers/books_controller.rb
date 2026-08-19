@@ -15,6 +15,9 @@ class BooksController < ApplicationController
   def show
     authorize @book
     @user_readings = current_user ? current_user.readings.where(book: @book).order(created_at: :desc).to_a : Reading.none
+    @user_shelves = current_user&.shelves&.order(:name)
+    @shelf_ids_with_book = current_user&.shelves&.joins(:shelf_books)
+      &.where(shelf_books: {book_id: @book.id})&.pluck(:id) || []
   end
 
   def new

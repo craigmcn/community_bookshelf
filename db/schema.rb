@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_17_173150) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_17_173726) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -75,6 +75,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_173150) do
     t.index ["name"], name: "index_series_on_name", unique: true
   end
 
+  create_table "shelf_books", force: :cascade do |t|
+    t.bigint "book_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "shelf_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_shelf_books_on_book_id"
+    t.index ["shelf_id", "book_id"], name: "index_shelf_books_on_shelf_id_and_book_id", unique: true
+    t.index ["shelf_id"], name: "index_shelf_books_on_shelf_id"
+  end
+
+  create_table "shelves", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "name"], name: "index_shelves_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_shelves_on_user_id"
+  end
+
   create_table "taggings", force: :cascade do |t|
     t.bigint "book_id", null: false
     t.datetime "created_at", null: false
@@ -110,6 +129,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_173150) do
   add_foreign_key "readings", "users"
   add_foreign_key "role_assignments", "roles"
   add_foreign_key "role_assignments", "users"
+  add_foreign_key "shelf_books", "books"
+  add_foreign_key "shelf_books", "shelves"
+  add_foreign_key "shelves", "users"
   add_foreign_key "taggings", "books"
   add_foreign_key "taggings", "tags"
 end

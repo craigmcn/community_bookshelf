@@ -48,7 +48,7 @@ scenarios. Each feature below is tagged:
 - [x] Re-read tracking (multiple reading records per user/book) `[parity: coordinated]`
 - [x] "Did Not Finish" (DNF) status, alongside want-to-read/reading/finished `[parity: coordinated]`
 - [x] Format field: physical / ebook / audiobook `[parity: solo]`
-- [ ] Custom shelves/collections beyond the single implicit list (e.g. "Favorites", "2026 TBR") `[parity: coordinated]`
+- [x] Custom shelves/collections beyond the single implicit list (e.g. "Favorites", "2026 TBR") `[parity: coordinated]`
 - [x] Private/public toggle on individual reviews `[parity: solo]`
 
 ## Discovery & search

@@ -5,6 +5,7 @@ class User < ApplicationRecord
 
   has_many :readings, dependent: :destroy
   has_many :books, foreign_key: :added_by_id
+  has_many :shelves, dependent: :destroy
   has_many :role_assignments, dependent: :destroy
   has_many :roles, through: :role_assignments
 

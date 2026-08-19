@@ -1,0 +1,21 @@
+<% content_for :title, "My Lists" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0"><i class="fasl fa-list-ul me-2 opacity-75"></i>My Lists</h1>
+  <%= link_to new_shelf_path, class: "btn btn-primary" do %>
+    <i class="fasl fa-plus me-1"></i>New List
+  <% end %>
+</div>
+
+<% if @shelves.any? %>
+  <% @shelves.each do |shelf| %>
+    <%= render shelf %>
+  <% end %>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <p class="fs-5">You haven't made any lists yet.</p>
+    <%= link_to new_shelf_path, class: "btn btn-primary" do %>
+      <i class="fasl fa-plus me-1"></i>Create your first list
+    <% end %>
+  </div>
+<% end %>
