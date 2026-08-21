@@ -88,3 +88,9 @@ Pundit policies live in `app/policies/`. Role checks use `admin?`, `moderator?`,
 ## Open Library integration
 
 The book search at `/book_search` queries the Open Library API via `OpenLibraryService` and returns matching titles, authors, and cover images. Results populate the new-book form without a page reload (Stimulus + Turbo Frame).
+
+## Discovery & search
+
+- `/books` and `/readings` ("My Shelf") both support text search, sort, and pagination (via [Pagy](https://ddnexus.github.io/pagy/)).
+- Books carry three kinds of tags — genre, mood (e.g. "dark"), and pace (e.g. "fast-paced") — each filterable via `?tag=<name>`, and each editable as its own comma-separated field on the book form.
+- A book's page lists "Similar Books" (ranked by shared tags); My Shelf shows "Recommended for You" (tag overlap with books you've finished or rated highly, excluding your own shelf).

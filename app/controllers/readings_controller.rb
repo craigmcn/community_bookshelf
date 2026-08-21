@@ -1,8 +1,40 @@
 class ReadingsController < ApplicationController
   before_action :set_reading, only: %i[show edit update destroy]
 
+  SORT_OPTIONS = {
+    "recent" => {label: "Recently Updated", order: {updated_at: :desc}},
+    "title" => {label: "Book Title", order: {"books.title": :asc}},
+    "rating" => {label: "Rating (high to low)", order: {rating: :desc}}
+  }.freeze
+
   def index
-    @readings = current_user.readings.includes(:book)
+    @readings = current_user.readings.includes(:book).joins(:book)
+
+    if params[:q].present?
+      query = "%#{params[:q].strip}%"
+      @readings = @readings.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
+    end
+
+    if params[:status].present? && Reading.statuses.key?(params[:status])
+      @readings = @readings.where(status: params[:status])
+    end
+
+    if params[:rating].present? && Reading.ratings.key?(params[:rating])
+      @readings = @readings.where(rating: params[:rating])
+    end
+
+    if params[:tag].present?
+      @tag = Tag.find_by(name: params[:tag].to_s.strip.downcase)
+      @readings = @tag ? @readings.merge(Book.joins(:tags).where(tags: {id: @tag.id})) : @readings.none
+    end
+
+    @sort = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : "recent"
+    @readings = @readings.order(SORT_OPTIONS[@sort][:order])
+
+    @shelf_tags = Tag.genre.joins(books: :readings).where(readings: {user: current_user}).distinct.order(:name)
+
+    @pagy, @readings = pagy(@readings)
+    @recommended_books = Book.recommended_for(current_user)
   end
 
   def show

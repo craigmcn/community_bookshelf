@@ -88,6 +88,19 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", reading_path(reread)
   end
 
+  test "book show lists similar books sharing tags" do
+    @book.update!(tag_list: "fantasy")
+    similar_one = Book.create!(title: "Similar Book One", author: "Some Author", added_by: users(:member), tag_list: "fantasy")
+    similar_two = Book.create!(title: "Similar Book Two", author: "Another Author", added_by: users(:admin), tag_list: "fantasy")
+
+    get book_url(@book)
+
+    assert_response :success
+    assert_select "h3", text: "Similar Books"
+    assert_includes @response.body, similar_one.title
+    assert_includes @response.body, similar_two.title
+  end
+
   test "books index filters by tag" do
     tagged_book = books(:one)
     tagged_book.update!(tag_list: "fantasy")
@@ -105,6 +118,58 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes @response.body, books(:one).title
     assert_not_includes @response.body, books(:two).title
+  end
+
+  test "books index searches by title or author" do
+    get books_url(q: books(:one).title)
+    assert_response :success
+    assert_includes @response.body, books(:one).title
+    assert_not_includes @response.body, books(:two).title
+
+    get books_url(q: books(:two).author)
+    assert_response :success
+    assert_includes @response.body, books(:two).title
+    assert_not_includes @response.body, books(:one).title
+  end
+
+  test "books index sorts by author" do
+    get books_url(sort: "author")
+    assert_response :success
+
+    # books(:one)'s author "F. Scott Fitzgerald" sorts before books(:two)'s "George Orwell"
+    body = @response.body
+    assert_operator body.index(books(:one).title), :<, body.index(books(:two).title)
+  end
+
+  test "books index search-clear link preserves the current sort" do
+    get books_url(q: "gatsby", sort: "author")
+    assert_response :success
+
+    assert_select "a", text: "Clear" do |links|
+      assert_match(/sort=author/, links.first["href"])
+    end
+  end
+
+  test "books index paginates results" do
+    26.times { |n| Book.create!(title: "Extra Book #{n}", author: "Author #{n}", added_by: users(:member)) }
+
+    get books_url
+    assert_response :success
+    assert_select ".pagy-bootstrap"
+
+    get books_url(page: 2)
+    assert_response :success
+  end
+
+  test "books index groups tag browsing by category" do
+    books(:one).update!(tag_list: "fantasy", mood_list: "dark", pace_list: "fast-paced")
+
+    get books_url
+
+    assert_response :success
+    assert_includes @response.body, "Browse by genres:"
+    assert_includes @response.body, "Browse by moods:"
+    assert_includes @response.body, "Browse by pace:"
   end
 
   # Auth wall

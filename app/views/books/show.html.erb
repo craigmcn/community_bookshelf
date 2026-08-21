@@ -103,15 +103,33 @@
       </div>
     <% end %>
 
-    <% if @book.tags.any? %>
-      <div class="d-flex flex-wrap gap-1 mt-2">
-        <% @book.tags.order(:name).each do |tag| %>
-          <%= link_to tag.name, books_path(tag: tag.name), class: "badge text-bg-primary text-decoration-none" %>
+    <% {genre: "text-bg-primary", mood: "text-bg-info", pace: "text-bg-warning"}.each do |category, badge_class| %>
+      <% category_tags = @book.tags.select { |tag| tag.category == category.to_s }.sort_by(&:name) %>
+      <% if category_tags.any? %>
+        <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
+          <span class="text-muted small me-1"><%= category.to_s.capitalize %>:</span>
+          <% category_tags.each do |tag| %>
+            <%= link_to tag.name, books_path(tag: tag.name), class: ["badge text-decoration-none", badge_class] %>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<% if @similar_books.any? %>
+  <hr class="my-4">
+  <h3><i class="fasl fa-shapes me-2 opacity-75"></i>Similar Books</h3>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+    <% @similar_books.each do |book| %>
+      <div class="col">
+        <%= link_to book, class: "text-decoration-none text-dark", data: { turbo_prefetch: false } do %>
+          <%= render book %>
         <% end %>
       </div>
     <% end %>
   </div>
-</div>
+<% end %>
 
 <% if @user_readings.any? %>
   <hr class="my-4">

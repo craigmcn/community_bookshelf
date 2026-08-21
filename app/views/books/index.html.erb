@@ -9,17 +9,43 @@
   <% end %>
 </div>
 
-<% if @tags.any? %>
-  <div class="d-flex flex-wrap align-items-center gap-1 mb-4">
-    <span class="text-muted small me-1">Browse by tag:</span>
-    <% @tags.each do |tag| %>
-      <%= link_to tag.name, books_path(tag: tag.name),
-            class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
-    <% end %>
-    <% if @tag %>
-      <%= link_to "Clear filter", books_path, class: "small ms-1" %>
+<%= form_with url: books_path, method: :get, class: "row g-2 align-items-center mb-3" do %>
+  <% if @tag %>
+    <%= hidden_field_tag :tag, @tag.name %>
+  <% end %>
+  <div class="col-sm-6 col-md-5">
+    <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by title or author...">
+  </div>
+  <div class="col-sm-4 col-md-3">
+    <select name="sort" class="form-select" onchange="this.form.requestSubmit()">
+      <% BooksController::SORT_OPTIONS.each do |key, opts| %>
+        <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
+      <% end %>
+    </select>
+  </div>
+  <div class="col-sm-auto">
+    <button type="submit" class="btn btn-outline-primary">Search</button>
+    <% if params[:q].present? %>
+      <%= link_to "Clear", books_path(tag: @tag&.name, sort: params[:sort]), class: "btn btn-outline-secondary" %>
     <% end %>
   </div>
+<% end %>
+
+<% [["Genres", @genre_tags], ["Moods", @mood_tags], ["Pace", @pace_tags]].each do |label, tags| %>
+  <% if tags.any? %>
+    <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+      <span class="text-muted small me-1">Browse by <%= label.downcase %>:</span>
+      <% tags.each do |tag| %>
+        <%= link_to tag.name, books_path(tag: tag.name, q: params[:q], sort: params[:sort]),
+              class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+<% if @tag %>
+  <%= link_to "Clear tag filter", books_path(q: params[:q], sort: params[:sort]), class: "small d-inline-block mb-4" %>
+<% else %>
+  <div class="mb-2"></div>
 <% end %>
 
 <% if params[:tag].present? && @tag.nil? %>
@@ -34,6 +60,9 @@
       </div>
     <% end %>
   </div>
+  <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
+<% elsif params[:q].present? %>
+  <p class="text-muted">No books match "<%= params[:q] %>".</p>
 <% else %>
   <div class="text-center text-muted py-5">
     <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>

@@ -2,14 +2,33 @@ class BooksController < ApplicationController
   skip_before_action :require_login, only: [:index, :show]
   before_action :set_book, only: %i[show edit update destroy]
 
+  SORT_OPTIONS = {
+    "title" => {label: "Title", order: {title: :asc}},
+    "author" => {label: "Author", order: {author: :asc, title: :asc}},
+    "newest" => {label: "Recently Added", order: {created_at: :desc}},
+    "published" => {label: "Publication Date", order: {published_on: :desc}}
+  }.freeze
+
   def index
     @books = policy_scope(Book).includes(:added_by)
-    @tags = Tag.order(:name)
+    @genre_tags = Tag.genre.order(:name)
+    @mood_tags = Tag.mood.order(:name)
+    @pace_tags = Tag.pace.order(:name)
+
+    if params[:q].present?
+      query = "%#{params[:q].strip}%"
+      @books = @books.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
+    end
 
     if params[:tag].present?
       @tag = Tag.find_by(name: params[:tag].to_s.strip.downcase)
       @books = @tag ? @books.joins(:tags).where(tags: {id: @tag.id}) : @books.none
     end
+
+    @sort = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : "title"
+    @books = @books.order(SORT_OPTIONS[@sort][:order])
+
+    @pagy, @books = pagy(@books)
   end
 
   def show
@@ -18,6 +37,7 @@ class BooksController < ApplicationController
     @user_shelves = current_user&.shelves&.order(:name)
     @shelf_ids_with_book = current_user&.shelves&.joins(:shelf_books)
       &.where(shelf_books: {book_id: @book.id})&.pluck(:id) || []
+    @similar_books = @book.similar_books
   end
 
   def new
@@ -65,6 +85,6 @@ class BooksController < ApplicationController
   end
 
   def book_params
-    params.expect(book: [:title, :author, :cover_url, :isbn, :page_count, :published_on, :open_library_key, :series_id, :series_position, :tag_list])
+    params.expect(book: [:title, :author, :cover_url, :isbn, :page_count, :published_on, :open_library_key, :series_id, :series_position, :tag_list, :mood_list, :pace_list])
   end
 end

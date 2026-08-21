@@ -83,4 +83,91 @@ class BookTest < ActiveSupport::TestCase
     book.valid?
     assert_equal 3, book.series_position
   end
+
+  test "assigning mood_list and pace_list tags them under their own category" do
+    book = books(:one)
+    book.update!(mood_list: "dark, hopeful", pace_list: "fast-paced")
+
+    assert_equal ["dark", "hopeful"], book.tags.mood.order(:name).pluck(:name)
+    assert_equal ["fast-paced"], book.tags.pace.order(:name).pluck(:name)
+  end
+
+  test "assigning mood_list leaves existing genre tags untouched" do
+    book = books(:one) # already tagged with tags(:one), a genre tag, via the taggings fixture
+
+    book.update!(mood_list: "dark")
+
+    assert_equal [tags(:one)], book.reload.tags.genre
+    assert_equal ["dark"], book.tags.mood.pluck(:name)
+  end
+
+  test "similar_books ranks by shared tag count and excludes the book itself" do
+    source = books(:one)
+    source.update!(tag_list: "fantasy, epic")
+
+    close_match = Book.create!(title: "Close Match", author: "A. Uthor", added_by: users(:member), tag_list: "fantasy, epic")
+    far_match = Book.create!(title: "Far Match", author: "A. Uthor", added_by: users(:member), tag_list: "fantasy")
+    no_match = Book.create!(title: "No Match", author: "A. Uthor", added_by: users(:member), tag_list: "romance")
+
+    results = source.reload.similar_books
+
+    assert_equal [close_match, far_match], results.to_a
+    assert_not_includes results, source
+    assert_not_includes results, no_match
+  end
+
+  test "similar_books returns none when the book has no tags" do
+    book = books(:two)
+    assert_empty book.similar_books
+  end
+
+  test "recommended_for suggests books tagged like ones the user finished or rated highly, excluding their own shelf" do
+    user = users(:member)
+    finished_book = books(:one)
+    finished_book.update!(tag_list: "fantasy")
+    Reading.where(user: user, book: finished_book).update_all(status: Reading.statuses[:finished])
+
+    recommended = Book.create!(title: "Recommended", author: "A. Uthor", added_by: user, tag_list: "fantasy")
+    already_shelved = books(:two)
+    already_shelved.update!(tag_list: "fantasy")
+    Reading.create!(user: user, book: already_shelved, status: :want_to_read)
+
+    results = Book.recommended_for(user)
+
+    assert_includes results, recommended
+    assert_not_includes results, finished_book
+    assert_not_includes results, already_shelved
+  end
+
+  test "recommended_for returns none for a nil user" do
+    assert_empty Book.recommended_for(nil)
+  end
+
+  test "recommended_for ignores a soft-deleted reading as a seed" do
+    user = users(:member)
+    finished_book = books(:one)
+    finished_book.update!(tag_list: "fantasy")
+    reading = Reading.where(user: user, book: finished_book).first
+    reading.update!(status: :finished)
+    reading.soft_delete
+
+    would_be_recommended = Book.create!(title: "Would Be Recommended", author: "A. Uthor", added_by: user, tag_list: "fantasy")
+
+    assert_empty Book.recommended_for(user)
+    assert_not_includes Book.recommended_for(user), would_be_recommended
+  end
+
+  test "recommended_for does not treat a soft-deleted reading as still shelved" do
+    user = users(:member)
+    finished_book = books(:one)
+    finished_book.update!(tag_list: "fantasy")
+    Reading.where(user: user, book: finished_book).update_all(status: Reading.statuses[:finished])
+
+    removed = books(:two)
+    removed.update!(tag_list: "fantasy")
+    removed_reading = Reading.create!(user: user, book: removed, status: :want_to_read)
+    removed_reading.soft_delete
+
+    assert_includes Book.recommended_for(user), removed
+  end
 end
