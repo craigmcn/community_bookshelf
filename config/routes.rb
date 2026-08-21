@@ -16,6 +16,10 @@ Rails.application.routes.draw do
   resource :session, controller: "sessions", only: [:new, :create, :destroy]
   resources :users, controller: "clearance/users", only: [:new, :create]
 
+  resource :account, only: [:edit, :update, :destroy]
+  resource :email_confirmation, only: [:create]
+  get "confirm_email/:token", to: "email_confirmations#confirm", as: :confirm_email
+
   namespace :admin do
     root "dashboard#index"
     resources :users, only: [:index, :edit, :update]

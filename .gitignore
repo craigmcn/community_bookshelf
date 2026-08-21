@@ -24,6 +24,10 @@
 
 /public/assets
 
+# Ignore uploaded files in development and test (Active Storage local disk service).
+/storage/*
+!/storage/.keep
+
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
