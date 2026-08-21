@@ -72,6 +72,18 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, books(:two).title
   end
 
+  test "readings index browse-by-genre row excludes mood and pace tags" do
+    books(:one).update!(tag_list: "fantasy", mood_list: "moody", pace_list: "fast-paced")
+
+    sign_in_as users(:member)
+    get readings_url
+
+    assert_response :success
+    assert_includes @response.body, "fantasy"
+    assert_not_includes @response.body, "moody"
+    assert_not_includes @response.body, "fast-paced"
+  end
+
   test "readings index paginates results" do
     26.times do |n|
       book = Book.create!(title: "Extra Book #{n}", author: "Author #{n}", added_by: users(:member))
@@ -87,14 +99,16 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
   test "readings index shows tag-overlap recommendations excluding the user's own shelf" do
     @reading.update!(status: :finished)
     books(:one).update!(tag_list: "fantasy")
-    recommended = Book.create!(title: "Recommended Read", author: "Some Author", added_by: users(:member), tag_list: "fantasy")
+    recommended_one = Book.create!(title: "Recommended Read One", author: "Some Author", added_by: users(:member), tag_list: "fantasy")
+    recommended_two = Book.create!(title: "Recommended Read Two", author: "Another Author", added_by: users(:admin), tag_list: "fantasy")
 
     sign_in_as users(:member)
     get readings_url
 
     assert_response :success
     assert_includes @response.body, "Recommended for You"
-    assert_includes @response.body, recommended.title
+    assert_includes @response.body, recommended_one.title
+    assert_includes @response.body, recommended_two.title
   end
 
   test "member can create a reading" do

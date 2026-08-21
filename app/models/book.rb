@@ -45,7 +45,8 @@ class Book < ApplicationRecord
     tag_ids = tags.ids
     return Book.none if tag_ids.empty?
 
-    Book.joins(:taggings)
+    Book.includes(:added_by)
+      .joins(:taggings)
       .where(taggings: {tag_id: tag_ids})
       .where.not(id: id)
       .group("books.id")
@@ -70,7 +71,8 @@ class Book < ApplicationRecord
 
     shelved_book_ids = user_readings.distinct.pluck(:book_id)
 
-    joins(:taggings)
+    includes(:added_by)
+      .joins(:taggings)
       .where(taggings: {tag_id: tag_ids})
       .where.not(id: shelved_book_ids)
       .group("books.id")

@@ -90,13 +90,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
 
   test "book show lists similar books sharing tags" do
     @book.update!(tag_list: "fantasy")
-    similar = Book.create!(title: "Similar Book", author: "Some Author", added_by: users(:member), tag_list: "fantasy")
+    similar_one = Book.create!(title: "Similar Book One", author: "Some Author", added_by: users(:member), tag_list: "fantasy")
+    similar_two = Book.create!(title: "Similar Book Two", author: "Another Author", added_by: users(:admin), tag_list: "fantasy")
 
     get book_url(@book)
 
     assert_response :success
     assert_select "h3", text: "Similar Books"
-    assert_includes @response.body, similar.title
+    assert_includes @response.body, similar_one.title
+    assert_includes @response.body, similar_two.title
   end
 
   test "books index filters by tag" do
@@ -137,6 +139,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     # books(:one)'s author "F. Scott Fitzgerald" sorts before books(:two)'s "George Orwell"
     body = @response.body
     assert_operator body.index(books(:one).title), :<, body.index(books(:two).title)
+  end
+
+  test "books index search-clear link preserves the current sort" do
+    get books_url(q: "gatsby", sort: "author")
+    assert_response :success
+
+    assert_select "a", text: "Clear" do |links|
+      assert_match(/sort=author/, links.first["href"])
+    end
   end
 
   test "books index paginates results" do

@@ -31,7 +31,7 @@ class ReadingsController < ApplicationController
     @sort = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : "recent"
     @readings = @readings.order(SORT_OPTIONS[@sort][:order])
 
-    @shelf_tags = Tag.joins(books: :readings).where(readings: {user: current_user}).distinct.order(:name)
+    @shelf_tags = Tag.genre.joins(books: :readings).where(readings: {user: current_user}).distinct.order(:name)
 
     @pagy, @readings = pagy(@readings)
     @recommended_books = Book.recommended_for(current_user)
