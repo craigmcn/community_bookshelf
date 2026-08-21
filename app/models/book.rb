@@ -59,7 +59,7 @@ class Book < ApplicationRecord
   def self.recommended_for(user, limit: 6)
     return none unless user
 
-    user_readings = Reading.unscoped.where(user_id: user.id)
+    user_readings = Reading.where(user_id: user.id)
     liked_book_ids = user_readings
       .where(status: :finished)
       .or(user_readings.where(rating: [:four, :five]))

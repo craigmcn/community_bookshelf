@@ -54,7 +54,7 @@
   </div>
   <div class="col-sm-auto">
     <button type="submit" class="btn btn-outline-primary">Filter</button>
-    <% if params[:q].present? || params[:status].present? || params[:rating].present? || @tag %>
+    <% if params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
       <%= link_to "Clear", readings_path, class: "btn btn-outline-secondary" %>
     <% end %>
   </div>
@@ -91,7 +91,7 @@
     </table>
   </div>
   <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
-<% elsif params[:q].present? || params[:status].present? || params[:rating].present? || @tag %>
+<% elsif params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
   <p class="text-muted">No readings match those filters.</p>
 <% else %>
   <div class="text-center text-muted py-5">

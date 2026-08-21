@@ -142,4 +142,32 @@ class BookTest < ActiveSupport::TestCase
   test "recommended_for returns none for a nil user" do
     assert_empty Book.recommended_for(nil)
   end
+
+  test "recommended_for ignores a soft-deleted reading as a seed" do
+    user = users(:member)
+    finished_book = books(:one)
+    finished_book.update!(tag_list: "fantasy")
+    reading = Reading.where(user: user, book: finished_book).first
+    reading.update!(status: :finished)
+    reading.soft_delete
+
+    would_be_recommended = Book.create!(title: "Would Be Recommended", author: "A. Uthor", added_by: user, tag_list: "fantasy")
+
+    assert_empty Book.recommended_for(user)
+    assert_not_includes Book.recommended_for(user), would_be_recommended
+  end
+
+  test "recommended_for does not treat a soft-deleted reading as still shelved" do
+    user = users(:member)
+    finished_book = books(:one)
+    finished_book.update!(tag_list: "fantasy")
+    Reading.where(user: user, book: finished_book).update_all(status: Reading.statuses[:finished])
+
+    removed = books(:two)
+    removed.update!(tag_list: "fantasy")
+    removed_reading = Reading.create!(user: user, book: removed, status: :want_to_read)
+    removed_reading.soft_delete
+
+    assert_includes Book.recommended_for(user), removed
+  end
 end

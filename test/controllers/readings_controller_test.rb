@@ -72,6 +72,16 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, books(:two).title
   end
 
+  test "readings index shows a Clear link and a filtered-not-empty message for an unknown tag" do
+    sign_in_as users(:member)
+    get readings_url(tag: "does-not-exist")
+
+    assert_response :success
+    assert_select "a", text: "Clear"
+    assert_includes @response.body, "No readings match those filters."
+    assert_not_includes @response.body, "Your shelf is empty."
+  end
+
   test "readings index browse-by-genre row excludes mood and pace tags" do
     books(:one).update!(tag_list: "fantasy", mood_list: "moody", pace_list: "fast-paced")
 
