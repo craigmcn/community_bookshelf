@@ -17,16 +17,25 @@ your own lists.
 
 ## Browsing books
 
-- **Books** (`/books`) lists every book in the catalog. Filter by clicking a
-  tag badge, or filter the URL with `?tag=<name>`.
+- **Books** (`/books`) lists every book in the catalog, 20 at a time with
+  pagination at the bottom.
+- **Search** the catalog by title or author with the search box, and
+  **sort** by title, author, recently added, or publication date.
+- **Tags** come in three flavors: genre (e.g. "fantasy"), mood (e.g. "dark"),
+  and pace (e.g. "fast-paced"). Each has its own "Browse by..." row of
+  badges on the catalog page — click one to filter, or filter the URL with
+  `?tag=<name>` directly (works for any tag regardless of category, since
+  tag names are unique across categories).
 - Each book's page shows its cover, author, ISBN, page count, publish date,
   series (with your place in the reading order), description, subjects, and
-  tags.
+  its genre/mood/pace tags. A **Similar Books** section lists other books
+  that share the most tags with it.
 - **Series** (`/series`) lists book series; a series page shows every book in
   it in reading order.
 - **Adding a book**: any signed-in member can add a new book to the catalog.
   Search Open Library from the add-book form to pull in the title, author,
-  cover, and description automatically, or enter details by hand.
+  cover, and description automatically, or enter details by hand. Genre,
+  mood, and pace tags are each entered as their own comma-separated field.
 
 ## Logging readings ("My Shelf")
 
@@ -52,6 +61,15 @@ its own record with its own status/rating/review.
 time. Deleting is a soft delete — the record is hidden from your shelf and
 from other readers, but not permanently erased (a moderator/admin can still
 see it).
+
+**Searching, filtering, and sorting your shelf**: search by book title or
+author, filter by status, rating, or genre tag, and sort by recently
+updated, book title, or rating — all from the controls above the table.
+Your shelf paginates 20 readings at a time once it grows past that.
+
+**Recommended for You**: if you've finished a book or rated one 4-5 stars,
+your shelf page shows a "Recommended for You" row of books that share tags
+with it and aren't already on your shelf.
 
 ## Community Readings
 

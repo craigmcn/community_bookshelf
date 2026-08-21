@@ -18,4 +18,14 @@ class TagTest < ActiveSupport::TestCase
   test "invalid with a duplicate name after normalization" do
     assert_not Tag.new(name: tags(:one).name.upcase).valid?
   end
+
+  test "defaults to the genre category" do
+    tag = Tag.create!(name: "new-tag")
+    assert tag.genre?
+  end
+
+  test "can be created as a mood or pace tag" do
+    assert Tag.create!(name: "dark", category: "mood").mood?
+    assert Tag.create!(name: "fast-paced", category: "pace").pace?
+  end
 end

@@ -53,13 +53,13 @@ scenarios. Each feature below is tagged:
 
 ## Discovery & search
 
-- [ ] Search box + filter + sort on the book catalog `[parity: coordinated]`
-- [ ] Search/filter/sort on "My Shelf" (by status, rating, genre) `[parity: coordinated]`
-- [ ] Pagination on catalog and shelf indexes `[parity: coordinated]`
-- [ ] Browse books by genre/tag `[parity: coordinated]`
-- [ ] Mood & pace tags on books (StoryGraph-style: "dark", "fast-paced") with filtering `[parity: solo]`
-- [ ] Recommendation engine based on reading history `[parity: solo]`
-- [ ] "Similar books" on a book's detail page `[parity: solo]`
+- [x] Search box + filter + sort on the book catalog `[parity: coordinated]`
+- [x] Search/filter/sort on "My Shelf" (by status, rating, genre) `[parity: coordinated]`
+- [x] Pagination on catalog and shelf indexes `[parity: coordinated]`
+- [x] Browse books by genre/tag `[parity: coordinated]`
+- [x] Mood & pace tags on books (StoryGraph-style: "dark", "fast-paced") with filtering `[parity: solo]`
+- [x] Recommendation engine based on reading history `[parity: solo]`
+- [x] "Similar books" on a book's detail page `[parity: solo]`
 
 ## Social
 

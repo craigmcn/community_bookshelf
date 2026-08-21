@@ -11,6 +11,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **Frontend**: Hotwire (Turbo + Stimulus), Bootstrap 5, esbuild + Sass via propshaft
 - **External API**: Open Library (book search + cover images via Faraday)
 - **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
+- **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
 - **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
 - **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL, Playwright e2e)
 - **Deployment**: Docker + Kamal + Thruster
@@ -53,6 +54,8 @@ yarn test:e2e                           # Playwright e2e (starts its own server,
 - **users** — Clearance authentication (email, encrypted_password, tokens)
 - **roles** — `name`: `member | moderator | admin`
 - **role_assignments** — join table users ↔ roles (users can hold multiple roles)
+- **tags** — `name` (globally unique), `category` (`genre | mood | pace`, default `genre`)
+- **taggings** — join table books ↔ tags (unique per book/tag pair)
 
 ### Enums
 ```ruby
@@ -139,6 +142,12 @@ Inherit from `Admin::BaseController` — it enforces `moderator_or_above?` and p
 
 ### Asset builds
 Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` running). Compiled output lands in `app/assets/builds/`.
+
+### Discovery & search (catalog + "My Shelf")
+- `BooksController#index` / `ReadingsController#index` each support `q` (ILIKE title/author search), `sort` (see each controller's `SORT_OPTIONS` constant), and pagination via `pagy` (`ApplicationController` includes `Pagy::Backend`, `ApplicationHelper` includes `Pagy::Frontend`; views render `pagy_bootstrap_nav`).
+- `ReadingsController#index` additionally filters by `status`, `rating`, and `tag` (via the reading's book).
+- Tags have a `category` (genre/mood/pace, see Domain Model above); `Book#tag_list` / `#mood_list` / `#pace_list` are per-category virtual attributes on the book form — each only touches taggings for its own category when assigned, so partial updates leave the other categories alone.
+- `Book#similar_books` and `Book.recommended_for(user)` rank by shared-tag count (no ML/vector infra) — the former excludes the book itself, the latter excludes books already on the user's shelf and seeds from books the user finished or rated 4-5 stars.
 
 ## Playwright e2e (cross-app parity)
 

@@ -77,9 +77,22 @@
   </div>
 
   <div class="mb-3">
-    <%= form.label :tag_list, "Tags", class: "form-label" %>
+    <%= form.label :tag_list, "Genres / Tags", class: "form-label" %>
     <%= form.text_field :tag_list, class: "form-control", placeholder: "fantasy, coming-of-age, ..." %>
     <div class="form-text">Comma-separated.</div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= form.label :mood_list, "Moods", class: "form-label" %>
+      <%= form.text_field :mood_list, class: "form-control", placeholder: "dark, hopeful, ..." %>
+      <div class="form-text">Comma-separated.</div>
+    </div>
+    <div class="col-md-6 mb-3">
+      <%= form.label :pace_list, "Pace", class: "form-label" %>
+      <%= form.text_field :pace_list, class: "form-control", placeholder: "fast-paced, slow-burn, ..." %>
+      <div class="form-text">Comma-separated.</div>
+    </div>
   </div>
 
   <div class="d-flex gap-2">
