@@ -71,7 +71,7 @@
 
           <% if @reading.is_review_public? %>
             <div class="mt-2">
-              <% if current_user && @reading.liking_users.include?(current_user) %>
+              <% if current_user && @reading.review_likes.exists?(user_id: current_user.id) %>
                 <%= button_to reading_review_like_path(@reading), method: :delete, class: "btn btn-sm btn-primary" do %>
                   <i class="fasl fa-heart me-1"></i>Liked (<%= @reading.review_likes.count %>)
                 <% end %>
@@ -92,9 +92,9 @@
       <hr class="my-4">
       <h3><i class="fasl fa-comments me-2 opacity-75"></i>Comments</h3>
 
-      <% if @reading.review_comments.any? %>
+      <% if @review_comments.any? %>
         <div class="list-group mb-3">
-          <% @reading.review_comments.each do |comment| %>
+          <% @review_comments.each do |comment| %>
             <div class="list-group-item">
               <div class="d-flex justify-content-between align-items-start">
                 <div>

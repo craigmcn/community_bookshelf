@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_183706) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -142,7 +142,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_183706) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["reading_id", "created_at"], name: "index_review_comments_on_reading_id_and_created_at"
-    t.index ["reading_id"], name: "index_review_comments_on_reading_id"
     t.index ["user_id"], name: "index_review_comments_on_user_id"
   end
 
@@ -153,7 +152,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_183706) do
     t.bigint "user_id", null: false
     t.index ["reading_id"], name: "index_review_likes_on_reading_id"
     t.index ["user_id", "reading_id"], name: "index_review_likes_on_user_id_and_reading_id", unique: true
-    t.index ["user_id"], name: "index_review_likes_on_user_id"
   end
 
   create_table "role_assignments", force: :cascade do |t|
