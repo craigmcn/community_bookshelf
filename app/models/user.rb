@@ -86,10 +86,6 @@ class User < ApplicationRecord
     active_follows.exists?(followed_id: other_user.id)
   end
 
-  def buddy_reads
-    BuddyRead.where(initiator: self).or(BuddyRead.where(partner: self))
-  end
-
   def email_confirmed?
     email_confirmed_at.present?
   end

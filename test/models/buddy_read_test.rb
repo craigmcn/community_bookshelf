@@ -28,4 +28,20 @@ class BuddyReadTest < ActiveSupport::TestCase
     assert_equal users(:moderator), buddy_read.other_participant(users(:member))
     assert_equal users(:member), buddy_read.other_participant(users(:moderator))
   end
+
+  test "messageable? is true while pending, accepted, or completed" do
+    buddy_read = BuddyRead.new(status: "pending")
+    assert buddy_read.messageable?
+    buddy_read.status = "accepted"
+    assert buddy_read.messageable?
+    buddy_read.status = "completed"
+    assert buddy_read.messageable?
+  end
+
+  test "messageable? is false once declined or cancelled" do
+    buddy_read = BuddyRead.new(status: "declined")
+    assert_not buddy_read.messageable?
+    buddy_read.status = "cancelled"
+    assert_not buddy_read.messageable?
+  end
 end
