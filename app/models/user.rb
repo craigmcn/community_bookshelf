@@ -16,6 +16,10 @@ class User < ApplicationRecord
   has_many :roles, through: :role_assignments
   has_many :favorite_genres, dependent: :destroy
   has_many :favorite_genre_tags, through: :favorite_genres, source: :tag
+  has_many :active_follows, class_name: "Follow", foreign_key: :follower_id, inverse_of: :follower, dependent: :destroy
+  has_many :following, through: :active_follows, source: :followed
+  has_many :passive_follows, class_name: "Follow", foreign_key: :followed_id, inverse_of: :followed, dependent: :destroy
+  has_many :followers, through: :passive_follows, source: :follower
   has_one_attached :avatar
 
   # Excludes the system placeholder account from user-facing listings/stats
@@ -72,6 +76,10 @@ class User < ApplicationRecord
   # deleted-account placeholder) still reads sensibly.
   def display_name
     name.presence || email
+  end
+
+  def following?(other_user)
+    active_follows.exists?(followed_id: other_user.id)
   end
 
   def email_confirmed?

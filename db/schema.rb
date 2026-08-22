@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_175419) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_175935) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,6 +68,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_175419) do
     t.index ["tag_id"], name: "index_favorite_genres_on_tag_id"
     t.index ["user_id", "tag_id"], name: "index_favorite_genres_on_user_id_and_tag_id", unique: true
     t.index ["user_id"], name: "index_favorite_genres_on_user_id"
+  end
+
+  create_table "follows", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "followed_id", null: false
+    t.bigint "follower_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["followed_id"], name: "index_follows_on_followed_id"
+    t.index ["follower_id", "followed_id"], name: "index_follows_on_follower_id_and_followed_id", unique: true
+    t.index ["follower_id"], name: "index_follows_on_follower_id"
+    t.check_constraint "follower_id <> followed_id", name: "follows_no_self_follow"
   end
 
   create_table "readings", force: :cascade do |t|
@@ -175,6 +186,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_175419) do
   add_foreign_key "books", "users", column: "added_by_id"
   add_foreign_key "favorite_genres", "tags"
   add_foreign_key "favorite_genres", "users"
+  add_foreign_key "follows", "users", column: "followed_id"
+  add_foreign_key "follows", "users", column: "follower_id"
   add_foreign_key "readings", "books"
   add_foreign_key "readings", "users"
   add_foreign_key "role_assignments", "roles"

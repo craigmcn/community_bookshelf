@@ -22,6 +22,26 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.badge", text: "fantasy"
   end
 
+  test "followers page lists a member's followers" do
+    Follow.create!(follower: users(:moderator), followed: users(:member))
+    sign_in_as users(:admin)
+
+    get followers_user_url(users(:member))
+
+    assert_response :success
+    assert_select "a", text: users(:moderator).display_name
+  end
+
+  test "following page lists who a member follows" do
+    Follow.create!(follower: users(:member), followed: users(:moderator))
+    sign_in_as users(:admin)
+
+    get following_user_url(users(:member))
+
+    assert_response :success
+    assert_select "a", text: users(:moderator).display_name
+  end
+
   test "deleted placeholder account has no profile page" do
     placeholder = User.deleted_placeholder
     sign_in_as users(:member)

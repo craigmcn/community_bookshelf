@@ -1,0 +1,16 @@
+<% if users.any? %>
+  <div class="list-group">
+    <% users.each do |user| %>
+      <%= link_to user, class: "list-group-item list-group-item-action d-flex align-items-center gap-3" do %>
+        <% if user.avatar.attached? %>
+          <%= image_tag user.avatar, style: "width: 40px; height: 40px; object-fit: cover; border-radius: 50%;", alt: "" %>
+        <% else %>
+          <i class="fasl fa-circle-user fa-2x text-muted opacity-50"></i>
+        <% end %>
+        <%= user.display_name %>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <p class="text-muted"><%= empty_message %></p>
+<% end %>

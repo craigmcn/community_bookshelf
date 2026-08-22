@@ -1,0 +1,9 @@
+<% content_for :title, "#{@profile_user.display_name} — Followers" %>
+
+<%= link_to @profile_user, class: "btn btn-outline-secondary btn-sm mb-3" do %>
+  <i class="fasl fa-arrow-left me-1"></i>Back to Profile
+<% end %>
+
+<h1 class="mb-4"><%= @profile_user.display_name %>'s Followers</h1>
+
+<%= render "profiles/user_list", users: @users, empty_message: "No followers yet." %>
