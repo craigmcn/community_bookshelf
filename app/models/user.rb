@@ -24,6 +24,8 @@ class User < ApplicationRecord
   has_many :review_comments, dependent: :destroy
   has_many :initiated_buddy_reads, class_name: "BuddyRead", foreign_key: :initiator_id, inverse_of: :initiator, dependent: :destroy
   has_many :partnered_buddy_reads, class_name: "BuddyRead", foreign_key: :partner_id, inverse_of: :partner, dependent: :destroy
+  has_many :club_memberships, dependent: :destroy
+  has_many :clubs, through: :club_memberships
   has_one_attached :avatar
 
   # Excludes the system placeholder account from user-facing listings/stats

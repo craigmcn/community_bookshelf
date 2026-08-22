@@ -117,6 +117,8 @@ GET  /feed                ActivitiesController#index    (signed-in only)
 resource :review_like, resources :review_comments, nested under /readings/:reading_id
 resources :buddy_reads      BuddyReadsController         (participant-only; index/new/create/show/update)
 resources :messages, nested under /buddy_reads/:buddy_read_id  BuddyReadMessagesController#create
+resources :clubs             ClubsController               (any signed-in user can view; creator/moderator can edit/delete)
+resource :membership, resources :posts, nested under /clubs/:club_id  ClubMembershipsController, ClubPostsController
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -191,6 +193,11 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `BuddyReadPolicy` gates everything on `record.participant?(user)` (true if `user` is either `initiator` or `partner`) — there's no moderator override, since this is a private two-person space, unlike reviews/clubs which are public-by-default. `BuddyReadsController#update` doesn't blindly apply `params[:status]`: only the *partner* can move `pending` → `accepted`/`declined` (the initiator can't accept their own invite), either participant can `cancel` from `pending` or `accepted`, and only `accepted` → `completed` is allowed — invalid combinations are silently no-ops (redirects without changing state) rather than raising, since this is a small fixed state machine, not a full workflow gem.
 - `BuddyReadMessage` is a flat per-pair discussion thread (`buddy_read_messages`, ordered by `created_at`) — no threading/replies, matching the "MVP: paired reading + shared thread" scope decision over full synced-progress milestones.
 - The buddy-reads index view always renders both `initiator.display_name` and `partner.display_name` (not a conditional "other participant" helper) — Bullet's N+1 detector flags an eager-loaded association that a request path never touches, and a per-row conditional (`other_participant(current_user)`) only ever touches one side of the `includes(:initiator, :partner)`, tripping it. `BuddyRead#other_participant` is still used on the show page, where only one side is displayed per request.
+
+### Social — book clubs
+- `Club` centers on one `book` (not a general standing group) — creating one auto-joins the creator via an `after_create` callback (`ClubMembership`), so `club.members` is never empty. `ClubPolicy#index?`/`#show?` are open to any signed-in member (clubs are discoverable/joinable by anyone, unlike `BuddyRead`); `#update?`/`#destroy?` are creator-or-moderator, the same pattern as comment/post moderation elsewhere.
+- Spoiler gating on `ClubPost#visible_to?(user)` is **status-based**, not page/chapter-based — a post flagged `spoiler` stays hidden from a member until they have a `Reading` with `status: finished` for the club's book (checked live via `Reading.exists?`, not cached on the membership). This was a deliberate scope decision: `Reading` only has a status enum, no page/percent-threshold field fine-grained enough to gate per-chapter, so a real "you've read past this point" mechanic was out of scope. The post's own author and moderators always see it regardless of their reading status.
+- `ClubPostPolicy#create?` requires `record.club.member?(user)` — posting is membership-gated even though *viewing* the club (and its non-spoiler posts) isn't, matching the "join to participate, browse to preview" pattern implied by the club index/show being open to all signed-in users.
 
 ## Playwright e2e (cross-app parity)
 

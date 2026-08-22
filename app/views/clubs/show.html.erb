@@ -1,0 +1,90 @@
+<% content_for :title, @club.name %>
+
+<%= link_to clubs_path, class: "btn btn-outline-secondary btn-sm mb-3" do %>
+  <i class="fasl fa-arrow-left me-1"></i>Back to Clubs
+<% end %>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h1 class="card-title mb-1"><%= @club.name %></h1>
+        <p class="text-muted mb-2">Reading <%= link_to @club.book.title, @club.book, class: "text-decoration-none" %></p>
+      </div>
+      <div class="d-flex gap-2">
+        <% if policy(@club).update? %>
+          <%= link_to edit_club_path(@club), class: "btn btn-sm btn-outline-primary" do %>
+            <i class="fasl fa-pen-to-square"></i>
+          <% end %>
+        <% end %>
+        <% if policy(@club).destroy? %>
+          <%= button_to club_path(@club), method: :delete, class: "btn btn-sm btn-outline-danger",
+                form: { data: { turbo_confirm: "Delete #{@club.name}?" } } do %>
+            <i class="fasl fa-trash-can"></i>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <p><%= @club.description %></p>
+
+    <p class="text-muted small mb-3"><%= pluralize(@club.members.count, "member") %></p>
+
+    <% if @club.member?(current_user) %>
+      <%= button_to "Leave Club", club_membership_path(@club), method: :delete, class: "btn btn-outline-secondary btn-sm" %>
+    <% else %>
+      <%= button_to "Join Club", club_membership_path(@club), method: :post, class: "btn btn-primary btn-sm" %>
+    <% end %>
+  </div>
+</div>
+
+<h3><i class="fasl fa-comments me-2 opacity-75"></i>Discussion</h3>
+
+<% if @club_posts.any? %>
+  <div class="list-group mb-3">
+    <% @club_posts.each do |post| %>
+      <div class="list-group-item">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <%= link_to post.user.display_name, post.user, class: "fw-semibold text-decoration-none" %>
+            <span class="text-muted small ms-2"><%= time_ago_in_words(post.created_at) %> ago</span>
+            <% if post.spoiler? %>
+              <span class="badge text-bg-warning ms-1">Spoiler</span>
+            <% end %>
+          </div>
+          <% if policy(post).destroy? %>
+            <%= button_to club_post_path(@club, post), method: :delete,
+                  class: "btn btn-sm btn-link text-danger p-0",
+                  form: { data: { turbo_confirm: "Delete this post?" } } do %>
+              <i class="fasl fa-trash-can"></i>
+            <% end %>
+          <% end %>
+        </div>
+        <% if post.visible_to?(current_user) %>
+          <p class="mb-0 mt-1"><%= post.body %></p>
+        <% else %>
+          <p class="mb-0 mt-1 text-muted fst-italic">
+            <i class="fasl fa-eye-slash me-1"></i>Hidden until you've finished the book.
+          </p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p class="text-muted">No posts yet.</p>
+<% end %>
+
+<% if @club.member?(current_user) %>
+  <%= form_with model: @club_post, url: club_posts_path(@club) do |form| %>
+    <div class="mb-2">
+      <%= form.text_area :body, class: "form-control", rows: 3, placeholder: "Share your thoughts..." %>
+    </div>
+    <div class="form-check mb-2">
+      <%= form.check_box :spoiler, class: "form-check-input" %>
+      <%= form.label :spoiler, "Contains spoilers", class: "form-check-label" %>
+    </div>
+    <%= form.submit "Post", class: "btn btn-outline-primary btn-sm" %>
+  <% end %>
+<% else %>
+  <p class="text-muted">Join this club to post in the discussion.</p>
+<% end %>
