@@ -5,9 +5,9 @@
     <div class="card">
       <div class="card-body text-center">
         <% if @profile_user.avatar.attached? %>
-          <%= image_tag @profile_user.avatar, style: "width: 120px; height: 120px; object-fit: cover; border-radius: 50%;", alt: "" %>
+          <%= image_tag @profile_user.avatar, style: "width: 120px; height: 120px; object-fit: cover; border-radius: 50%;", alt: "#{@profile_user.display_name}'s avatar" %>
         <% else %>
-          <i class="fasl fa-circle-user fa-6x text-muted opacity-50"></i>
+          <i class="fasl fa-circle-user fa-6x text-muted opacity-50" aria-hidden="true"></i>
         <% end %>
         <h2 class="mt-3 mb-0"><%= @profile_user.display_name %></h2>
 

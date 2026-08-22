@@ -153,8 +153,8 @@ class User < ApplicationRecord
   end
 
   def find_or_create_genre_tag(name)
-    Tag.find_or_create_by(name: name) { |tag| tag.category = "genre" }
-  rescue ActiveRecord::RecordNotUnique
+    Tag.find_or_create_by!(name: name) { |tag| tag.category = "genre" }
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
     Tag.find_by!(name: name)
   end
 

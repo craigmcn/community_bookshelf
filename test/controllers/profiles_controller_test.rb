@@ -13,6 +13,17 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "profile shows only public reviews" do
+    Reading.create!(user: users(:member), book: books(:two), status: :finished, review: "A private take.", is_review_public: false)
+
+    sign_in_as users(:moderator)
+    get user_url(users(:member))
+
+    assert_response :success
+    assert_match "A great read.", response.body
+    assert_no_match "A private take.", response.body
+  end
+
+  test "profile shows a member's favorite genres" do
     users(:member).update!(favorite_genre_list: "fantasy")
 
     sign_in_as users(:moderator)
