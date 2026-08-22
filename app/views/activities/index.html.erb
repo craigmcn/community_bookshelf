@@ -1,0 +1,22 @@
+<% content_for :title, "Feed" %>
+
+<h1 class="mb-4"><i class="fasl fa-rss me-2 opacity-75"></i>Feed</h1>
+
+<% if @activities.any? %>
+  <div class="list-group">
+    <% @activities.each do |activity| %>
+      <div class="list-group-item">
+        <%= link_to activity.user.display_name, activity.user, class: "fw-semibold text-decoration-none" %>
+        <%= link_to activity.description, activity.reading.book, class: "text-decoration-none" %>
+        <div class="text-muted small"><%= time_ago_in_words(activity.created_at) %> ago</div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
+<% else %>
+  <p class="text-muted">
+    Nobody you follow has any reading updates yet.
+    <%= link_to "Find readers to follow", books_path, class: "text-decoration-none" %>.
+  </p>
+<% end %>
