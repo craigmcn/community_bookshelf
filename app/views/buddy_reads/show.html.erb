@@ -46,9 +46,13 @@
   <p class="text-muted">No messages yet.</p>
 <% end %>
 
-<%= form_with model: @message, url: buddy_read_messages_path(@buddy_read) do |form| %>
-  <div class="mb-2">
-    <%= form.text_area :body, class: "form-control", rows: 2, placeholder: "Say something to your buddy..." %>
-  </div>
-  <%= form.submit "Send", class: "btn btn-outline-primary btn-sm" %>
+<% if @buddy_read.messageable? %>
+  <%= form_with model: @message, url: buddy_read_messages_path(@buddy_read) do |form| %>
+    <div class="mb-2">
+      <%= form.text_area :body, class: "form-control", rows: 2, placeholder: "Say something to your buddy..." %>
+    </div>
+    <%= form.submit "Send", class: "btn btn-outline-primary btn-sm" %>
+  <% end %>
+<% else %>
+  <p class="text-muted">This buddy read is <%= @buddy_read.status %> — no new messages can be posted.</p>
 <% end %>

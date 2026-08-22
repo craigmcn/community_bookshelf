@@ -28,6 +28,7 @@ class BuddyReadsController < ApplicationController
 
   def show
     authorize @buddy_read
+    @buddy_read = BuddyRead.includes(:book, :initiator, :partner).find(@buddy_read.id)
     @messages = @buddy_read.messages.includes(:user).order(created_at: :asc)
     @message = BuddyReadMessage.new
   end

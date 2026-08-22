@@ -39,6 +39,7 @@ class ReadingsController < ApplicationController
 
   def show
     authorize @reading
+    @review_comments = @reading.review_comments.includes(:user)
   end
 
   def new

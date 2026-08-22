@@ -30,4 +30,23 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to user_url(users(:moderator))
     assert_not users(:member).reload.following?(users(:moderator))
   end
+
+  test "following someone already followed does not show a false success notice" do
+    Follow.create!(follower: users(:member), followed: users(:moderator))
+    sign_in_as users(:member)
+
+    post user_follow_url(users(:moderator))
+
+    assert_redirected_to user_url(users(:moderator))
+    assert_nil flash[:notice]
+  end
+
+  test "unfollowing twice is idempotent" do
+    sign_in_as users(:member)
+
+    delete user_follow_url(users(:moderator))
+
+    assert_redirected_to user_url(users(:moderator))
+    assert_not users(:member).reload.following?(users(:moderator))
+  end
 end

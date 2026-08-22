@@ -16,6 +16,12 @@ class BuddyRead < ApplicationRecord
     (user.id == initiator_id) ? partner : initiator
   end
 
+  # Declining or cancelling ends the pairing — a thread with no active or
+  # completed relationship behind it shouldn't keep accepting new messages.
+  def messageable?
+    !declined? && !cancelled?
+  end
+
   private
 
   def initiator_and_partner_are_distinct

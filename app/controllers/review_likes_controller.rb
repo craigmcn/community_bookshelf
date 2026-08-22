@@ -10,10 +10,12 @@ class ReviewLikesController < ApplicationController
   end
 
   def destroy
-    @review_like = current_user.review_likes.find_by!(reading_id: @reading.id)
-    authorize @review_like
+    @review_like = current_user.review_likes.find_by(reading_id: @reading.id)
+    if @review_like
+      authorize @review_like
+      @review_like.destroy
+    end
 
-    @review_like.destroy
     redirect_to @reading, status: :see_other
   end
 

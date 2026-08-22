@@ -88,10 +88,6 @@ class User < ApplicationRecord
     active_follows.exists?(followed_id: other_user.id)
   end
 
-  def buddy_reads
-    BuddyRead.where(initiator: self).or(BuddyRead.where(partner: self))
-  end
-
   def email_confirmed?
     email_confirmed_at.present?
   end
@@ -171,8 +167,8 @@ class User < ApplicationRecord
   end
 
   def find_or_create_genre_tag(name)
-    Tag.find_or_create_by(name: name) { |tag| tag.category = "genre" }
-  rescue ActiveRecord::RecordNotUnique
+    Tag.find_or_create_by!(name: name) { |tag| tag.category = "genre" }
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
     Tag.find_by!(name: name)
   end
 
