@@ -5,19 +5,29 @@ member_role = Role.find_or_create_by!(name: "member")
 
 # Users
 # Admins and moderators always have member permissions without requiring a member role assignment.
-admin_user = User.find_or_create_by!(email: "admin@communitybookshelf.org") { |u| u.password = User::DEFAULT_PASSWORD }
+# Seed accounts are pre-confirmed and skip the confirmation email — they're
+# demo data, not real signups, so there's no inbox to actually confirm from.
+def seed_user(email)
+  User.find_or_create_by!(email: email) do |u|
+    u.password = User::DEFAULT_PASSWORD
+    u.email_confirmed_at = Time.current
+    u.skip_confirmation_email = true
+  end
+end
+
+admin_user = seed_user("admin@communitybookshelf.org")
 admin_user.roles = [admin_role, moderator_role]
 
-mod_user = User.find_or_create_by!(email: "moderator@communitybookshelf.org") { |u| u.password = User::DEFAULT_PASSWORD }
+mod_user = seed_user("moderator@communitybookshelf.org")
 mod_user.roles = [moderator_role]
 
-member1 = User.find_or_create_by!(email: "alice@example.com") { |u| u.password = User::DEFAULT_PASSWORD }
+member1 = seed_user("alice@example.com")
 member1.roles = [member_role]
 
-member2 = User.find_or_create_by!(email: "bob@example.com") { |u| u.password = User::DEFAULT_PASSWORD }
+member2 = seed_user("bob@example.com")
 member2.roles = [member_role]
 
-member3 = User.find_or_create_by!(email: "carol@example.com") { |u| u.password = User::DEFAULT_PASSWORD }
+member3 = seed_user("carol@example.com")
 member3.roles = [member_role]
 
 all_users = [admin_user, mod_user, member1, member2, member3]

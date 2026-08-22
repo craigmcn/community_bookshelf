@@ -14,7 +14,7 @@
   <div class="col-md-9">
     <h1><%= @book.title %></h1>
     <p class="fs-5 text-muted"><%= @book.author %></p>
-    <p class="text-muted"><small>Added by <%= @book.added_by.email %></small></p>
+    <p class="text-muted"><small>Added by <%= @book.added_by.display_name %></small></p>
 
     <% if @book.series.present? %>
       <p>
@@ -193,7 +193,7 @@
       <tbody>
         <% @book.readings.includes(:user).each do |reading| %>
           <tr>
-            <td><%= reading.user.email %></td>
+            <td><%= reading.user.display_name %></td>
             <td>
               <span class="badge badge-status-<%= reading.status.tr('_', '-') %>">
                 <%= reading.status_label %>

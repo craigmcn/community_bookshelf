@@ -15,6 +15,33 @@ You don't need to be signed in to browse the book catalog or read series
 pages — signing in is only required to log readings, review books, or build
 your own lists.
 
+After signing up, check your inbox for a confirmation email — but this is a
+nudge, not a requirement. You can sign in and use every feature of the app
+before confirming; a reminder banner on your account page just offers a
+resend link until you do.
+
+## Your account
+
+`/account/edit` is where you manage your own account:
+
+- **Display name and bio** — your display name (if set) replaces your email
+  everywhere your contributions are shown to others, like "Added by" on a
+  book you added or your name in a book's Community Readings table. Leaving
+  it blank falls back to showing your email, same as before this existed.
+- **Avatar** — upload a PNG, JPEG, or WEBP image up to 5MB. Shows next to
+  your name in the navigation bar; remove it with the checkbox next to your
+  current avatar.
+- **Email confirmation** — if you haven't confirmed yet, a banner here lets
+  you resend the confirmation email. You can resend once a minute; if you've
+  already confirmed, the option disappears.
+- **Deleting your account** — the "Danger Zone" at the bottom permanently
+  deletes your account: your readings, reviews, and lists are gone for good.
+  Books you added to the catalog stay (the catalog is shared, community
+  content), but show "Deleted user" as the contributor instead of your name.
+  This can't be undone, and requires re-entering your password to confirm.
+  If you're the app's only admin, deletion is blocked until you promote
+  someone else to admin first — see the Admin Guide.
+
 ## Browsing books
 
 - **Books** (`/books`) lists every book in the catalog, 20 at a time with

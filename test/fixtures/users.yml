@@ -1,11 +1,14 @@
 member:
   email: member@example.com
   encrypted_password: <%= BCrypt::Password.create(User::DEFAULT_PASSWORD, cost: BCrypt::Engine::MIN_COST) %>
+  email_confirmed_at: <%= Time.current.iso8601 %>
 
 moderator:
   email: moderator@example.com
   encrypted_password: <%= BCrypt::Password.create(User::DEFAULT_PASSWORD, cost: BCrypt::Engine::MIN_COST) %>
+  email_confirmed_at: <%= Time.current.iso8601 %>
 
 admin:
   email: admin@example.com
   encrypted_password: <%= BCrypt::Password.create(User::DEFAULT_PASSWORD, cost: BCrypt::Engine::MIN_COST) %>
+  email_confirmed_at: <%= Time.current.iso8601 %>

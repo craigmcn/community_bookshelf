@@ -2,7 +2,7 @@ class Admin::DashboardController < Admin::BaseController
   before_action :require_admin
 
   def index
-    @total_users = User.count
+    @total_users = User.excluding_deleted_placeholder.count
     @total_books = Book.count
     @total_readings = Reading.count
     @popular_books = Book.joins(:readings)

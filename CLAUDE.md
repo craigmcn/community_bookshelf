@@ -11,6 +11,8 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **Frontend**: Hotwire (Turbo + Stimulus), Bootstrap 5, esbuild + Sass via propshaft
 - **External API**: Open Library (book search + cover images via Faraday)
 - **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
+- **File uploads**: Active Storage, local disk service (`config/storage.yml`) in every environment
+- **Mailers**: `ApplicationMailer`/`UserMailer` via Action Mailer; `letter_opener` in development, `:test` delivery in test
 - **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
 - **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
 - **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL, Playwright e2e)
@@ -51,7 +53,7 @@ yarn test:e2e                           # Playwright e2e (starts its own server,
 ### Core Tables
 - **books** — `title`, `author`, `cover_url`, `added_by_id` (FK → users)
 - **readings** — `user_id`, `book_id`, `status` (enum), `rating` (enum), `review`, `deleted_at` (soft delete)
-- **users** — Clearance authentication (email, encrypted_password, tokens)
+- **users** — Clearance authentication (email, encrypted_password, tokens), plus `name`/`bio` (self-service profile), `avatar` (Active Storage attachment), `email_confirmed_at`/`email_confirmation_token` (informational-only confirmation, not enforced)
 - **roles** — `name`: `member | moderator | admin`
 - **role_assignments** — join table users ↔ roles (users can hold multiple roles)
 - **tags** — `name` (globally unique), `category` (`genre | mood | pace`, default `genre`)
@@ -79,7 +81,7 @@ Readings use `deleted_at` for soft deletes. Default scopes exclude deleted recor
 - Test fixture password: `"correct-horse-shelf"` (all fixture users)
 
 ### Pundit
-- `ApplicationController` includes `Pundit::Authorization` and calls `verify_authorized`
+- `ApplicationController` includes `Pundit::Authorization`; `authorize` is called explicitly per action (not enforced via a `verify_authorized` after_action) — every controller that acts on a model, including ones that only ever touch `current_user` directly rather than a `params[:id]` (`AccountsController`, `EmailConfirmationsController#create`), calls `authorize` via a matching policy, so a missing check anywhere raises `Pundit::NotAuthorizedError` instead of failing silently
 - One policy per model in `app/policies/` — all default to `false`
 - Roles checked via `current_user.member?`, `.moderator?`, `.admin?`, `.moderator_or_above?`
 - Pundit errors are rescued in ApplicationController (renders 403)
@@ -104,6 +106,10 @@ DELETE /books/:id        BooksController#destroy     (moderator+)
 resources :readings      ReadingsController           (owner or moderator+)
 
 GET  /book_search        BookSearchController#index   (Turbo Frame search)
+
+resource :account        AccountsController           (signed-in only; always acts on current_user)
+resource :email_confirmation, only: [:create]         (resend, signed-in only)
+GET  /confirm_email/:token  EmailConfirmationsController#confirm  (public)
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -148,6 +154,14 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `ReadingsController#index` additionally filters by `status`, `rating`, and `tag` (via the reading's book).
 - Tags have a `category` (genre/mood/pace, see Domain Model above); `Book#tag_list` / `#mood_list` / `#pace_list` are per-category virtual attributes on the book form — each only touches taggings for its own category when assigned, so partial updates leave the other categories alone.
 - `Book#similar_books` and `Book.recommended_for(user)` rank by shared-tag count (no ML/vector infra) — the former excludes the book itself, the latter excludes books already on the user's shelf and seeds from books the user finished or rated 4-5 stars.
+
+### Account & profile
+- `User#display_name` (`name.presence || email`) is used wherever a user's contributions are attributed publicly (book "Added by", Community Readings) — admin-only views (`admin/users`, `admin/readings`) still show the real `email` since admins need it for account management.
+- `AccountsController` (edit/update/destroy on `current_user`) and `EmailConfirmationsController#create` are backed by `UserPolicy` (`record == user`) even though neither ever takes a `params[:id]` — the policy pins that invariant with the same authorization layer every other model uses, rather than leaving it as an unenforced assumption in the controller body. `EmailConfirmationsController#confirm` has no policy (public, token-authenticated, not ownership-based).
+- Email confirmation is informational-only, not enforced: `User#send_email_confirmation` (also an `after_create` callback) generates a token, stamps `email_confirmation_sent_at`, and delivers `UserMailer#email_confirmation` via `deliver_later`; nothing blocks an unconfirmed user from signing in or using any feature. `EmailConfirmationsController#create` (resend) refuses if already confirmed or if `User#email_confirmation_on_cooldown?` (`RESEND_COOLDOWN`, 1 minute) is true — otherwise the route itself had no limit on regenerating tokens/re-sending mail, independent of the UI hiding the resend button once confirmed. New accounts created programmatically without a real inbox (the deleted-user placeholder, seeded demo accounts) set `skip_confirmation_email = true` before saving.
+- Self-service account deletion (`AccountsController#destroy`) requires re-entering the current password (`current_user.authenticated?`) and refuses if `User#sole_admin?` is true (raises `User::SoleAdminError` if called directly) — otherwise it would permanently lock every `/admin` route with no recovery path short of a console. Otherwise calls `User#delete_account!`: reassigns the user's contributed catalog books to `User.deleted_placeholder` (a lazily-created system account, email `deleted-user@community-bookshelf.invalid`, excluded from admin listings/counts via the `excluding_deleted_placeholder` scope and from direct `admin/users/:id` access) in a transaction, explicitly destroys the user's readings via `Reading.unscoped` (readings' default scope hides soft-deleted rows from the `dependent: :destroy` association, so a soft-deleted one left behind would otherwise still reference the user's id and fail the final `destroy!` on its FK), then destroys the user, cascading to shelves/role_assignments via existing `dependent: :destroy`. `sign_out` must run *before* `delete_account!` — Clearance's `sign_out` writes a fresh `remember_token` to the current user, which raises `FrozenError` against an already-destroyed record if the order is reversed.
+- `User.deleted_placeholder`'s `find_by || create!` rescues both `ActiveRecord::RecordNotUnique` and `ActiveRecord::RecordInvalid` and retries via `find_by!` — concurrent first-time calls can lose the race either at the DB's unique index or at the `uniqueness: true` validation depending on exact timing (verified both are reachable), unlike a plain `rescue RecordNotUnique` which only covers one of the two.
+- Avatar upload validates content type (PNG/JPEG/WEBP) and a 5MB size cap in `User`'s own `validate` callback rather than a gem (no `image_processing`/libvips dependency) — avatars render at their original resolution, constrained by CSS, not an Active Storage variant. `AccountsController#update` only purges an existing avatar when `remove_avatar=1` *and* no new avatar was submitted in the same request — otherwise a stale checked checkbox would silently discard an avatar just uploaded in that same submit.
 
 ## Playwright e2e (cross-app parity)
 

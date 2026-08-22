@@ -11,7 +11,8 @@ features.
 `/admin` (also linked as "Admin Dashboard" once you're signed in as an
 admin) shows community-wide stats:
 
-- Total users, total books, and total readings logged.
+- Total users, total books, and total readings logged. The "Users" total
+  excludes the internal "Deleted user" placeholder account (see below).
 - **Most-Read Books** — the top 5 books ranked by number of readings logged
   against them, linked through to each book's page.
 
@@ -32,6 +33,24 @@ visit it directly.
   toggling checkboxes and saving.
 
 This screen is admin-only; moderators cannot see or reach it.
+
+### The "Deleted user" placeholder
+
+When a member deletes their own account (see the Member Guide's Account
+section), any books they'd added to the catalog are reassigned to a shared
+"Deleted user" placeholder account rather than being removed — the catalog
+is shared, community content, so it stays. That placeholder is a real row
+in the users table, but it's deliberately excluded from this list (and from
+the dashboard's user count) and can't be opened directly, even by URL —
+it's not a real account and shouldn't be assigned roles or otherwise
+managed.
+
+### Deleting your own admin account
+
+Self-service account deletion (from `/account/edit`) refuses to go through
+if you're the only admin — otherwise the entire `/admin` area would become
+permanently unreachable with no way back in short of a console. Promote
+another member to admin first if you want to delete your own account.
 
 ## Everything else
 

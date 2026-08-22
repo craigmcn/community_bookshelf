@@ -94,3 +94,9 @@ The book search at `/book_search` queries the Open Library API via `OpenLibraryS
 - `/books` and `/readings` ("My Shelf") both support text search, sort, and pagination (via [Pagy](https://ddnexus.github.io/pagy/)).
 - Books carry three kinds of tags — genre, mood (e.g. "dark"), and pace (e.g. "fast-paced") — each filterable via `?tag=<name>`, and each editable as its own comma-separated field on the book form.
 - A book's page lists "Similar Books" (ranked by shared tags); My Shelf shows "Recommended for You" (tag overlap with books you've finished or rated highly, excluding your own shelf).
+
+## Account & profile
+
+- `/account/edit` lets a signed-in user set a display name, bio, and avatar (Active Storage, local disk service — see `config/storage.yml`), and is where the "Danger Zone" self-service account deletion lives (requires re-entering your password; permanently destroys your readings/reviews/lists — including soft-deleted ones, since a stray one left behind would otherwise block the deletion on a foreign-key constraint — but books you added to the catalog stay, reattributed to a "Deleted user" placeholder account). Blocked for the sole admin, to avoid locking the whole `/admin` area.
+- New sign-ups get a confirmation email (`UserMailer`, viewable via `letter_opener` in development) with a link to confirm their address. Confirmation is informational only — an unconfirmed account can still sign in and use every feature; the account page just shows a reminder with a resend option (capped at once a minute, and hidden once confirmed).
+- `UserPolicy` backs `AccountsController` even though it only ever acts on `current_user` — it's there to pin that invariant with the same authorization layer every other model in this app uses, not because the controller branches on ownership today.

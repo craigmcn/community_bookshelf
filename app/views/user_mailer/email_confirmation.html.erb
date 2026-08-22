@@ -1,0 +1,7 @@
+<p>Hi <%= @user.display_name %>,</p>
+
+<p>Please confirm your email address for Community Bookshelf by clicking the link below:</p>
+
+<p><%= link_to "Confirm my email", confirm_email_url(token: @user.email_confirmation_token) %></p>
+
+<p>If you didn't create this account, you can safely ignore this email.</p>

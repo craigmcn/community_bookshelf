@@ -95,10 +95,10 @@ scenarios. Each feature below is tagged:
 
 ## Account & profile
 
-- [ ] Self-service profile edit (name, bio) `[parity: coordinated]` — Clearance currently has no profile-edit views in any sibling repo
-- [ ] Avatar upload `[parity: solo]`
-- [ ] Email confirmation flow (the `confirmation_token` column exists but is only used for password reset today) `[parity: solo]`
-- [ ] Self-service account deletion `[parity: coordinated]`
+- [x] Self-service profile edit (name, bio) `[parity: coordinated]` — Clearance currently has no profile-edit views in any sibling repo
+- [x] Avatar upload `[parity: solo]`
+- [x] Email confirmation flow (the `confirmation_token` column exists but is only used for password reset today) `[parity: solo]`
+- [x] Self-service account deletion `[parity: coordinated]`
 
 ## API
 
