@@ -111,6 +111,8 @@ resource :account        AccountsController           (signed-in only; always ac
 resource :email_confirmation, only: [:create]         (resend, signed-in only)
 GET  /confirm_email/:token  EmailConfirmationsController#confirm  (public)
 GET  /users/:id          ProfilesController#show       (any signed-in user)
+GET  /users/:id/followers, /users/:id/following  ProfilesController#followers/#following
+resource :follow, nested under /users/:user_id  FollowsController#create/#destroy
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -165,6 +167,10 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - Avatar upload validates content type (PNG/JPEG/WEBP) and a 5MB size cap in `User`'s own `validate` callback rather than a gem (no `image_processing`/libvips dependency) — avatars render at their original resolution, constrained by CSS, not an Active Storage variant. `AccountsController#update` only purges an existing avatar when `remove_avatar=1` *and* no new avatar was submitted in the same request — otherwise a stale checked checkbox would silently discard an avatar just uploaded in that same submit.
 - `User#favorite_genre_list` is a comma-separated virtual attribute mirroring `Book#tag_list` — same `find_or_create_by`/`RecordNotUnique` reuse pattern, but always creates tags as `category: "genre"` and is backed by its own join model (`FavoriteGenre`), not `Tagging` (which is book-scoped). Edited on `/account/edit`, shown on the public profile.
 - `ProfilesController#show` (`/users/:id`) is any member's public profile page — `UserPolicy#show?` allows any signed-in user (unlike `edit?`/`update?`/`destroy?`, which stay pinned to `record == user` for `AccountsController`). Excludes the deleted-user placeholder via `excluding_deleted_placeholder` (404s if requested directly). Shows finished/currently-reading counts and up to 5 recent reviews where `is_review_public?` — private reviews never appear here even to the profile's own readings list, since this view has no owner-only branch.
+
+### Social — follows
+- `Follow` (`follower_id`/`followed_id`, both FK to `users`) backs `User#following`/`#followers` (`has_many :through`) and `User#following?`. A DB check constraint (`follower_id <> followed_id`) plus a model validation both block self-follows — the constraint is the real guard (defense at the DB layer, consistent with the uniqueness index also being DB-enforced), the validation exists so a self-follow attempt renders a normal `unprocessable_content`/error path instead of a raw `ActiveRecord::StatementInvalid`.
+- `FollowsController` (`POST`/`DELETE /users/:user_id/follow`, nested under the profile route) always resolves `@followed_user` from `params[:user_id]`, never a `Follow` id — `destroy` looks it up via `current_user.active_follows.find_by!`, so a user can only ever unfollow their own follow relationship. `FollowPolicy#create?` additionally blocks following yourself at the authorization layer (belt-and-suspenders with the DB constraint above).
 
 ## Playwright e2e (cross-app parity)
 

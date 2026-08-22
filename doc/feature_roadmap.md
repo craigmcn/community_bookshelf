@@ -63,7 +63,7 @@ scenarios. Each feature below is tagged:
 
 ## Social
 
-- [ ] Follow other readers `[parity: solo]`
+- [x] Follow other readers `[parity: solo]`
 - [ ] Activity feed of followed users' reading updates `[parity: solo]`
 - [ ] Likes/comments on reviews `[parity: solo]`
 - [ ] Buddy reads (shared reading sessions between two users) `[parity: solo]`
