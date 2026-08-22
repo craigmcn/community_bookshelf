@@ -10,6 +10,9 @@ Rails.application.routes.draw do
   end
   get "book_search", to: "book_search#index"
   get "feed", to: "activities#index"
+  resources :buddy_reads, only: [:index, :new, :create, :show, :update] do
+    resources :messages, only: [:create], controller: "buddy_read_messages"
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   get "up" => "rails/health#show", :as => :rails_health_check

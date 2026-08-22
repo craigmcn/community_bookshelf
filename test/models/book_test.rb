@@ -5,6 +5,15 @@ class BookTest < ActiveSupport::TestCase
     assert Book.new(title: "Test", author: "Author", added_by: users(:member)).valid?
   end
 
+  test "destroying a book destroys its buddy reads" do
+    book = Book.create!(title: "Test", author: "Author", added_by: users(:member))
+    BuddyRead.create!(book: book, initiator: users(:member), partner: users(:moderator))
+
+    assert_difference "BuddyRead.count", -1 do
+      book.destroy!
+    end
+  end
+
   test "invalid without title" do
     assert_not Book.new(author: "Author", added_by: users(:member)).valid?
   end

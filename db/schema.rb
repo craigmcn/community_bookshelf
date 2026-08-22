@@ -95,39 +95,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
     t.check_constraint "initiator_id <> partner_id", name: "buddy_reads_no_self_pair"
   end
 
-  create_table "club_memberships", force: :cascade do |t|
-    t.bigint "club_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["club_id", "user_id"], name: "index_club_memberships_on_club_id_and_user_id", unique: true
-    t.index ["club_id"], name: "index_club_memberships_on_club_id"
-    t.index ["user_id"], name: "index_club_memberships_on_user_id"
-  end
-
-  create_table "club_posts", force: :cascade do |t|
-    t.text "body", null: false
-    t.bigint "club_id", null: false
-    t.datetime "created_at", null: false
-    t.boolean "spoiler", default: false, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["club_id", "created_at"], name: "index_club_posts_on_club_id_and_created_at"
-    t.index ["club_id"], name: "index_club_posts_on_club_id"
-    t.index ["user_id"], name: "index_club_posts_on_user_id"
-  end
-
-  create_table "clubs", force: :cascade do |t|
-    t.bigint "book_id", null: false
-    t.datetime "created_at", null: false
-    t.bigint "created_by_id", null: false
-    t.text "description"
-    t.string "name", null: false
-    t.datetime "updated_at", null: false
-    t.index ["book_id"], name: "index_clubs_on_book_id"
-    t.index ["created_by_id"], name: "index_clubs_on_created_by_id"
-  end
-
   create_table "favorite_genres", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "tag_id", null: false
@@ -278,12 +245,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
   add_foreign_key "buddy_reads", "books"
   add_foreign_key "buddy_reads", "users", column: "initiator_id"
   add_foreign_key "buddy_reads", "users", column: "partner_id"
-  add_foreign_key "club_memberships", "clubs"
-  add_foreign_key "club_memberships", "users"
-  add_foreign_key "club_posts", "clubs"
-  add_foreign_key "club_posts", "users"
-  add_foreign_key "clubs", "books"
-  add_foreign_key "clubs", "users", column: "created_by_id"
   add_foreign_key "favorite_genres", "tags"
   add_foreign_key "favorite_genres", "users"
   add_foreign_key "follows", "users", column: "followed_id"

@@ -102,5 +102,6 @@ The book search at `/book_search` queries the Open Library API via `OpenLibraryS
 - Members can follow each other from a profile page (`/users/:id/followers` and `/users/:id/following` list who follows whom); a member can't follow themselves.
 - `/feed` shows a chronological feed of reading updates (added to shelf, started, finished, reviewed) from people you follow.
 - Public reviews (the default) can be liked and commented on by any member from the reading's page, which any member can now view when the review is public — comments can be deleted by their author or a moderator.
+- `/buddy_reads` lets two members pair up to read a book together: invite, accept/decline, a shared discussion thread, and cancel/mark-completed. Private to the two participants.
 - New sign-ups get a confirmation email (`UserMailer`, viewable via `letter_opener` in development) with a link to confirm their address. Confirmation is informational only — an unconfirmed account can still sign in and use every feature; the account page just shows a reminder with a resend option (capped at once a minute, and hidden once confirmed).
 - `UserPolicy` backs `AccountsController` even though it only ever acts on `current_user` — it's there to pin that invariant with the same authorization layer every other model in this app uses, not because the controller branches on ownership today.

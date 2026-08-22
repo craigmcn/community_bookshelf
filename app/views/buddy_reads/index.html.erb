@@ -1,0 +1,40 @@
+<% content_for :title, "Buddy Reads" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0"><i class="fasl fa-user-group me-2 opacity-75"></i>Buddy Reads</h1>
+  <%= link_to new_buddy_read_path, class: "btn btn-primary" do %>
+    <i class="fasl fa-plus me-1"></i>Invite a Buddy
+  <% end %>
+</div>
+
+<% if @buddy_reads.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Book</th>
+          <th>With</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @buddy_reads.each do |buddy_read| %>
+          <tr>
+            <td><%= buddy_read.book.title %></td>
+            <td><%= buddy_read.initiator.display_name %> &harr; <%= buddy_read.partner.display_name %></td>
+            <td><span class="badge text-bg-secondary"><%= buddy_read.status.humanize %></span></td>
+            <td>
+              <%= link_to buddy_read, class: "btn btn-sm btn-outline-success" do %>
+                <i class="fasl fa-eye" aria-hidden="true"></i>
+                <span class="visually-hidden">View</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <p class="text-muted">No buddy reads yet. Invite another member to read a book together.</p>
+<% end %>
