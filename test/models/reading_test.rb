@@ -14,6 +14,50 @@ class ReadingTest < ActiveSupport::TestCase
     assert reading.is_review_public?
   end
 
+  test "creating a reading records an added_book activity" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    assert_equal ["added_book"], reading.activities.pluck(:action)
+  end
+
+  test "changing status to reading records a started_reading activity" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    reading.update!(status: :reading)
+    assert_equal ["added_book", "started_reading"], reading.activities.order(:created_at).pluck(:action)
+  end
+
+  test "changing status to finished records a finished_reading activity" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :reading)
+    reading.update!(status: :finished)
+    assert_includes reading.activities.pluck(:action), "finished_reading"
+  end
+
+  test "adding a public review records a reviewed activity" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :reading)
+    reading.update!(review: "Loved it.")
+    assert_includes reading.activities.pluck(:action), "reviewed"
+  end
+
+  test "adding a private review does not record a reviewed activity" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :reading)
+    reading.update!(review: "Loved it.", is_review_public: false)
+    assert_not_includes reading.activities.pluck(:action), "reviewed"
+  end
+
+  test "editing an existing review does not record a second reviewed activity" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :reading)
+    reading.update!(review: "Good.")
+    reading.update!(review: "Great!")
+    assert_equal 1, reading.activities.reviewed.count
+  end
+
+  test "soft_delete removes the reading's activities" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :reading)
+    assert reading.activities.any?
+
+    reading.soft_delete
+    assert_empty Activity.where(reading_id: reading.id)
+  end
+
   test "valid with dnf status" do
     assert Reading.new(user: users(:member), book: books(:two), status: :dnf).valid?
   end

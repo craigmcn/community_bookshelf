@@ -113,6 +113,7 @@ GET  /confirm_email/:token  EmailConfirmationsController#confirm  (public)
 GET  /users/:id          ProfilesController#show       (any signed-in user)
 GET  /users/:id/followers, /users/:id/following  ProfilesController#followers/#following
 resource :follow, nested under /users/:user_id  FollowsController#create/#destroy
+GET  /feed                ActivitiesController#index    (signed-in only)
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -171,6 +172,11 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 ### Social — follows
 - `Follow` (`follower_id`/`followed_id`, both FK to `users`) backs `User#following`/`#followers` (`has_many :through`) and `User#following?`. A DB check constraint (`follower_id <> followed_id`) plus a model validation both block self-follows — the constraint is the real guard (defense at the DB layer, consistent with the uniqueness index also being DB-enforced), the validation exists so a self-follow attempt renders a normal `unprocessable_content`/error path instead of a raw `ActiveRecord::StatementInvalid`.
 - `FollowsController` (`POST`/`DELETE /users/:user_id/follow`, nested under the profile route) always resolves `@followed_user` from `params[:user_id]`, never a `Follow` id — `destroy` looks it up via `current_user.active_follows.find_by!`, so a user can only ever unfollow their own follow relationship. `FollowPolicy#create?` additionally blocks following yourself at the authorization layer (belt-and-suspenders with the DB constraint above).
+
+### Social — activity feed
+- `Activity` (`user_id`, `reading_id`, `action` — `added_book`/`started_reading`/`finished_reading`/`reviewed`) is written by `Reading` callbacks, not created directly: `after_create` always logs `added_book`; `after_update` logs `started_reading`/`finished_reading` on `saved_change_to_status?`; `reviewed` only fires when a *blank* review becomes present *and* `is_review_public?` — editing existing review text, or making a review public without changing its text, does not re-fire it, so the feed doesn't spam on every edit.
+- `Reading#soft_delete` explicitly destroys its `activities` before setting `deleted_at` — soft delete doesn't run `dependent: :destroy` (that only fires on a real `destroy`), so without this a soft-deleted reading's activity would keep showing in followers' feeds pointing at a reading the owner believes they removed.
+- `/feed` (`ActivitiesController#index`) queries `Activity.where(user: current_user.following)` — no policy class; it's inherently scoped to the signed-in user's own follow list, not a specific authorizable record. Activity entries link to the book, not the reading itself — `ReadingPolicy#show?` doesn't grant followers access to someone else's reading page.
 
 ## Playwright e2e (cross-app parity)
 
