@@ -24,4 +24,14 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_users_path
     assert users(:member).reload.moderator?
   end
+
+  test "user list excludes the deleted-user placeholder" do
+    placeholder = User.deleted_placeholder
+
+    sign_in_as users(:admin)
+    get admin_users_url
+
+    assert_response :success
+    assert_not_includes @response.body, placeholder.email
+  end
 end

@@ -15,20 +15,40 @@ class EmailConfirmationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to sign_in_path
   end
 
-  test "visiting the confirmation link with a valid token confirms the account" do
+  test "visiting the confirmation link while signed out redirects to sign in with a visible notice" do
     user = User.create!(email: "toconfirm@example.com", password: User::DEFAULT_PASSWORD)
     token = user.email_confirmation_token
 
     get confirm_email_url(token: token)
 
-    assert_redirected_to root_path
+    # root_path requires login; redirecting there for a signed-out visitor
+    # would just bounce again to sign_in_path, losing this notice to
+    # whatever require_login sets there instead.
+    assert_redirected_to sign_in_path
+    follow_redirect!
+    assert_select ".alert-success", text: /Email confirmed/
     assert user.reload.email_confirmed?
   end
 
-  test "visiting the confirmation link with an invalid token does not confirm anything" do
-    get confirm_email_url(token: "not-a-real-token")
+  test "visiting the confirmation link while signed in redirects to root with a visible notice" do
+    user = User.create!(email: "toconfirmsignedin@example.com", password: User::DEFAULT_PASSWORD)
+    token = user.email_confirmation_token
+    sign_in_as user
+
+    get confirm_email_url(token: token)
 
     assert_redirected_to root_path
+    follow_redirect!
+    assert_select ".alert-success", text: /Email confirmed/
+    assert user.reload.email_confirmed?
+  end
+
+  test "visiting the confirmation link with an invalid token shows an error instead of confirming anything" do
+    get confirm_email_url(token: "not-a-real-token")
+
+    assert_redirected_to sign_in_path
+    follow_redirect!
+    assert_select ".alert-danger", text: /invalid or has expired/
   end
 
   test "confirming does not require being signed in" do

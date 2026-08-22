@@ -2,7 +2,7 @@ class Admin::UsersController < Admin::BaseController
   before_action :require_admin
 
   def index
-    @users = User.all.order(:email).includes(:roles)
+    @users = User.excluding_deleted_placeholder.order(:email).includes(:roles)
   end
 
   def edit

@@ -17,4 +17,15 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     get admin_root_url
     assert_response :success
   end
+
+  test "total user count excludes the deleted-user placeholder" do
+    starting_count = User.excluding_deleted_placeholder.count
+    User.deleted_placeholder
+
+    sign_in_as users(:admin)
+    get admin_root_url
+
+    assert_response :success
+    assert_select ".display-4.text-primary", text: starting_count.to_s
+  end
 end

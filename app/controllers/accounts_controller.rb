@@ -5,9 +5,9 @@ class AccountsController < ApplicationController
 
   def update
     @user = current_user
-    remove_avatar if params[:remove_avatar] == "1"
 
     if @user.update(account_params)
+      remove_avatar if params[:remove_avatar] == "1"
       redirect_to edit_account_path, notice: "Profile updated."
     else
       render :edit, status: :unprocessable_content
@@ -22,7 +22,11 @@ class AccountsController < ApplicationController
       # raise FrozenError against an already-destroyed (frozen) record.
       sign_out
       user.delete_account!
-      redirect_to root_path, notice: "Your account has been deleted."
+      # sign_in_path, not root_path: the user is now signed out, and root_path
+      # requires login — it would immediately redirect again to sign_in_path,
+      # whose own "please sign in" alert would clobber this notice before it's
+      # ever rendered.
+      redirect_to sign_in_path, notice: "Your account has been deleted."
     else
       @user = current_user
       flash.now[:alert] = "Current password was incorrect."

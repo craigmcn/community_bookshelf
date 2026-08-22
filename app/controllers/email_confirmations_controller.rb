@@ -8,11 +8,16 @@ class EmailConfirmationsController < ApplicationController
 
   def confirm
     user = User.find_by(email_confirmation_token: params[:token])
+    # root_path requires login, so a signed-out visitor (confirming from a
+    # device other than the one they're signed in on, or not signed in at
+    # all) would just get redirected straight through to sign_in_path —
+    # losing this flash message to whatever require_login sets there.
+    destination = signed_in? ? root_path : sign_in_path
 
     if user&.confirm_email!(params[:token])
-      redirect_to root_path, notice: "Email confirmed."
+      redirect_to destination, notice: "Email confirmed."
     else
-      redirect_to root_path, alert: "That confirmation link is invalid or has expired."
+      redirect_to destination, alert: "That confirmation link is invalid or has expired."
     end
   end
 end

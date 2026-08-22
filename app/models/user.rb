@@ -13,6 +13,10 @@ class User < ApplicationRecord
   has_many :roles, through: :role_assignments
   has_one_attached :avatar
 
+  # Excludes the system placeholder account from user-facing listings/stats
+  # (admin user management, dashboard totals) — it isn't a real account.
+  scope :excluding_deleted_placeholder, -> { where.not(email: DELETED_PLACEHOLDER_EMAIL) }
+
   # Set on the system placeholder account so its creation doesn't send a
   # confirmation email to an inbox nobody reads.
   attr_accessor :skip_confirmation_email

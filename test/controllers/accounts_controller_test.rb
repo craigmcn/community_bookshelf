@@ -43,6 +43,17 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_not user.reload.avatar.attached?
   end
 
+  test "an invalid update leaves an existing avatar untouched, even with remove_avatar checked" do
+    user = users(:member)
+    user.avatar.attach(fixture_file_upload("avatar.png", "image/png"))
+
+    sign_in_as user
+    patch account_url, params: {remove_avatar: "1", user: {name: "a" * 101}}
+
+    assert_response :unprocessable_content
+    assert user.reload.avatar.attached?
+  end
+
   test "member can delete their account with the correct password" do
     sign_in_as users(:member)
     User.deleted_placeholder # pre-create so the assertion below isn't masked by its own +1
@@ -50,7 +61,9 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "User.count", -1 do
       delete account_url, params: {current_password: User::DEFAULT_PASSWORD}
     end
-    assert_redirected_to root_path
+    assert_redirected_to sign_in_path
+    follow_redirect!
+    assert_select ".alert-success", text: /Your account has been deleted/
   end
 
   test "member cannot delete their account with the wrong password" do
