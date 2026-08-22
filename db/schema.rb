@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_183310) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,6 +71,63 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_183310) do
     t.index ["series_id"], name: "index_books_on_series_id"
   end
 
+  create_table "buddy_read_messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "buddy_read_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["buddy_read_id", "created_at"], name: "index_buddy_read_messages_on_buddy_read_id_and_created_at"
+    t.index ["buddy_read_id"], name: "index_buddy_read_messages_on_buddy_read_id"
+    t.index ["user_id"], name: "index_buddy_read_messages_on_user_id"
+  end
+
+  create_table "buddy_reads", force: :cascade do |t|
+    t.bigint "book_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "initiator_id", null: false
+    t.bigint "partner_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_buddy_reads_on_book_id"
+    t.index ["initiator_id"], name: "index_buddy_reads_on_initiator_id"
+    t.index ["partner_id"], name: "index_buddy_reads_on_partner_id"
+    t.check_constraint "initiator_id <> partner_id", name: "buddy_reads_no_self_pair"
+  end
+
+  create_table "club_memberships", force: :cascade do |t|
+    t.bigint "club_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["club_id", "user_id"], name: "index_club_memberships_on_club_id_and_user_id", unique: true
+    t.index ["club_id"], name: "index_club_memberships_on_club_id"
+    t.index ["user_id"], name: "index_club_memberships_on_user_id"
+  end
+
+  create_table "club_posts", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "club_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "spoiler", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["club_id", "created_at"], name: "index_club_posts_on_club_id_and_created_at"
+    t.index ["club_id"], name: "index_club_posts_on_club_id"
+    t.index ["user_id"], name: "index_club_posts_on_user_id"
+  end
+
+  create_table "clubs", force: :cascade do |t|
+    t.bigint "book_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_clubs_on_book_id"
+    t.index ["created_by_id"], name: "index_clubs_on_created_by_id"
+  end
+
   create_table "favorite_genres", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "tag_id", null: false
@@ -118,7 +175,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_183310) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["reading_id", "created_at"], name: "index_review_comments_on_reading_id_and_created_at"
-    t.index ["reading_id"], name: "index_review_comments_on_reading_id"
     t.index ["user_id"], name: "index_review_comments_on_user_id"
   end
 
@@ -129,7 +185,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_183310) do
     t.bigint "user_id", null: false
     t.index ["reading_id"], name: "index_review_likes_on_reading_id"
     t.index ["user_id", "reading_id"], name: "index_review_likes_on_user_id_and_reading_id", unique: true
-    t.index ["user_id"], name: "index_review_likes_on_user_id"
   end
 
   create_table "role_assignments", force: :cascade do |t|
@@ -218,6 +273,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_183310) do
   add_foreign_key "activities", "users"
   add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"
+  add_foreign_key "buddy_read_messages", "buddy_reads"
+  add_foreign_key "buddy_read_messages", "users"
+  add_foreign_key "buddy_reads", "books"
+  add_foreign_key "buddy_reads", "users", column: "initiator_id"
+  add_foreign_key "buddy_reads", "users", column: "partner_id"
+  add_foreign_key "club_memberships", "clubs"
+  add_foreign_key "club_memberships", "users"
+  add_foreign_key "club_posts", "clubs"
+  add_foreign_key "club_posts", "users"
+  add_foreign_key "clubs", "books"
+  add_foreign_key "clubs", "users", column: "created_by_id"
   add_foreign_key "favorite_genres", "tags"
   add_foreign_key "favorite_genres", "users"
   add_foreign_key "follows", "users", column: "followed_id"

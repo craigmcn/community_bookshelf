@@ -23,6 +23,19 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "reading page renders comments from multiple authors without N+1" do
+    other_member = User.create!(email: "other@example.com", password: User::DEFAULT_PASSWORD)
+    ReviewComment.create!(user: users(:moderator), reading: @reading, body: "Nice!")
+    ReviewComment.create!(user: other_member, reading: @reading, body: "Agreed!")
+
+    sign_in_as users(:admin)
+    get reading_url(@reading)
+
+    assert_response :success
+    assert_select "p", text: "Nice!"
+    assert_select "p", text: "Agreed!"
+  end
+
   test "another member cannot view a reading with a private review" do
     @reading.update!(is_review_public: false)
     other_member = User.create!(email: "other@example.com", password: User::DEFAULT_PASSWORD)
