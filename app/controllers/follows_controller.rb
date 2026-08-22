@@ -5,15 +5,20 @@ class FollowsController < ApplicationController
     @follow = Follow.new(follower: current_user, followed: @followed_user)
     authorize @follow
 
-    @follow.save
-    redirect_to @followed_user, notice: "You're now following #{@followed_user.display_name}."
+    if @follow.save
+      redirect_to @followed_user, notice: "You're now following #{@followed_user.display_name}."
+    else
+      redirect_to @followed_user
+    end
   end
 
   def destroy
-    @follow = current_user.active_follows.find_by!(followed_id: @followed_user.id)
-    authorize @follow
+    @follow = current_user.active_follows.find_by(followed_id: @followed_user.id)
+    if @follow
+      authorize @follow
+      @follow.destroy
+    end
 
-    @follow.destroy
     redirect_to @followed_user, notice: "Unfollowed #{@followed_user.display_name}.", status: :see_other
   end
 

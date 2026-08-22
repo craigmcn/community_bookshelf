@@ -10,11 +10,11 @@ class ProfilesController < ApplicationController
   end
 
   def followers
-    @users = @profile_user.followers.excluding_deleted_placeholder.order(:name)
+    @users = @profile_user.followers.excluding_deleted_placeholder.with_attached_avatar.order(:name)
   end
 
   def following
-    @users = @profile_user.following.excluding_deleted_placeholder.order(:name)
+    @users = @profile_user.following.excluding_deleted_placeholder.with_attached_avatar.order(:name)
   end
 
   private
