@@ -2,8 +2,16 @@ class EmailConfirmationsController < ApplicationController
   skip_before_action :require_login, only: [:confirm]
 
   def create
-    current_user.send_email_confirmation
-    redirect_to edit_account_path, notice: "Confirmation email sent."
+    authorize current_user, :update?
+
+    if current_user.email_confirmed?
+      redirect_to edit_account_path, notice: "Your email is already confirmed."
+    elsif current_user.email_confirmation_on_cooldown?
+      redirect_to edit_account_path, alert: "Please wait a moment before requesting another confirmation email."
+    else
+      current_user.send_email_confirmation
+      redirect_to edit_account_path, notice: "Confirmation email sent."
+    end
   end
 
   def confirm

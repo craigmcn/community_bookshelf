@@ -5,6 +5,9 @@ class User < ApplicationRecord
   DELETED_PLACEHOLDER_EMAIL = "deleted-user@community-bookshelf.invalid"
   MAX_AVATAR_BYTES = 5.megabytes
   ALLOWED_AVATAR_TYPES = %w[image/png image/jpeg image/webp].freeze
+  RESEND_COOLDOWN = 1.minute
+
+  class SoleAdminError < StandardError; end
 
   has_many :readings, dependent: :destroy
   has_many :books, foreign_key: :added_by_id
@@ -70,21 +73,45 @@ class User < ApplicationRecord
   end
 
   def send_email_confirmation
-    update_column(:email_confirmation_token, SecureRandom.urlsafe_base64(32))
+    update_columns(email_confirmation_token: SecureRandom.urlsafe_base64(32), email_confirmation_sent_at: Time.current)
     UserMailer.email_confirmation(self).deliver_later
+  end
+
+  def email_confirmation_on_cooldown?
+    email_confirmation_sent_at.present? && email_confirmation_sent_at > RESEND_COOLDOWN.ago
+  end
+
+  # True for an admin with no other admin to hand the role to — deleting this
+  # account would lock every /admin route with no recovery path short of a
+  # console.
+  def sole_admin?
+    admin? && self.class.joins(:roles).where(roles: {name: "admin"}).where.not(id: id).none?
   end
 
   # Reassigns this user's contributed catalog books to a shared placeholder
   # account (so the catalog itself isn't disrupted by an account deletion),
   # then destroys the user — cascading to their own readings/shelves/role
-  # assignments via dependent: :destroy.
+  # assignments via dependent: :destroy. Readings' default scope hides
+  # soft-deleted rows from that association, so they're destroyed explicitly
+  # first — otherwise one left behind would still reference this user's id
+  # via its FK and the final destroy! would fail.
   def delete_account!
+    raise SoleAdminError, "Can't delete the only admin account." if sole_admin?
+
     transaction do
       books.update_all(added_by_id: self.class.deleted_placeholder.id)
+      Reading.unscoped.where(user_id: id).destroy_all
       destroy!
     end
   end
 
+  # Two concurrent account deletions can both miss the find below before
+  # either has created this placeholder. Depending on timing, the loser's
+  # create! surfaces the collision as either a real ActiveRecord::RecordNotUnique
+  # (the DB unique index, if both inserts race before either commits) or an
+  # ActiveRecord::RecordInvalid (the uniqueness validation, if the winner's
+  # insert already committed and is merely visible in time) — verified both
+  # are reachable depending on interleaving, so both are rescued here.
   def self.deleted_placeholder
     find_by(email: DELETED_PLACEHOLDER_EMAIL) || create!(
       email: DELETED_PLACEHOLDER_EMAIL,
@@ -92,6 +119,8 @@ class User < ApplicationRecord
       password: SecureRandom.hex(32),
       skip_confirmation_email: true
     )
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+    find_by!(email: DELETED_PLACEHOLDER_EMAIL)
   end
 
   private

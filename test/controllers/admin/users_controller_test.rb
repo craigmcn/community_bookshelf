@@ -34,4 +34,23 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes @response.body, placeholder.email
   end
+
+  test "the deleted-user placeholder can't be reached directly via edit" do
+    placeholder = User.deleted_placeholder
+
+    sign_in_as users(:admin)
+    get edit_admin_user_url(placeholder)
+
+    assert_response :not_found
+  end
+
+  test "the deleted-user placeholder can't be reached directly via update" do
+    placeholder = User.deleted_placeholder
+
+    sign_in_as users(:admin)
+    patch admin_user_url(placeholder), params: {user: {role_ids: [roles(:admin).id]}}
+
+    assert_response :not_found
+    assert_not placeholder.reload.admin?
+  end
 end

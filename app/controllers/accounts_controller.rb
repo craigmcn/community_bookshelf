@@ -1,13 +1,18 @@
 class AccountsController < ApplicationController
   def edit
     @user = current_user
+    authorize @user
   end
 
   def update
     @user = current_user
+    authorize @user
 
     if @user.update(account_params)
-      remove_avatar if params[:remove_avatar] == "1"
+      # Only if this same request didn't also just attach a new one — e.g. a
+      # user leaves "Remove avatar" checked from a prior page state and picks
+      # a new file instead of unchecking it. The new upload wins.
+      remove_avatar if params[:remove_avatar] == "1" && params.dig(:user, :avatar).blank?
       redirect_to edit_account_path, notice: "Profile updated."
     else
       render :edit, status: :unprocessable_content
@@ -15,7 +20,16 @@ class AccountsController < ApplicationController
   end
 
   def destroy
-    if current_user.authenticated?(params[:current_password])
+    @user = current_user
+    authorize @user
+
+    if !current_user.authenticated?(params[:current_password])
+      flash.now[:alert] = "Current password was incorrect."
+      render :edit, status: :unprocessable_content
+    elsif current_user.sole_admin?
+      flash.now[:alert] = "You're the only admin — promote another member to admin before deleting this account."
+      render :edit, status: :unprocessable_content
+    else
       user = current_user
       # sign_out must run before delete_account! destroys the record — it
       # writes a fresh remember_token to invalidate the session, which would
@@ -27,10 +41,6 @@ class AccountsController < ApplicationController
       # whose own "please sign in" alert would clobber this notice before it's
       # ever rendered.
       redirect_to sign_in_path, notice: "Your account has been deleted."
-    else
-      @user = current_user
-      flash.now[:alert] = "Current password was incorrect."
-      render :edit, status: :unprocessable_content
     end
   end
 

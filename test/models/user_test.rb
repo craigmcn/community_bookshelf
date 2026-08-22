@@ -134,4 +134,59 @@ class UserTest < ActiveSupport::TestCase
     assert_not Reading.unscoped.exists?(reading.id)
     assert_not Shelf.exists?(shelf.id)
   end
+
+  test "delete_account! destroys a soft-deleted reading too, instead of failing on its FK" do
+    user = users(:member)
+    reading = readings(:one)
+    reading.soft_delete
+    assert_not_nil reading.deleted_at
+
+    user.delete_account!
+
+    assert_not Reading.unscoped.exists?(reading.id)
+  end
+
+  test "delete_account! raises for the sole admin instead of leaving the app with none" do
+    admin = users(:admin)
+    assert admin.sole_admin?
+
+    assert_raises(User::SoleAdminError) { admin.delete_account! }
+    assert User.exists?(admin.id)
+  end
+
+  test "delete_account! succeeds for an admin when another admin exists" do
+    admin = users(:admin)
+    other_admin = User.create!(email: "otheradmin@example.com", password: User::DEFAULT_PASSWORD)
+    other_admin.roles = [roles(:admin)]
+    assert_not admin.sole_admin?
+    User.deleted_placeholder # pre-create so the assertion below isn't masked by its own +1
+
+    assert_difference "User.count", -1 do
+      admin.delete_account!
+    end
+  end
+
+  test "sole_admin? is false for a non-admin" do
+    assert_not users(:member).sole_admin?
+    assert_not users(:moderator).sole_admin?
+  end
+
+  test "deleted_placeholder recovers from a concurrent create losing the uniqueness validation race" do
+    User.where(email: User::DELETED_PLACEHOLDER_EMAIL).destroy_all
+    # Simulates the interleaving where another process's create already
+    # committed by the time this one's uniqueness validation runs.
+    User.create!(email: User::DELETED_PLACEHOLDER_EMAIL, name: "Deleted user", password: SecureRandom.hex(32), skip_confirmation_email: true)
+
+    placeholder = User.deleted_placeholder
+
+    assert_equal "Deleted user", placeholder.display_name
+  end
+
+  test "email_confirmation_on_cooldown? is true immediately after sending, false once the cooldown elapses" do
+    user = User.create!(email: "cooldown@example.com", password: User::DEFAULT_PASSWORD)
+    assert user.email_confirmation_on_cooldown?
+
+    user.update_column(:email_confirmation_sent_at, (User::RESEND_COOLDOWN + 1.second).ago)
+    assert_not user.email_confirmation_on_cooldown?
+  end
 end

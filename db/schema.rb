@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_230727) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_030539) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -146,6 +146,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_230727) do
     t.string "confirmation_token", limit: 128
     t.datetime "created_at", null: false
     t.string "email"
+    t.datetime "email_confirmation_sent_at"
     t.string "email_confirmation_token"
     t.datetime "email_confirmed_at"
     t.string "encrypted_password", limit: 128
