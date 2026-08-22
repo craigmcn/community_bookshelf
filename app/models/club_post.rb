@@ -9,10 +9,18 @@ class ClubPost < ApplicationRecord
   # author and moderators. There's no page/chapter-level tracking — Reading
   # only has a status enum, not a progress marker fine-grained enough for
   # anything more precise.
-  def visible_to?(user)
+  #
+  # viewer_has_finished_book lets a caller looping over many posts for the
+  # same viewer/club (e.g. the club show page) pass in a precomputed result
+  # instead of this running an identical Reading.exists? query per post.
+  def visible_to?(user, viewer_has_finished_book: nil)
     return true unless spoiler?
     return true if user == self.user || user&.moderator_or_above?
 
-    Reading.exists?(user_id: user&.id, book_id: club.book_id, status: :finished)
+    if viewer_has_finished_book.nil?
+      Reading.exists?(user_id: user&.id, book_id: club.book_id, status: :finished)
+    else
+      viewer_has_finished_book
+    end
   end
 end

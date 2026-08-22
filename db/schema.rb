@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_230754) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -101,7 +101,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["club_id", "user_id"], name: "index_club_memberships_on_club_id_and_user_id", unique: true
-    t.index ["club_id"], name: "index_club_memberships_on_club_id"
     t.index ["user_id"], name: "index_club_memberships_on_user_id"
   end
 
@@ -113,7 +112,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_215204) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["club_id", "created_at"], name: "index_club_posts_on_club_id_and_created_at"
-    t.index ["club_id"], name: "index_club_posts_on_club_id"
     t.index ["user_id"], name: "index_club_posts_on_user_id"
   end
 

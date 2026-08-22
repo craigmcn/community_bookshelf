@@ -23,7 +23,7 @@ class ClubPostTest < ActiveSupport::TestCase
 
   test "a spoiler post is visible to a moderator" do
     post = ClubPost.create!(club: @club, user: users(:member), body: "The twist is...", spoiler: true)
-    assert post.visible_to?(users(:admin))
+    assert post.visible_to?(users(:moderator))
   end
 
   test "a spoiler post is visible to someone who finished the book" do

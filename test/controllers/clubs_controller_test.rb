@@ -22,6 +22,31 @@ class ClubsControllerTest < ActionDispatch::IntegrationTest
     assert club.member?(users(:member))
   end
 
+  test "index shows accurate member counts without an N+1 per club" do
+    club_one = Club.create!(name: "Sci-Fi Society", book: books(:one), created_by: users(:member))
+    club_one.club_memberships.create!(user: users(:moderator))
+    Club.create!(name: "Fantasy Fans", book: books(:two), created_by: users(:admin))
+
+    sign_in_as users(:member)
+    get clubs_url
+
+    assert_response :success
+    assert_includes @response.body, "2 members"
+    assert_includes @response.body, "1 member"
+  end
+
+  test "show hides a spoiler post from multiple viewers without a query per post" do
+    club = Club.create!(name: "Sci-Fi Society", book: books(:one), created_by: users(:moderator))
+    ClubPost.create!(club: club, user: users(:moderator), body: "Twist one", spoiler: true)
+    ClubPost.create!(club: club, user: users(:moderator), body: "Twist two", spoiler: true)
+
+    sign_in_as users(:member)
+    get club_url(club)
+
+    assert_response :success
+    assert_includes @response.body, "Hidden until you've finished the book."
+  end
+
   test "any signed-in member can view a club" do
     club = Club.create!(name: "Sci-Fi Society", book: books(:one), created_by: users(:moderator))
     sign_in_as users(:member)

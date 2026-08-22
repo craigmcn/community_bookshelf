@@ -16,7 +16,7 @@
             <h5 class="card-title"><%= link_to club.name, club, class: "text-decoration-none" %></h5>
             <p class="text-muted small mb-2">Reading <%= club.book.title %></p>
             <p class="card-text"><%= truncate(club.description, length: 140) %></p>
-            <p class="text-muted small mb-0"><%= pluralize(club.members.count, "member") %></p>
+            <p class="text-muted small mb-0"><%= pluralize(@member_counts.fetch(club.id, 0), "member") %></p>
           </div>
         </div>
       </div>

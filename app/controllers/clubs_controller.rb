@@ -3,13 +3,15 @@ class ClubsController < ApplicationController
 
   def index
     authorize Club
-    @clubs = policy_scope(Club).includes(:book, :created_by).order(created_at: :desc)
+    @clubs = policy_scope(Club).includes(:book).order(created_at: :desc)
+    @member_counts = ClubMembership.where(club_id: @clubs.map(&:id)).group(:club_id).count
   end
 
   def show
     authorize @club
     @club_posts = @club.club_posts.includes(:user)
     @club_post = ClubPost.new
+    @viewer_has_finished_book = Reading.exists?(user_id: current_user.id, book_id: @club.book_id, status: :finished)
   end
 
   def new
