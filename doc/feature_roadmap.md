@@ -65,7 +65,7 @@ scenarios. Each feature below is tagged:
 
 - [x] Follow other readers `[parity: solo]`
 - [x] Activity feed of followed users' reading updates `[parity: solo]`
-- [ ] Likes/comments on reviews `[parity: solo]`
+- [x] Likes/comments on reviews `[parity: solo]`
 - [ ] Buddy reads (shared reading sessions between two users) `[parity: solo]`
 - [ ] Book clubs with discussion threads (Fable-style, spoiler-gated by reading progress) `[parity: solo]`
 - [x] User profiles: avatar, bio, favorite genres `[parity: solo]`

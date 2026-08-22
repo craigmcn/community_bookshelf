@@ -216,7 +216,9 @@
             <td>
               <% if reading.review.blank? %>
                 —
-              <% elsif reading.is_review_public? || reading.user == current_user || current_user&.moderator_or_above? %>
+              <% elsif reading.is_review_public? %>
+                <%= link_to truncate(reading.review, length: 100), reading, class: "text-decoration-none text-dark" %>
+              <% elsif reading.user == current_user || current_user&.moderator_or_above? %>
                 <%= truncate(reading.review, length: 100) %>
               <% else %>
                 <span class="text-muted fst-italic">Review is private</span>

@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
-  resources :readings
+  resources :readings do
+    resource :review_like, only: [:create, :destroy]
+    resources :review_comments, only: [:create, :destroy]
+  end
   resources :books
   resources :series
   resources :shelves do
