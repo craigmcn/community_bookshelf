@@ -114,6 +114,7 @@ GET  /users/:id          ProfilesController#show       (any signed-in user)
 GET  /users/:id/followers, /users/:id/following  ProfilesController#followers/#following
 resource :follow, nested under /users/:user_id  FollowsController#create/#destroy
 GET  /feed                ActivitiesController#index    (signed-in only)
+resource :review_like, resources :review_comments, nested under /readings/:reading_id
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -177,6 +178,11 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `Activity` (`user_id`, `reading_id`, `action` — `added_book`/`started_reading`/`finished_reading`/`reviewed`) is written by `Reading` callbacks, not created directly: `after_create` always logs `added_book`; `after_update` logs `started_reading`/`finished_reading` on `saved_change_to_status?`; `reviewed` only fires when a *blank* review becomes present *and* `is_review_public?` — editing existing review text, or making a review public without changing its text, does not re-fire it, so the feed doesn't spam on every edit.
 - `Reading#soft_delete` explicitly destroys its `activities` before setting `deleted_at` — soft delete doesn't run `dependent: :destroy` (that only fires on a real `destroy`), so without this a soft-deleted reading's activity would keep showing in followers' feeds pointing at a reading the owner believes they removed.
 - `/feed` (`ActivitiesController#index`) queries `Activity.where(user: current_user.following)` — no policy class; it's inherently scoped to the signed-in user's own follow list, not a specific authorizable record. Activity entries link to the book, not the reading itself — `ReadingPolicy#show?` doesn't grant followers access to someone else's reading page.
+
+### Social — likes & comments on reviews
+- `ReadingPolicy#show?` was widened from owner-or-moderator to also allow any signed-in user when the reading has a public, non-blank review (`is_review_public? && review.present?`) — a blank review with the (default-true) `is_review_public` flag stays owner/moderator-only, since opening the page on that flag alone would leak dates/progress/format for readings the user never intended to share. The moderator branch is a separate `||` term, not gated by the deleted/public checks, so moderators keep the pre-existing ability to view a soft-deleted reading's show page (e.g. from `admin/readings`).
+- `ReviewLike`/`ReviewComment` both belong to `reading` (not `book`) — likes/comments are on a specific member's review, not the book. `ReviewLikePolicy#create?`/`ReviewCommentPolicy#create?` re-check `is_review_public? && review.present?` independently of `ReadingPolicy#show?` (a moderator can view a private review's page but still shouldn't be able to like/comment on it as if it were public). Comment deletion allows the author or `moderator_or_above?`, matching the moderation pattern used elsewhere; likes only the liker (no moderator override — a like isn't abuse-prone the way a comment body is).
+- `Reading#soft_delete` also destroys `review_likes`/`review_comments` (same reasoning as `activities` above — soft delete skips `dependent: :destroy`).
 
 ## Playwright e2e (cross-app parity)
 

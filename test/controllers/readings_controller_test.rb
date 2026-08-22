@@ -16,6 +16,36 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "another member can view a reading with a public review" do
+    other_member = User.create!(email: "other@example.com", password: User::DEFAULT_PASSWORD)
+    sign_in_as other_member
+    get reading_url(@reading)
+    assert_response :success
+  end
+
+  test "another member cannot view a reading with a private review" do
+    @reading.update!(is_review_public: false)
+    other_member = User.create!(email: "other@example.com", password: User::DEFAULT_PASSWORD)
+    sign_in_as other_member
+    get reading_url(@reading)
+    assert_redirected_to root_path
+  end
+
+  test "another member cannot view a reading with no review at all" do
+    reading = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    other_member = User.create!(email: "other@example.com", password: User::DEFAULT_PASSWORD)
+    sign_in_as other_member
+    get reading_url(reading)
+    assert_redirected_to root_path
+  end
+
+  test "moderator can view a reading even with a private review" do
+    @reading.update!(is_review_public: false)
+    sign_in_as users(:moderator)
+    get reading_url(@reading)
+    assert_response :success
+  end
+
   test "readings index only shows the current user's readings" do
     Reading.create!(user: users(:admin), book: books(:two), status: :reading)
 
