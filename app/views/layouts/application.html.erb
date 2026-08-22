@@ -88,6 +88,11 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li>
+                    <%= link_to user_path(current_user), class: "dropdown-item" do %>
+                      <i class="fasl fa-circle-user me-2"></i>My Profile
+                    <% end %>
+                  </li>
+                  <li>
                     <%= link_to edit_account_path, class: "dropdown-item" do %>
                       <i class="fasl fa-user-gear me-2"></i>My Account
                     <% end %>

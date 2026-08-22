@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   resources :passwords, controller: "clearance/passwords", only: [:new, :create, :edit, :update]
   resource :session, controller: "sessions", only: [:new, :create, :destroy]
   resources :users, controller: "clearance/users", only: [:new, :create]
+  resources :users, controller: "profiles", only: [:show]
 
   resource :account, only: [:edit, :update, :destroy]
   resource :email_confirmation, only: [:create]

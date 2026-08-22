@@ -22,6 +22,14 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "I like fantasy novels.", users(:member).bio
   end
 
+  test "member can set their favorite genres" do
+    sign_in_as users(:member)
+    patch account_url, params: {user: {favorite_genre_list: "fantasy, sci-fi"}}
+
+    assert_redirected_to edit_account_url
+    assert_equal ["fantasy", "sci-fi"], users(:member).reload.favorite_genre_tags.order(:name).pluck(:name)
+  end
+
   test "member can upload an avatar" do
     sign_in_as users(:member)
     avatar = fixture_file_upload("avatar.png", "image/png")

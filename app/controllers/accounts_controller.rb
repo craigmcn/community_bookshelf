@@ -51,6 +51,6 @@ class AccountsController < ApplicationController
   end
 
   def account_params
-    params.expect(user: [:name, :bio, :avatar])
+    params.expect(user: [:name, :bio, :avatar, :favorite_genre_list])
   end
 end

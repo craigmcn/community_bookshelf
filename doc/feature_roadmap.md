@@ -68,7 +68,7 @@ scenarios. Each feature below is tagged:
 - [ ] Likes/comments on reviews `[parity: solo]`
 - [ ] Buddy reads (shared reading sessions between two users) `[parity: solo]`
 - [ ] Book clubs with discussion threads (Fable-style, spoiler-gated by reading progress) `[parity: solo]`
-- [ ] User profiles: avatar, bio, favorite genres `[parity: solo]`
+- [x] User profiles: avatar, bio, favorite genres `[parity: solo]`
 
 ## Gamification
 

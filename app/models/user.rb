@@ -14,6 +14,8 @@ class User < ApplicationRecord
   has_many :shelves, dependent: :destroy
   has_many :role_assignments, dependent: :destroy
   has_many :roles, through: :role_assignments
+  has_many :favorite_genres, dependent: :destroy
+  has_many :favorite_genre_tags, through: :favorite_genres, source: :tag
   has_one_attached :avatar
 
   # Excludes the system placeholder account from user-facing listings/stats
@@ -31,6 +33,16 @@ class User < ApplicationRecord
 
   after_create :assign_default_role
   after_create :send_email_confirmation, unless: :skip_confirmation_email
+  after_save :sync_favorite_genre_list, if: -> { !@favorite_genre_list.nil? }
+
+  # Virtual attribute: a comma-separated string of genre tag names, mirroring
+  # Book#tag_list. Only touches favorite_genres when explicitly assigned, so a
+  # profile update that omits it leaves existing favorites alone.
+  attr_writer :favorite_genre_list
+
+  def favorite_genre_list
+    @favorite_genre_list || favorite_genre_tags.order(:name).pluck(:name).join(", ")
+  end
 
   def admin?
     roles.exists?(name: "admin")
@@ -128,6 +140,22 @@ class User < ApplicationRecord
   def assign_default_role
     member_role = Role.find_by(name: "member")
     roles << member_role if member_role
+  end
+
+  def sync_favorite_genre_list
+    names = @favorite_genre_list.to_s.split(",").filter_map { |name| name.strip.downcase.presence }.uniq
+    desired_ids = names.map { |name| find_or_create_genre_tag(name).id }
+    current_ids = favorite_genre_tags.pluck(:id)
+
+    favorite_genres.where(tag_id: current_ids - desired_ids).destroy_all
+    (desired_ids - current_ids).each { |tag_id| favorite_genres.create!(tag_id: tag_id) }
+    @favorite_genre_list = nil
+  end
+
+  def find_or_create_genre_tag(name)
+    Tag.find_or_create_by(name: name) { |tag| tag.category = "genre" }
+  rescue ActiveRecord::RecordNotUnique
+    Tag.find_by!(name: name)
   end
 
   def avatar_is_a_supported_image_under_the_size_limit

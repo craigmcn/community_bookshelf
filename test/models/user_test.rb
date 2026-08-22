@@ -46,6 +46,31 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.valid?
   end
 
+  test "favorite_genre_list assigns genre tags, creating them as needed" do
+    user = users(:member)
+    user.update!(favorite_genre_list: "Fantasy, sci-fi")
+
+    assert_equal ["fantasy", "sci-fi"], user.favorite_genre_tags.order(:name).pluck(:name)
+    assert user.favorite_genre_tags.all? { |tag| tag.genre? }
+  end
+
+  test "favorite_genre_list removes tags no longer listed and reuses an existing tag" do
+    user = users(:member)
+    user.update!(favorite_genre_list: "fantasy, mystery")
+    user.update!(favorite_genre_list: "fantasy")
+
+    assert_equal ["fantasy"], user.favorite_genre_tags.pluck(:name)
+  end
+
+  test "favorite_genre_list is untouched when omitted from an update" do
+    user = users(:member)
+    user.update!(favorite_genre_list: "fantasy")
+
+    user.update!(name: "Sam Reader")
+
+    assert_equal ["fantasy"], user.reload.favorite_genre_tags.pluck(:name)
+  end
+
   test "new user gets an email confirmation token and a confirmation email" do
     assert_enqueued_emails 1 do
       user = User.create!(email: "newuser@example.com", password: User::DEFAULT_PASSWORD)
