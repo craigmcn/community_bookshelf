@@ -1,4 +1,8 @@
 class UserPolicy < ApplicationPolicy
+  # Any signed-in member can view another member's profile page — show? backs
+  # ProfilesController, not AccountsController.
+  def show? = user.present?
+
   # Backs AccountsController, which only ever loads current_user (never a
   # params[:id]) — these checks exist to pin that invariant with the same
   # authorization layer every other model in this app uses, not because the

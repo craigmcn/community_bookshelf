@@ -193,7 +193,7 @@
       <tbody>
         <% @book.readings.includes(:user).each do |reading| %>
           <tr>
-            <td><%= reading.user.display_name %></td>
+            <td><%= link_to reading.user.display_name, reading.user, class: "text-decoration-none" %></td>
             <td>
               <span class="badge badge-status-<%= reading.status.tr('_', '-') %>">
                 <%= reading.status_label %>

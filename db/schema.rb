@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_030539) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_175419) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,6 +58,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_030539) do
     t.datetime "updated_at", null: false
     t.index ["added_by_id"], name: "index_books_on_added_by_id"
     t.index ["series_id"], name: "index_books_on_series_id"
+  end
+
+  create_table "favorite_genres", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["tag_id"], name: "index_favorite_genres_on_tag_id"
+    t.index ["user_id", "tag_id"], name: "index_favorite_genres_on_user_id_and_tag_id", unique: true
+    t.index ["user_id"], name: "index_favorite_genres_on_user_id"
   end
 
   create_table "readings", force: :cascade do |t|
@@ -163,6 +173,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_030539) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"
+  add_foreign_key "favorite_genres", "tags"
+  add_foreign_key "favorite_genres", "users"
   add_foreign_key "readings", "books"
   add_foreign_key "readings", "users"
   add_foreign_key "role_assignments", "roles"

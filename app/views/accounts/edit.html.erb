@@ -40,6 +40,12 @@
       </div>
 
       <div class="mb-3">
+        <%= form.label :favorite_genre_list, "Favorite Genres", class: "form-label" %>
+        <%= form.text_field :favorite_genre_list, class: "form-control", placeholder: "fantasy, sci-fi, ..." %>
+        <div class="form-text">Comma-separated. Shown on your public profile.</div>
+      </div>
+
+      <div class="mb-3">
         <%= form.label :avatar, "Avatar", class: "form-label d-block" %>
         <% if @user.avatar.attached? %>
           <div class="d-flex align-items-center gap-3 mb-2">
