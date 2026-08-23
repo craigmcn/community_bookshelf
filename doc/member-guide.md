@@ -105,6 +105,37 @@ logged for that book — reader, status, rating, format, and review (subject
 to that reader's privacy setting). This is where you see what other members
 think of a book before adding it yourself.
 
+## Social
+
+- **Profiles** — every member has a public profile at `/users/:id`: avatar,
+  bio, favorite genres, finished/currently-reading counts, and their public
+  reviews. Any signed-in member can view any profile. Set your own favorite
+  genres (comma-separated, like the genre tags on a book) from
+  `/account/edit`. Names throughout the app — Community Readings, "Added
+  by", comments — link to the person's profile.
+- **Following** — follow another member from their profile page to see their
+  reading activity in your feed. `/users/:id/followers` and
+  `/users/:id/following` list who follows whom. You can't follow yourself.
+- **Feed** (`/feed`) is a chronological feed of updates from people you
+  follow: books added to their shelf, started, finished, and reviewed
+  (public reviews only). Nothing shows here until you follow someone.
+- **Likes and comments** — a public review (the default privacy setting) can
+  be liked and commented on by any member from the reading's page — click
+  the review text in a book's Community Readings table to open it. You can
+  delete your own comments; a moderator can delete anyone's.
+- **Buddy reads** (`/buddy_reads`) let you pair up with one other member to
+  read a book together: invite them, they accept or decline, and you get a
+  private shared discussion thread for the two of you. Either of you can
+  cancel it or mark it completed once accepted. It's separate from your own
+  reading log — your own status/progress/rating for the book still lives on
+  your own shelf as normal.
+- **Book clubs** (`/clubs`) are open discussion groups built around one
+  book. Anyone can browse a club's discussion, but you need to join to post.
+  Starting a club joins you automatically. Flag a post as containing
+  spoilers and it's hidden from other members — including in the club
+  you're reading together — until they've logged that book as **Finished**;
+  you and moderators can still see it either way.
+
 ## Lists (Shelves)
 
 Beyond your reading log, you can create your own named lists ("shelves") to

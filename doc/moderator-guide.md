@@ -35,6 +35,22 @@ You can see and act on every member's reading, not just your own:
 - Deleting someone else's reading is a soft delete, same as a member
   deleting their own — the record is hidden but recoverable.
 
+## Moderating social features
+
+- You can view any reading page regardless of its privacy setting or
+  deletion state (members can only view a reading if it's their own or has a
+  public, non-blank review) — same as the existing private-review exception
+  above, extended to the page itself, not just the Community Readings table.
+- You can **delete any comment** on a review, or **any post** in a book
+  club, not just your own — the delete control appears on every
+  comment/post when you're signed in as a moderator or admin.
+- You always see club posts flagged as spoilers, regardless of your own
+  reading progress on that club's book.
+- Buddy reads are the one social feature moderators have no special access
+  to — they're private between their two participants, with no
+  moderator-visibility exception (there's nothing to moderate; report abuse
+  the same way you would anything else in the app).
+
 ## Reviewed Readings queue
 
 `/admin/readings` lists every reading that has review text, most recently

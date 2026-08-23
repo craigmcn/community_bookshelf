@@ -1,0 +1,32 @@
+<%= form_with model: club, class: "needs-validation" do |form| %>
+  <% if club.errors.any? %>
+    <div class="alert alert-danger">
+      <strong><%= pluralize(club.errors.count, "error") %> prevented this club from being saved:</strong>
+      <ul class="mb-0 mt-1">
+        <% club.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :name, class: "form-label" %>
+    <%= form.text_field :name, class: "form-control" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :book_id, "Book", class: "form-label" %>
+    <%= form.collection_select :book_id, @books, :id, :title, {prompt: "Choose a book"}, class: "form-select" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :description, class: "form-label" %>
+    <%= form.text_area :description, class: "form-control", rows: 4 %>
+  </div>
+
+  <div class="d-flex gap-2">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", clubs_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>
