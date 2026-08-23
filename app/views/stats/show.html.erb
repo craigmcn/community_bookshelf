@@ -36,7 +36,7 @@
       <div class="card-body">
         <h3 class="h5">Pages Read Over Time</h3>
         <p class="text-muted small">Pages read per month, last 12 months.</p>
-        <% if @has_finished_readings %>
+        <% if @has_page_counted_finished_readings %>
           <%= line_chart @pages_read_by_month %>
         <% else %>
           <p class="text-muted">Finish a book with a page count to see this chart.</p>

@@ -6,5 +6,7 @@ class StatsController < ApplicationController
     @books_finished_by_month = current_user.books_finished_by_month
     @pages_read_by_month = current_user.pages_read_by_month
     @has_finished_readings = current_user.readings.finished.where.not(finished_on: nil).exists?
+    @has_page_counted_finished_readings = current_user.readings.finished.joins(:book)
+      .where.not(finished_on: nil).where.not(books: {page_count: nil}).exists?
   end
 end

@@ -145,7 +145,7 @@ class User < ApplicationRecord
   # Pages read per calendar month over the last year (summed from each
   # finished book's page_count, which is optional and may be nil).
   def pages_read_by_month
-    readings.finished.where.not(finished_on: nil).joins(:book).group_by_month(:finished_on, last: 12).sum("books.page_count")
+    readings.finished.where.not(finished_on: nil).joins(:book).group_by_month(:finished_on, last: 12).sum("COALESCE(books.page_count, 0)")
   end
 
   # Checks every badge definition and records any newly-earned ones. Called

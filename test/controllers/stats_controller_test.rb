@@ -30,4 +30,17 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: /Finish a book with a page count/, count: 0
     assert_includes @response.body, tag.name
   end
+
+  test "a finished reading without a page count still shows the pace chart but not the pages chart" do
+    book = books(:one)
+    book.update!(page_count: nil)
+    Reading.create!(user: users(:member), book: book, status: :finished, finished_on: Date.current)
+
+    sign_in_as users(:member)
+    get stats_url
+
+    assert_response :success
+    assert_select "p", text: /Finish a book to start tracking your pace/, count: 0
+    assert_select "p", text: /Finish a book with a page count/
+  end
 end
