@@ -8,7 +8,7 @@ class ReadingChallenge < ApplicationRecord
   after_save :award_badges
 
   def books_finished_count
-    user.readings.finished.where(finished_on: Date.new(year, 1, 1)..Date.new(year, 12, 31)).count
+    @books_finished_count ||= user.readings.finished.where(finished_on: Date.new(year, 1, 1)..Date.new(year, 12, 31)).count
   end
 
   def progress_percent

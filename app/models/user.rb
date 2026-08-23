@@ -125,20 +125,28 @@ class User < ApplicationRecord
   end
 
   def badges
-    Badge.list.select { |definition| user_badges.exists?(badge_key: definition.key) }
+    earned_keys = user_badges.pluck(:badge_key)
+    Badge.list.select { |definition| earned_keys.include?(definition.key) }
   end
 
   # Checks every badge definition and records any newly-earned ones. Called
   # from Reading's after_save callback (finishing a book, writing a review)
   # rather than on a schedule — badges are permanent once earned, so this
-  # only ever needs to add rows, never remove them.
+  # only ever needs to add rows, never remove them. Two concurrent saves
+  # (e.g. two requests finishing the same threshold at once) can both pass
+  # the earned_keys check before either commits; the loser's create! is
+  # rescued as a no-op since the badge is awarded either way.
   def award_badges!
     earned_keys = user_badges.pluck(:badge_key)
     Badge.list.each do |definition|
       next if earned_keys.include?(definition.key)
       next unless definition.criteria.call(self)
 
-      user_badges.create!(badge_key: definition.key, awarded_at: Time.current)
+      begin
+        user_badges.create!(badge_key: definition.key, awarded_at: Time.current)
+      rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+        next
+      end
     end
   end
 

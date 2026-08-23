@@ -48,4 +48,14 @@ class ReadingChallengeTest < ActiveSupport::TestCase
 
     assert_equal 100, challenge.progress_percent
   end
+
+  test "books_finished_count is memoized per instance" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.new(2026, 3, 1))
+    challenge = ReadingChallenge.create!(user: member, year: 2026, goal: 5)
+
+    assert_equal 1, challenge.books_finished_count
+    Reading.create!(user: member, book: books(:two), status: :finished, finished_on: Date.new(2026, 4, 1))
+    assert_equal 1, challenge.books_finished_count, "expected the memoized count, not a fresh query"
+  end
 end

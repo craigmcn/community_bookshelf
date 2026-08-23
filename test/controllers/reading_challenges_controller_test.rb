@@ -44,4 +44,23 @@ class ReadingChallengesControllerTest < ActionDispatch::IntegrationTest
     patch reading_challenge_url(@challenge), params: {reading_challenge: {goal: 30}}
     assert_response :not_found
   end
+
+  test "member can view their own challenge's edit form" do
+    sign_in_as users(:member)
+    get edit_reading_challenge_url(@challenge)
+    assert_response :success
+  end
+
+  test "member cannot view another user's challenge edit form" do
+    sign_in_as users(:moderator)
+    get edit_reading_challenge_url(@challenge)
+    assert_response :not_found
+  end
+
+  test "update ignores a submitted year and leaves it unchanged" do
+    sign_in_as users(:member)
+    patch reading_challenge_url(@challenge), params: {reading_challenge: {year: 2030, goal: 30}}
+    assert_equal 2026, @challenge.reload.year
+    assert_equal 30, @challenge.goal
+  end
 end

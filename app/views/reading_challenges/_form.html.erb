@@ -16,7 +16,6 @@
       <%= form.number_field :year, class: "form-control", min: 2000, max: 2200 %>
     <% else %>
       <input type="text" class="form-control" value="<%= reading_challenge.year %>" disabled>
-      <%= form.hidden_field :year %>
     <% end %>
   </div>
 
