@@ -67,6 +67,50 @@
 
     <hr class="my-5">
 
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0"><i class="fasl fa-trophy me-2 opacity-75"></i>Reading Challenges</h5>
+          <%= link_to "Manage", reading_challenges_path, class: "btn btn-sm btn-outline-secondary" %>
+        </div>
+        <% if (challenge = @user.current_year_challenge) %>
+          <p class="text-muted small mb-1"><%= challenge.year %>: <%= challenge.books_finished_count %> of <%= challenge.goal %> books finished</p>
+          <div class="progress" role="progressbar" aria-valuenow="<%= challenge.progress_percent %>" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar<%= " bg-success" if challenge.completed? %>" style="width: <%= challenge.progress_percent %>%">
+              <%= challenge.progress_percent %>%
+            </div>
+          </div>
+        <% else %>
+          <p class="text-muted mb-0">You haven't set a reading challenge for <%= Date.current.year %> yet.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3"><i class="fasl fa-fire me-2 opacity-75"></i>Reading Streak</h5>
+        <p class="mb-0">
+          <span class="fs-4 fw-bold"><%= @user.current_streak %></span>
+          <span class="text-muted"><%= (@user.current_streak == 1) ? "book" : "books" %> in a row</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3"><i class="fasl fa-medal me-2 opacity-75"></i>Badges</h5>
+        <% if @user.badges.any? %>
+          <div class="d-flex flex-wrap gap-2">
+            <% @user.badges.each do |badge| %>
+              <span class="badge text-bg-primary" title="<%= badge.description %>"><%= badge.name %></span>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-muted mb-0">No badges earned yet — finish a book, write a review, or set a reading challenge to start earning them.</p>
+        <% end %>
+      </div>
+    </div>
+
     <div class="card border-danger">
       <div class="card-header bg-danger text-white">Danger Zone</div>
       <div class="card-body">

@@ -50,6 +50,9 @@ You can see and act on every member's reading, not just your own:
   to — they're private between their two participants, with no
   moderator-visibility exception (there's nothing to moderate; report abuse
   the same way you would anything else in the app).
+- Reading challenges and badges have no moderator override either — each
+  member manages their own challenge, and badges are earned and shown the
+  same way for everyone regardless of role.
 
 ## Reviewed Readings queue
 

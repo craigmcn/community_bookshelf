@@ -58,6 +58,8 @@ yarn test:e2e                           # Playwright e2e (starts its own server,
 - **role_assignments** — join table users ↔ roles (users can hold multiple roles)
 - **tags** — `name` (globally unique), `category` (`genre | mood | pace`, default `genre`)
 - **taggings** — join table books ↔ tags (unique per book/tag pair)
+- **reading_challenges** — `user_id`, `year`, `goal` (unique per user/year, `goal > 0` check constraint)
+- **user_badges** — `user_id`, `badge_key`, `awarded_at` (unique per user/badge_key); `badge_key` is validated against the hardcoded `Badge::DEFINITIONS` registry, not a database-backed `badges` table
 
 ### Enums
 ```ruby
@@ -119,6 +121,7 @@ resources :buddy_reads      BuddyReadsController         (participant-only; inde
 resources :messages, nested under /buddy_reads/:buddy_read_id  BuddyReadMessagesController#create
 resources :clubs             ClubsController               (any signed-in user can view; creator/moderator can edit/delete)
 resource :membership, resources :posts, nested under /clubs/:club_id  ClubMembershipsController, ClubPostsController
+resources :reading_challenges, only: [:index, :new, :create, :edit, :update]  ReadingChallengesController  (scoped to current_user, like AccountsController)
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -203,6 +206,13 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `User#delete_account!` reassigns `created_clubs` to the deleted-user placeholder, the same treatment as `books` — without it, `destroy!` hit `ActiveRecord::InvalidForeignKey` via `clubs.created_by_id` for anyone who'd ever created a club (reproduced directly before fixing). `User has_many :club_posts, dependent: :destroy` similarly closes the same failure mode via `club_posts.user_id` for anyone who'd ever posted in one — neither had a caught test until both were added here.
 - `ClubsController#index` computes member counts with one grouped `ClubMembership.where(club_id: ...).group(:club_id).count` query rather than `club.members.count` per row in the view. `ClubsController#show` precomputes `@viewer_has_finished_book` once and passes it into `ClubPost#visible_to?(user, viewer_has_finished_book:)` — every spoiler post on the same club/viewer would otherwise run an identical `Reading.exists?` query.
 - `ClubMembershipsController#create`/`#destroy` follow the same result-checking/idempotent pattern as `FollowsController` and `ReviewLikesController` — but note `ClubMembershipPolicy#create?` already blocks a same-request double-join (`!record.club.member?(user)`), so the `save` check there is defense against a concurrent-request race, not a reachable UI double-click path the way it is for `Follow`.
+
+### Gamification
+- `ReadingChallenge` (`user_id`, `year`, `goal`) is one member-set book-count goal per calendar year (unique per user/year). `#books_finished_count` queries `user.readings.finished.where(finished_on: ...)` for that year live rather than caching a counter — the same "compute on read" tradeoff `Book#similar_books`/`User#current_streak` make elsewhere, and cheap at this scale. `ReadingChallengePolicy` pins ownership (`record.user == user`) the same way `ShelfPolicy` does; `ReadingChallengesController` is scoped to `current_user.reading_challenges` like `ShelvesController`, so a non-owner id 404s before `authorize` is ever reached.
+- `User::STREAK_GAP_DAYS` (30) is the max gap between two consecutive finished books for `User#current_streak` to still count them as one streak — deliberately book-based, not calendar-day-based (no "did you read today" tracking exists, only finish dates), so tiers read as "N books in a row" rather than "N-day streak". A most-recent finish older than the gap window itself resets the streak to zero, even though it was once part of one.
+- `Badge` is a plain-Ruby registry (`Badge::DEFINITIONS`), not a database table — there's no admin UI to manage badges, and each definition is just a name/description plus a `criteria` lambda checked against a `User`. `UserBadge` (`user_id`, `badge_key`, `awarded_at`, unique per user/badge_key) is the only DB-backed piece; its `badge_key` is validated against `Badge::DEFINITIONS` so a typo'd or removed key can't be persisted.
+- Badges are awarded by `User#award_badges!`, which only ever adds rows — once earned, a badge is never revoked (e.g. editing a challenge's goal upward after completion doesn't strip the `challenge_completed` badge). It's called from `Reading`'s `after_save` (`saved_change_to_status? || saved_change_to_review?` — covers finishing a book, DNF, and adding a review) and from `ReadingChallenge`'s `after_save` (covers a challenge becoming completed on creation/edit without a new reading event, e.g. lowering the goal below an already-met count).
+- Streak, badges, and the current year's challenge progress render in two places: privately on `/account/edit` (via `AccountsController#edit`'s `@user`) and publicly on `/users/:id` (`ProfilesController#show` sets `@current_streak`/`@badges`/`@current_year_challenge` off `@profile_user`) — mirroring how favorite genres and finished/reading counts are already shown in both places.
 
 ## Playwright e2e (cross-app parity)
 

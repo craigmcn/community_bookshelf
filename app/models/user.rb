@@ -6,6 +6,9 @@ class User < ApplicationRecord
   MAX_AVATAR_BYTES = 5.megabytes
   ALLOWED_AVATAR_TYPES = %w[image/png image/jpeg image/webp].freeze
   RESEND_COOLDOWN = 1.minute
+  # Max gap, in days, between two consecutive finished books for them to
+  # still count toward the same reading streak.
+  STREAK_GAP_DAYS = 30
 
   class SoleAdminError < StandardError; end
 
@@ -28,6 +31,8 @@ class User < ApplicationRecord
   has_many :clubs, through: :club_memberships
   has_many :created_clubs, class_name: "Club", foreign_key: :created_by_id, inverse_of: :created_by
   has_many :club_posts, dependent: :destroy
+  has_many :reading_challenges, dependent: :destroy
+  has_many :user_badges, dependent: :destroy
   has_one_attached :avatar
 
   # Excludes the system placeholder account from user-facing listings/stats
@@ -88,6 +93,61 @@ class User < ApplicationRecord
 
   def following?(other_user)
     active_follows.exists?(followed_id: other_user.id)
+  end
+
+  def finished_readings_count
+    readings.finished.count
+  end
+
+  def reviews_written_count
+    readings.where.not(review: [nil, ""]).count
+  end
+
+  def current_year_challenge
+    reading_challenges.find_by(year: Date.current.year)
+  end
+
+  # Consecutive finished books, most recent first, where each pair of
+  # finishes is no more than STREAK_GAP_DAYS apart. A most-recent finish
+  # older than that itself breaks the streak (nothing "current" to count).
+  def current_streak
+    finish_dates = readings.finished.where.not(finished_on: nil).order(finished_on: :desc).pluck(:finished_on)
+    return 0 if finish_dates.empty?
+    return 0 if finish_dates.first < STREAK_GAP_DAYS.days.ago.to_date
+
+    streak = 1
+    finish_dates.each_cons(2) do |newer, older|
+      break unless (newer - older) <= STREAK_GAP_DAYS
+
+      streak += 1
+    end
+    streak
+  end
+
+  def badges
+    earned_keys = user_badges.pluck(:badge_key)
+    Badge.list.select { |definition| earned_keys.include?(definition.key) }
+  end
+
+  # Checks every badge definition and records any newly-earned ones. Called
+  # from Reading's after_save callback (finishing a book, writing a review)
+  # rather than on a schedule — badges are permanent once earned, so this
+  # only ever needs to add rows, never remove them. Two concurrent saves
+  # (e.g. two requests finishing the same threshold at once) can both pass
+  # the earned_keys check before either commits; the loser's create! is
+  # rescued as a no-op since the badge is awarded either way.
+  def award_badges!
+    earned_keys = user_badges.pluck(:badge_key)
+    Badge.list.each do |definition|
+      next if earned_keys.include?(definition.key)
+      next unless definition.criteria.call(self)
+
+      begin
+        user_badges.create!(badge_key: definition.key, awarded_at: Time.current)
+      rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+        next
+      end
+    end
   end
 
   def email_confirmed?
