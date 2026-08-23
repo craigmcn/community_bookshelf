@@ -1,0 +1,32 @@
+<%= form_with(model: reading_challenge) do |form| %>
+  <% if reading_challenge.errors.any? %>
+    <div class="alert alert-danger">
+      <strong><%= pluralize(reading_challenge.errors.count, "error") %> prevented this challenge from being saved:</strong>
+      <ul class="mb-0 mt-1">
+        <% reading_challenge.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :year, class: "form-label" %>
+    <% if reading_challenge.new_record? %>
+      <%= form.number_field :year, class: "form-control", min: 2000, max: 2200 %>
+    <% else %>
+      <input type="text" class="form-control" value="<%= reading_challenge.year %>" disabled>
+      <%= form.hidden_field :year %>
+    <% end %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :goal, "Goal (books)", class: "form-label" %>
+    <%= form.number_field :goal, class: "form-control", min: 1 %>
+  </div>
+
+  <div class="d-flex gap-2">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", reading_challenges_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>

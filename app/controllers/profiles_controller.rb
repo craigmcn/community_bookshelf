@@ -7,6 +7,9 @@ class ProfilesController < ApplicationController
     @currently_reading_count = readings.reading.count
     @public_reviews = readings.where(is_review_public: true).where.not(review: [nil, ""])
       .includes(:book).order(updated_at: :desc).limit(5)
+    @current_streak = @profile_user.current_streak
+    @badges = @profile_user.badges
+    @current_year_challenge = @profile_user.current_year_challenge
   end
 
   def followers

@@ -1,0 +1,39 @@
+<% content_for :title, "Reading Challenges" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0"><i class="fasl fa-trophy me-2 opacity-75"></i>Reading Challenges</h1>
+  <%= link_to new_reading_challenge_path, class: "btn btn-primary" do %>
+    <i class="fasl fa-plus me-1"></i>New Challenge
+  <% end %>
+</div>
+
+<% if @reading_challenges.any? %>
+  <% @reading_challenges.each do |challenge| %>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <h5 class="card-title mb-1">
+            <%= challenge.year %> Challenge
+            <% if challenge.completed? %>
+              <span class="badge text-bg-success ms-1"><i class="fasl fa-check me-1"></i>Completed</span>
+            <% end %>
+          </h5>
+          <%= link_to "Edit", edit_reading_challenge_path(challenge), class: "btn btn-sm btn-outline-secondary" %>
+        </div>
+        <p class="text-muted small mb-2"><%= challenge.books_finished_count %> of <%= challenge.goal %> books finished</p>
+        <div class="progress" role="progressbar" aria-valuenow="<%= challenge.progress_percent %>" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar<%= " bg-success" if challenge.completed? %>" style="width: <%= challenge.progress_percent %>%">
+            <%= challenge.progress_percent %>%
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% else %>
+  <div class="text-center text-muted py-5">
+    <p class="fs-5">You haven't set a reading challenge yet.</p>
+    <%= link_to new_reading_challenge_path, class: "btn btn-primary" do %>
+      <i class="fasl fa-plus me-1"></i>Set a goal
+    <% end %>
+  </div>
+<% end %>

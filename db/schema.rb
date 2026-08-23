@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_230754) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_165811) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -147,6 +147,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_230754) do
     t.check_constraint "follower_id <> followed_id", name: "follows_no_self_follow"
   end
 
+  create_table "reading_challenges", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "goal", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.integer "year", null: false
+    t.index ["user_id", "year"], name: "index_reading_challenges_on_user_id_and_year", unique: true
+    t.index ["user_id"], name: "index_reading_challenges_on_user_id"
+    t.check_constraint "goal > 0", name: "reading_challenges_goal_positive"
+  end
+
   create_table "readings", force: :cascade do |t|
     t.bigint "book_id", null: false
     t.datetime "created_at", null: false
@@ -247,6 +258,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_230754) do
     t.index ["name"], name: "index_tags_on_name", unique: true
   end
 
+  create_table "user_badges", force: :cascade do |t|
+    t.datetime "awarded_at", null: false
+    t.string "badge_key", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "badge_key"], name: "index_user_badges_on_user_id_and_badge_key", unique: true
+    t.index ["user_id"], name: "index_user_badges_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.text "bio"
     t.string "confirmation_token", limit: 128
@@ -286,6 +307,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_230754) do
   add_foreign_key "favorite_genres", "users"
   add_foreign_key "follows", "users", column: "followed_id"
   add_foreign_key "follows", "users", column: "follower_id"
+  add_foreign_key "reading_challenges", "users"
   add_foreign_key "readings", "books"
   add_foreign_key "readings", "users"
   add_foreign_key "review_comments", "readings"
@@ -299,4 +321,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_230754) do
   add_foreign_key "shelves", "users"
   add_foreign_key "taggings", "books"
   add_foreign_key "taggings", "tags"
+  add_foreign_key "user_badges", "users"
 end

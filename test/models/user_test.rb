@@ -237,4 +237,64 @@ class UserTest < ActiveSupport::TestCase
     user.update_column(:email_confirmation_sent_at, (User::RESEND_COOLDOWN + 1.second).ago)
     assert_not user.email_confirmation_on_cooldown?
   end
+
+  test "current_streak is zero with no finished books" do
+    assert_equal 0, users(:member).current_streak
+  end
+
+  test "current_streak counts consecutive finishes within the gap window" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: 2.days.ago.to_date)
+    Reading.create!(user: member, book: books(:two), status: :finished, finished_on: 20.days.ago.to_date)
+
+    assert_equal 2, member.reload.current_streak
+  end
+
+  test "current_streak breaks on a gap larger than STREAK_GAP_DAYS" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: 2.days.ago.to_date)
+    Reading.create!(user: member, book: books(:two), status: :finished, finished_on: 40.days.ago.to_date)
+
+    assert_equal 1, member.reload.current_streak
+  end
+
+  test "current_streak is zero when the most recent finish is outside the gap window" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: 40.days.ago.to_date)
+
+    assert_equal 0, member.reload.current_streak
+  end
+
+  test "award_badges! awards a books_finished badge once the tier is reached" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current)
+
+    assert member.reload.user_badges.exists?(badge_key: "books_finished_1")
+  end
+
+  test "award_badges! does not re-award an already-earned badge" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current)
+
+    assert_no_difference -> { member.user_badges.where(badge_key: "books_finished_1").count } do
+      member.award_badges!
+    end
+  end
+
+  test "badges returns earned Badge definitions" do
+    member = users(:member)
+    UserBadge.create!(user: member, badge_key: "books_finished_1", awarded_at: Time.current)
+
+    assert_equal ["books_finished_1"], member.badges.map(&:key)
+  end
+
+  test "finished_readings_count and reviews_written_count" do
+    member = users(:member)
+    reviews_before = member.reviews_written_count
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current)
+    Reading.create!(user: member, book: books(:two), status: :finished, finished_on: Date.current, review: "Loved it")
+
+    assert_equal 2, member.finished_readings_count
+    assert_equal reviews_before + 1, member.reviews_written_count
+  end
 end

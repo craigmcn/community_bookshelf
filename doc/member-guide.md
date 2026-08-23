@@ -150,6 +150,22 @@ organize books however you like — e.g. "Beach Reads" or "To Buy".
 Lists are private to you — no one else, including moderators and admins, can
 see another member's lists.
 
+## Gamification
+
+- **Reading challenges** (`/reading_challenges`) let you set a book-count
+  goal for a calendar year — e.g. "read 20 books in 2026" — and track your
+  progress against it. You can set one challenge per year, and edit the goal
+  at any time. Your current year's progress also shows on your account page
+  and your public profile.
+- **Reading streaks** count how many books you've finished in a row without
+  more than a 30-day gap between finishes. Your current streak shows on your
+  account page and your public profile.
+- **Badges** are earned automatically as you finish books, write reviews,
+  build a streak, or complete a reading challenge — there are several tiers
+  for each. Once earned, a badge is yours for good. See what you've earned
+  (and what's still open) on your account page; your public profile shows
+  the badges you've earned to other members.
+
 ## What members can't do
 
 - Edit or delete a book, even one you added yourself (moderator+ only).

@@ -1,6 +1,6 @@
 # Feature Roadmap: Toward a Fully-Featured Reading List App
 
-_Last updated: 2026-08-15_
+_Last updated: 2026-08-23_
 
 This is a gap analysis, not a commitment or a sprint plan. It compares
 community_bookshelf's current feature set against established reading-tracker apps —
@@ -34,12 +34,12 @@ scenarios. Each feature below is tagged:
 ## Cataloging & metadata
 
 - [ ] Genres/tags on books, with tag-based browsing `[parity: coordinated]`
-- [ ] ISBN field `[parity: solo]`
-- [ ] Page count `[parity: solo]`
-- [ ] Publish date / edition metadata `[parity: solo]`
-- [ ] Series tracking (link books into a series, show reading order) `[parity: solo]`
+- [x] ISBN field `[parity: solo]`
+- [x] Page count `[parity: solo]`
+- [x] Publish date metadata `[parity: solo]`
+- [x] Series tracking (link books into a series, show reading order) `[parity: solo]`
 - [ ] Support multiple editions per book (LibraryThing-style precise cataloging) `[parity: solo]`
-- [ ] Pull richer detail from Open Library (description, subjects) into the book page `[parity: solo]`
+- [x] Pull richer detail from Open Library (description, subjects) into the book page `[parity: solo]`
 
 ## Reading tracking
 
@@ -72,9 +72,9 @@ scenarios. Each feature below is tagged:
 
 ## Gamification
 
-- [ ] Annual reading challenge (set a book-count goal, track progress) `[parity: solo]`
-- [ ] Reading streaks `[parity: solo]`
-- [ ] Badges/achievements (books read, reviews written, challenges completed) `[parity: solo]`
+- [x] Annual reading challenge (set a book-count goal, track progress) `[parity: solo]`
+- [x] Reading streaks `[parity: solo]`
+- [x] Badges/achievements (books read, reviews written, challenges completed) `[parity: solo]`
 
 ## Stats & insights
 

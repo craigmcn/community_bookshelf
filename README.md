@@ -106,3 +106,9 @@ The book search at `/book_search` queries the Open Library API via `OpenLibraryS
 - `/clubs` are open discussion groups centered on one book — any member can browse and join; creating a club auto-joins you. Posts can be flagged as spoilers, which hides them (except from their author or a moderator) until you have a `finished` reading logged for the club's book.
 - New sign-ups get a confirmation email (`UserMailer`, viewable via `letter_opener` in development) with a link to confirm their address. Confirmation is informational only — an unconfirmed account can still sign in and use every feature; the account page just shows a reminder with a resend option (capped at once a minute, and hidden once confirmed).
 - `UserPolicy` backs `AccountsController` even though it only ever acts on `current_user` — it's there to pin that invariant with the same authorization layer every other model in this app uses, not because the controller branches on ownership today.
+
+## Gamification
+
+- `/reading_challenges` lets a member set an annual book-count goal (one per calendar year) and tracks progress against readings finished with a `finished_on` date in that year; editable at any time, with a progress bar shown there, on the account page, and (for the current year) on the member's public profile.
+- Reading streaks count consecutive finished books where no two consecutive finishes are more than 30 days apart (`User::STREAK_GAP_DAYS`) — a most-recent finish older than that resets the streak to zero. Shown on the account page and public profile.
+- Badges are a fixed, hardcoded set (`Badge::DEFINITIONS`) covering books finished, reviews written, streak length, and completing a reading challenge, at several tiers each. They're awarded permanently (never revoked) by `User#award_badges!`, called after a reading's status or review changes and after a reading challenge is saved. Shown on the account page and public profile.

@@ -56,6 +56,9 @@
               <li class="nav-item">
                 <%= link_to "Book Clubs", clubs_path, class: "nav-link" %>
               </li>
+              <li class="nav-item">
+                <%= link_to "Reading Challenges", reading_challenges_path, class: "nav-link" %>
+              </li>
             <% end %>
             <% if current_user&.moderator_or_above? %>
               <li class="nav-item dropdown">

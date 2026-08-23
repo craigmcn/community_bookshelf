@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   end
   resources :books
   resources :series
+  resources :reading_challenges, only: [:index, :new, :create, :edit, :update]
   resources :shelves do
     resources :shelf_books, only: [:create, :destroy], path: "books"
   end

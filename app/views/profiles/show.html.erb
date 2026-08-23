@@ -33,6 +33,10 @@
             <div class="small">Reading</div>
           </div>
           <div>
+            <div class="fs-4 fw-bold text-dark"><i class="fasl fa-fire text-warning" aria-hidden="true"></i> <%= @current_streak %></div>
+            <div class="small">Streak</div>
+          </div>
+          <div>
             <%= link_to followers_user_path(@profile_user), class: "text-decoration-none text-dark" do %>
               <div class="fs-4 fw-bold"><%= @profile_user.followers.excluding_deleted_placeholder.count %></div>
               <div class="small text-muted">Followers</div>
@@ -45,6 +49,23 @@
             <% end %>
           </div>
         </div>
+
+        <% if @current_year_challenge %>
+          <div class="mt-4 text-start">
+            <p class="text-muted small mb-1"><%= @current_year_challenge.year %> Challenge: <%= @current_year_challenge.books_finished_count %> of <%= @current_year_challenge.goal %> books</p>
+            <div class="progress" role="progressbar" aria-valuenow="<%= @current_year_challenge.progress_percent %>" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar<%= " bg-success" if @current_year_challenge.completed? %>" style="width: <%= @current_year_challenge.progress_percent %>%"></div>
+            </div>
+          </div>
+        <% end %>
+
+        <% if @badges.any? %>
+          <div class="d-flex flex-wrap justify-content-center gap-1 mt-3">
+            <% @badges.each do |badge| %>
+              <span class="badge text-bg-secondary" title="<%= badge.description %>"><i class="fasl fa-medal me-1"></i><%= badge.name %></span>
+            <% end %>
+          </div>
+        <% end %>
 
         <% if @profile_user == current_user %>
           <%= link_to edit_account_path, class: "btn btn-outline-primary btn-sm mt-4" do %>
