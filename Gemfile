@@ -34,6 +34,12 @@ gem "faraday"
 # Pagination
 gem "pagy", "~> 9.4"
 
+# Charts (stats & analytics pages)
+gem "chartkick"
+
+# Grouping records by time period (for chart trend data)
+gem "groupdate"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[windows jruby]
 

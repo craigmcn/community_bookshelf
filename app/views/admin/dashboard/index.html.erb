@@ -57,3 +57,31 @@
 <% else %>
   <p class="text-muted">No readings logged yet.</p>
 <% end %>
+
+<h3 class="mt-5 mb-3">Trends</h3>
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h4 class="h6">New Users</h4>
+        <%= line_chart @new_users_by_month %>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h4 class="h6">Books Added</h4>
+        <%= line_chart @books_added_by_month %>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h4 class="h6">Readings Logged</h4>
+        <%= line_chart @readings_logged_by_month %>
+      </div>
+    </div>
+  </div>
+</div>

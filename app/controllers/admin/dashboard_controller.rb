@@ -10,5 +10,9 @@ class Admin::DashboardController < Admin::BaseController
       .select("books.*, COUNT(readings.id) AS readings_count")
       .order(readings_count: :desc)
       .limit(5)
+
+    @new_users_by_month = User.excluding_deleted_placeholder.group_by_month(:created_at, last: 12).count
+    @books_added_by_month = Book.group_by_month(:created_at, last: 12).count
+    @readings_logged_by_month = Reading.group_by_month(:created_at, last: 12).count
   end
 end

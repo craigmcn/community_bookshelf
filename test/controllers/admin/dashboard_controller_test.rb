@@ -18,6 +18,13 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "admin dashboard renders trend charts" do
+    sign_in_as users(:admin)
+    get admin_root_url
+    assert_response :success
+    assert_select "h3", text: "Trends"
+  end
+
   test "total user count excludes the deleted-user placeholder" do
     starting_count = User.excluding_deleted_placeholder.count
     User.deleted_placeholder

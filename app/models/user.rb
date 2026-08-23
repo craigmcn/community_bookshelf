@@ -129,6 +129,25 @@ class User < ApplicationRecord
     Badge.list.select { |definition| earned_keys.include?(definition.key) }
   end
 
+  # Genre tag counts across this user's finished books, for the personal
+  # stats page's genre breakdown chart. A book tagged with multiple genres
+  # contributes to each of them.
+  def genre_breakdown
+    Tag.genre.joins(books: :readings).merge(Reading.finished).where(readings: {user_id: id}).group(:name).count
+  end
+
+  # Books finished per calendar month over the last year, for the personal
+  # stats page's reading-pace chart.
+  def books_finished_by_month
+    readings.finished.where.not(finished_on: nil).group_by_month(:finished_on, last: 12).count
+  end
+
+  # Pages read per calendar month over the last year (summed from each
+  # finished book's page_count, which is optional and may be nil).
+  def pages_read_by_month
+    readings.finished.where.not(finished_on: nil).joins(:book).group_by_month(:finished_on, last: 12).sum("books.page_count")
+  end
+
   # Checks every badge definition and records any newly-earned ones. Called
   # from Reading's after_save callback (finishing a book, writing a review)
   # rather than on a schedule — badges are permanent once earned, so this

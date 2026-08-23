@@ -1,0 +1,47 @@
+<% content_for :title, "My Stats" %>
+
+<h1 class="mb-4">My Stats</h1>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h5">Genre Breakdown</h3>
+        <p class="text-muted small">Genres of the books you've finished.</p>
+        <% if @genre_breakdown.any? %>
+          <%= pie_chart @genre_breakdown %>
+        <% else %>
+          <p class="text-muted">Finish a book with a genre tag to see your breakdown.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h5">Reading Pace</h3>
+        <p class="text-muted small">Books finished per month, last 12 months.</p>
+        <% if @has_finished_readings %>
+          <%= column_chart @books_finished_by_month %>
+        <% else %>
+          <p class="text-muted">Finish a book to start tracking your pace.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h5">Pages Read Over Time</h3>
+        <p class="text-muted small">Pages read per month, last 12 months.</p>
+        <% if @has_finished_readings %>
+          <%= line_chart @pages_read_by_month %>
+        <% else %>
+          <p class="text-muted">Finish a book with a page count to see this chart.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

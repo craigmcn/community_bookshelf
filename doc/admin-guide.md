@@ -15,6 +15,9 @@ admin) shows community-wide stats:
   excludes the internal "Deleted user" placeholder account (see below).
 - **Most-Read Books** — the top 5 books ranked by number of readings logged
   against them, linked through to each book's page.
+- **Trends** — line charts of new users, books added, and readings logged
+  per month, over the last 12 months, so you can see growth over time rather
+  than just the current totals above.
 
 This page is admin-only; moderators are redirected/forbidden if they try to
 visit it directly.

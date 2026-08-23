@@ -14,8 +14,9 @@ personal reading log with a 3-state status (want to read / reading / finished), 
 1–5 star rating, a free-text review, and soft delete; a "Community Readings" table on
 each book's page showing everyone's status/rating/review for that book; Clearance-based
 auth (sign up/in/out, forgot/reset password); Pundit RBAC with member/moderator/admin
-roles; and an admin dashboard (user/book/reading counts, top-5 most-read leaderboard)
-plus a moderator review-moderation queue.
+roles; an admin dashboard (user/book/reading counts, top-5 most-read leaderboard,
+monthly trend charts) plus a moderator review-moderation queue; and a personal stats
+page (genre breakdown, reading pace, pages read over time).
 
 ## Parity context
 
@@ -78,8 +79,8 @@ scenarios. Each feature below is tagged:
 
 ## Stats & insights
 
-- [ ] Personal reading stats page: genre breakdown, pace, pages read over time (charts) `[parity: solo]`
-- [ ] Site-wide analytics expansion on the admin dashboard (trends over time, not just current totals) `[parity: solo]`
+- [x] Personal reading stats page: genre breakdown, pace, pages read over time (charts) `[parity: solo]`
+- [x] Site-wide analytics expansion on the admin dashboard (trends over time, not just current totals) `[parity: solo]`
 
 ## Notifications
 
