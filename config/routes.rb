@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   end
   get "book_search", to: "book_search#index"
   get "feed", to: "activities#index"
+  resource :stats, only: [:show]
   resources :buddy_reads, only: [:index, :new, :create, :show, :update] do
     resources :messages, only: [:create], controller: "buddy_read_messages"
   end

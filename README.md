@@ -13,6 +13,7 @@ Built as a learning exercise to explore Rails auth/authz patterns before rebuild
 - **Clearance** — authentication
 - **Pundit** — authorization
 - **Faraday** — Open Library API integration
+- **Chartkick** + **Chart.js** — stats/analytics charts
 
 ## Setup
 
@@ -81,7 +82,7 @@ Pundit policies live in `app/policies/`. Role checks use `admin?`, `moderator?`,
 
 | Route | Access |
 |-------|--------|
-| `/admin` — dashboard with site stats and most-read books | Admin only |
+| `/admin` — dashboard with site stats, most-read books, and monthly trend charts | Admin only |
 | `/admin/users` — user list with role assignment | Admin only |
 | `/admin/readings` — reviewed readings with edit/delete actions | Moderator+ |
 
@@ -112,3 +113,8 @@ The book search at `/book_search` queries the Open Library API via `OpenLibraryS
 - `/reading_challenges` lets a member set an annual book-count goal (one per calendar year) and tracks progress against readings finished with a `finished_on` date in that year; editable at any time, with a progress bar shown there, on the account page, and (for the current year) on the member's public profile.
 - Reading streaks count consecutive finished books where no two consecutive finishes are more than 30 days apart (`User::STREAK_GAP_DAYS`) — a most-recent finish older than that resets the streak to zero. Shown on the account page and public profile.
 - Badges are a fixed, hardcoded set (`Badge::DEFINITIONS`) covering books finished, reviews written, streak length, and completing a reading challenge, at several tiers each. They're awarded permanently (never revoked) by `User#award_badges!`, called after a reading's status or review changes and after a reading challenge is saved. Shown on the account page and public profile.
+
+## Stats & analytics
+
+- `/stats` ("My Stats") shows a signed-in member's own reading charts: genre breakdown of finished books, books finished per month (last 12), and pages read per month (last 12) — rendered with [Chartkick](https://chartkick.com/) + Chart.js.
+- The admin dashboard (`/admin`) adds monthly trend line charts for new users, books added, and readings logged, alongside its existing totals and leaderboard.

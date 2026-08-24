@@ -166,6 +166,21 @@ see another member's lists.
   (and what's still open) on your account page; your public profile shows
   the badges you've earned to other members.
 
+## My Stats
+
+`/stats` ("My Stats" in the nav) shows charts built from your own finished
+readings:
+
+- **Genre Breakdown** — a pie chart of the genre tags on the books you've
+  finished (a book tagged with multiple genres counts toward each).
+- **Reading Pace** — a bar chart of how many books you finished per month,
+  over the last 12 months.
+- **Pages Read Over Time** — a line chart of pages read per month (summed
+  from each finished book's page count), over the last 12 months.
+
+Each chart shows a short prompt instead of an empty chart until you have
+matching data (e.g. a finished book with a genre tag).
+
 ## What members can't do
 
 - Edit or delete a book, even one you added yourself (moderator+ only).

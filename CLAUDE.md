@@ -14,6 +14,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **File uploads**: Active Storage, local disk service (`config/storage.yml`) in every environment
 - **Mailers**: `ApplicationMailer`/`UserMailer` via Action Mailer; `letter_opener` in development, `:test` delivery in test
 - **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
+- **Charts**: Chartkick (view helpers) + Chart.js (JS renderer, bundled via esbuild — `import "chartkick/chart.js"` in `app/javascript/application.js`), `groupdate` gem for month-bucketed trend queries
 - **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
 - **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL, Playwright e2e)
 - **Deployment**: Docker + Kamal + Thruster
@@ -122,6 +123,7 @@ resources :messages, nested under /buddy_reads/:buddy_read_id  BuddyReadMessages
 resources :clubs             ClubsController               (any signed-in user can view; creator/moderator can edit/delete)
 resource :membership, resources :posts, nested under /clubs/:club_id  ClubMembershipsController, ClubPostsController
 resources :reading_challenges, only: [:index, :new, :create, :edit, :update]  ReadingChallengesController  (scoped to current_user, like AccountsController)
+GET  /stats               StatsController#show           (signed-in only; scoped to current_user, like /feed)
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -213,6 +215,12 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `Badge` is a plain-Ruby registry (`Badge::DEFINITIONS`), not a database table — there's no admin UI to manage badges, and each definition is just a name/description plus a `criteria` lambda checked against a `User`. `UserBadge` (`user_id`, `badge_key`, `awarded_at`, unique per user/badge_key) is the only DB-backed piece; its `badge_key` is validated against `Badge::DEFINITIONS` so a typo'd or removed key can't be persisted.
 - Badges are awarded by `User#award_badges!`, which only ever adds rows — once earned, a badge is never revoked (e.g. editing a challenge's goal upward after completion doesn't strip the `challenge_completed` badge). It's called from `Reading`'s `after_save` (`saved_change_to_status? || saved_change_to_review?` — covers finishing a book, DNF, and adding a review) and from `ReadingChallenge`'s `after_save` (covers a challenge becoming completed on creation/edit without a new reading event, e.g. lowering the goal below an already-met count).
 - Streak, badges, and the current year's challenge progress render in two places: privately on `/account/edit` (via `AccountsController#edit`'s `@user`) and publicly on `/users/:id` (`ProfilesController#show` sets `@current_streak`/`@badges`/`@current_year_challenge` off `@profile_user`) — mirroring how favorite genres and finished/reading counts are already shown in both places.
+
+### Stats & analytics
+- `/stats` (`StatsController#show`) is the personal stats page — no policy class, inherently scoped to `current_user` like `ActivitiesController`'s `/feed`. Its three chart datasets are computed on `User`: `#genre_breakdown` (finished-book genre tag counts, via `Tag.genre.joins(books: :readings).merge(Reading.finished)`), `#books_finished_by_month` and `#pages_read_by_month` (both `group_by_month(:finished_on, last: 12)` off `readings.finished`, the latter summing `books.page_count`).
+- `groupdate`'s `group_by_month(..., last: 12)` always backfills every month in the range with a zero count, so a hash's presence/size can't be used to detect "no data yet" — `books_finished_by_month`/`pages_read_by_month` are always non-empty even for a user with zero finished readings. `StatsController#show` computes a separate `@has_finished_readings` (`readings.finished.where.not(finished_on: nil).exists?`) for the view's empty-state checks on those two charts; `genre_breakdown`'s hash is genuinely empty with no matching tags, so it doesn't need the same treatment.
+- Charts render via Chartkick + Chart.js (`pie_chart`/`column_chart`/`line_chart` view helpers) — the JS side is wired with a single `import "chartkick/chart.js"` in `app/javascript/application.js` (this subpath import self-registers the Chart.js adapter and sets up the global `Chartkick` object; importing `chartkick` and `chart.js/auto` separately does not wire them together and silently renders nothing).
+- The admin dashboard (`Admin::DashboardController#index`) adds three site-wide trend line charts (new users, books added, readings logged) alongside its existing totals/leaderboard, each a `group_by_month(:created_at, last: 12)` count — same backfill-zeros behavior as above, but there's no empty-state branch needed since admin trend charts are always shown regardless of whether any given month has data.
 
 ## Playwright e2e (cross-app parity)
 
