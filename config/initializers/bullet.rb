@@ -25,5 +25,13 @@ if Rails.env.local?
     # rendering each shelf's book count. Same low-fixture-count false positive
     # as the Series safelist above.
     Bullet.add_safelist type: :unused_eager_loading, class_name: "Shelf", association: :shelf_books
+
+    # NotificationsController#index eager-loads :notifiable to render each
+    # notification's message, but that method only dereferences notifiable
+    # for review_comment/club_post types, not new_follower — a page of
+    # notifications that happens to be all new-follower rows trips Bullet's
+    # unused-eager-load heuristic even though the include is needed whenever
+    # the other types are present.
+    Bullet.add_safelist type: :unused_eager_loading, class_name: "Notification", association: :notifiable
   end
 end

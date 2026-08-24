@@ -34,7 +34,7 @@ scenarios. Each feature below is tagged:
 
 ## Cataloging & metadata
 
-- [ ] Genres/tags on books, with tag-based browsing `[parity: coordinated]`
+- [x] Genres/tags on books, with tag-based browsing `[parity: coordinated]`
 - [x] ISBN field `[parity: solo]`
 - [x] Page count `[parity: solo]`
 - [x] Publish date metadata `[parity: solo]`
@@ -84,10 +84,10 @@ scenarios. Each feature below is tagged:
 
 ## Notifications
 
-- [ ] New follower notifications `[parity: solo]`
-- [ ] Comment/reply notifications on your reviews `[parity: solo]`
-- [ ] Book club activity notifications `[parity: solo]`
-- [ ] Digest emails (uses the currently-unused `solid_queue`/`solid_cache` infra for background sending) `[parity: solo]`
+- [x] New follower notifications `[parity: solo]`
+- [x] Comment/reply notifications on your reviews `[parity: solo]`
+- [x] Book club activity notifications `[parity: solo]`
+- [x] Digest emails (uses the currently-unused `solid_queue`/`solid_cache` infra for background sending) `[parity: solo]`
 
 ## Import/export
 

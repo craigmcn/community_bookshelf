@@ -1,7 +1,16 @@
-<p>Hi <%= @user.display_name %>,</p>
+<p style="margin-top: 0;">Hi <%= @user.display_name %>,</p>
 
-<p>Please confirm your email address for Community Bookshelf by clicking the link below:</p>
+<p>Please confirm your email address for Community Bookshelf by clicking the button below:</p>
 
-<p><%= link_to "Confirm my email", confirm_email_url(token: @user.email_confirmation_token) %></p>
+<p style="text-align: center; margin: 32px 0;">
+  <%= link_to "Confirm my email", confirm_email_url(token: @user.email_confirmation_token),
+        style: "display: inline-block; padding: 12px 28px; background-color: #0d6efd; color: #ffffff; " \
+               "text-decoration: none; border-radius: 6px; font-weight: 600;" %>
+</p>
 
-<p>If you didn't create this account, you can safely ignore this email.</p>
+<p style="color: #6c757d; font-size: 13px;">
+  If the button doesn't work, copy and paste this link into your browser:<br>
+  <%= link_to confirm_email_url(token: @user.email_confirmation_token), confirm_email_url(token: @user.email_confirmation_token) %>
+</p>
+
+<p style="margin-bottom: 0;">If you didn't create this account, you can safely ignore this email.</p>
