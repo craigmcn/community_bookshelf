@@ -15,6 +15,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **Mailers**: `ApplicationMailer`/`UserMailer`/`NotificationsMailer` via Action Mailer; `letter_opener` in development, `:test` delivery in test; shared `layouts/mailer.html.erb` carries inline-CSS branding used by every transactional email
 - **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
 - **Charts**: Chartkick (view helpers) + Chart.js (JS renderer, bundled via esbuild — `import "chartkick/chart.js"` in `app/javascript/application.js`), `groupdate` gem for month-bucketed trend queries
+- **Import/export**: `csv` gem (removed from Ruby's default gems since 3.4, so it's an explicit Gemfile dependency) backs shelf CSV export and Goodreads CSV import
 - **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
 - **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL, Playwright e2e)
 - **Deployment**: Docker + Kamal + Thruster
@@ -126,6 +127,8 @@ resource :membership, resources :posts, nested under /clubs/:club_id  ClubMember
 resources :reading_challenges, only: [:index, :new, :create, :edit, :update]  ReadingChallengesController  (scoped to current_user, like AccountsController)
 GET  /stats               StatsController#show           (signed-in only; scoped to current_user, like /feed)
 GET  /notifications, PATCH /notifications/:id, PATCH /notifications/mark_all_read  NotificationsController  (signed-in only; scoped to current_user, like /feed)
+GET  /readings/export     ReadingsController#export      (signed-in only; scoped to current_user, like /feed)
+resource :goodreads_import, only: [:new, :create]  GoodreadsImportsController  (signed-in only; scoped to current_user, like /feed)
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -230,6 +233,13 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `/notifications` (`NotificationsController`) — no policy class, same `current_user`-scoped pattern as `/feed` and `/stats`. `#index` lists them newest-first; `#update` (the link each row points to) marks one read and redirects straight to the underlying resource (`NotificationsHelper#notification_path_for`/`#notification_url_for` map `notification_type` to the follower's profile, the reading, or the club — two variants because Rails mailer views need `_url` helpers, not `_path`); `#mark_all_read` bulk-clears everything unread. The navbar bell (`layouts/application.html.erb`) shows `current_user.notifications.unread.count`, capped at "9+".
 - `Notification#message` only dereferences `notifiable` for `review_comment`/`club_post`, not `new_follower` — Bullet's unused-eager-load heuristic flags `NotificationsController#index`'s `includes(:notifiable)` on a page that happens to be all-follower notifications even though the include is needed once the other types are mixed in, so it's safelisted in `config/initializers/bullet.rb` alongside the existing `Series`/`Shelf` entries.
 - `SendNotificationDigestsJob` (recurring via `solid_queue`'s `config/recurring.yml`, daily) finds users with `not_yet_digested` notifications, sends each one `NotificationsMailer#digest`, and marks those specific notifications' `digested_at` — a user who reads everything in-app before the job runs still gets skipped, since the query is on `digested_at`, not `read_at`.
+
+### Import & export
+- `ReadingsController#export` (`GET /readings/export.csv`) streams `current_user.readings` as CSV via `send_data` — no policy class, same `current_user`-scoped pattern as `/feed`/`/stats`/`/notifications`. Requires `gem "csv"` in the Gemfile; Ruby removed `csv` from the default gems bundled with Rails/Ruby itself as of 3.4, so `require "csv"` alone raises a `LoadError` without it.
+- `GoodreadsImportsController#new`/`#create` (`/goodreads_import`, a singular resource) parses an uploaded Goodreads "Export Library" CSV via the `GoodreadsImport` service object — no policy class either, same scoping. Rejects a missing file and anything over `MAX_FILE_BYTES` (5MB) before parsing.
+- `GoodreadsImport` matches each row to an existing catalog `Book` by ISBN (`ISBN13` preferred over `ISBN`) first, then by case-insensitive title+author, before creating a new one — same "shared catalog" model `BookSearchController`/the manual add-book form use. Rows missing a title or author are skipped. Goodreads exports wrap ISBNs in Excel's `="..."` literal-string quoting, which trips a strict CSV parser ("Illegal quoting") — `CSV.parse(..., liberal_parsing: true)` is required to read the file at all, and `clean_isbn` strips the `="` `"` characters back out afterward.
+- A row is matched to an existing `Reading` (including soft-deleted ones, via `Reading.with_deleted`) by `user` and `book` before being applied — if one already exists the row is skipped rather than overwritten, so re-uploading the same export is a no-op instead of piling up duplicate readings. This lookup is deliberately `Reading.with_deleted.find_or_initialize_by(user: user, book: book)` on the class, **not** `user.readings.with_deleted...` through the association — chaining `.with_deleted` (which is `scope :with_deleted, -> { unscoped }`) off an association proxy calls `unscoped` on that relation, which drops the association's own `user_id` scoping along with the default scope, silently building a reading with `user_id: nil` that then fails to save. Reproduced directly while building this feature; the association-chained form must not be reintroduced.
+- `Exclusive Shelf` maps `read`/`currently-reading`/`to-read` to `finished`/`reading`/`want_to_read`; anything else (a custom Goodreads shelf) defaults to `want_to_read` rather than raising, since a `Reading` always requires a status.
 
 ## Playwright e2e (cross-app parity)
 
