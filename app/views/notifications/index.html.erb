@@ -1,0 +1,30 @@
+<% content_for :title, "Notifications" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0"><i class="fasl fa-bell me-2 opacity-75"></i>Notifications</h1>
+  <% if current_user.notifications.unread.exists? %>
+    <%= button_to "Mark all as read", mark_all_read_notifications_path, method: :patch, class: "btn btn-outline-secondary btn-sm" %>
+  <% end %>
+</div>
+
+<% if @notifications.any? %>
+  <div class="list-group mb-4">
+    <% @notifications.each do |notification| %>
+      <%= button_to notification_path(notification), method: :patch,
+            class: ["list-group-item list-group-item-action w-100 text-start border-0",
+                    ("bg-body-tertiary" unless notification.read?)] do %>
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <i class="fasl <%= notification_icon_for(notification) %> me-2 opacity-75"></i>
+            <%= notification.message %>
+          </div>
+          <span class="text-muted small text-nowrap ms-3"><%= time_ago_in_words(notification.created_at) %> ago</span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %>
+<% else %>
+  <p class="text-muted">You don't have any notifications yet.</p>
+<% end %>

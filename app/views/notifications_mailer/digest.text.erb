@@ -1,0 +1,10 @@
+Hi <%= @user.display_name %>,
+
+Here's what you missed on Community Bookshelf:
+
+<% @notifications.each do |notification| -%>
+- <%= notification.message %>
+  <%= notification_url_for(notification) %>
+<% end -%>
+
+View all notifications: <%= notifications_url %>

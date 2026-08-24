@@ -114,6 +114,12 @@ The book search at `/book_search` queries the Open Library API via `OpenLibraryS
 - Reading streaks count consecutive finished books where no two consecutive finishes are more than 30 days apart (`User::STREAK_GAP_DAYS`) — a most-recent finish older than that resets the streak to zero. Shown on the account page and public profile.
 - Badges are a fixed, hardcoded set (`Badge::DEFINITIONS`) covering books finished, reviews written, streak length, and completing a reading challenge, at several tiers each. They're awarded permanently (never revoked) by `User#award_badges!`, called after a reading's status or review changes and after a reading challenge is saved. Shown on the account page and public profile.
 
+## Notifications
+
+- A bell icon in the navbar (visible when signed in) shows an unread count and links to `/notifications`. Notifications are created for a new follower, a comment on your review, or a new post in a club you belong to (not for your own comments/posts).
+- Opening a notification marks it read and redirects straight to the thing it's about (the follower's profile, the reading, or the club).
+- `SendNotificationDigestsJob` (scheduled daily via `config/recurring.yml`, `solid_queue`) emails each user with unread notifications a summary since their last digest, then marks those notifications as digested so they aren't re-sent tomorrow — independent of whether they've since been read in-app.
+
 ## Stats & analytics
 
 - `/stats` ("My Stats") shows a signed-in member's own reading charts: genre breakdown of finished books, books finished per month (last 12), and pages read per month (last 12) — rendered with [Chartkick](https://chartkick.com/) + Chart.js.

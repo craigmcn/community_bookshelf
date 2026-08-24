@@ -135,6 +135,15 @@ think of a book before adding it yourself.
   spoilers and it's hidden from other members — including in the club
   you're reading together — until they've logged that book as **Finished**;
   you and moderators can still see it either way.
+- **Notifications** — the bell icon in the nav bar shows how many
+  notifications you haven't seen yet. You get one when someone follows you,
+  comments on one of your public reviews, or posts in a club you belong to
+  (your own comments and posts don't notify you). Opening a notification
+  from `/notifications` marks it read and takes you straight to the
+  follower's profile, the reading, or the club post. If you have unread
+  notifications, you'll also get a daily email digest summarizing them —
+  each notification is only emailed once, even if you haven't opened the
+  app since.
 
 ## Lists (Shelves)
 

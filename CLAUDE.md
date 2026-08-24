@@ -12,7 +12,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **External API**: Open Library (book search + cover images via Faraday)
 - **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
 - **File uploads**: Active Storage, local disk service (`config/storage.yml`) in every environment
-- **Mailers**: `ApplicationMailer`/`UserMailer` via Action Mailer; `letter_opener` in development, `:test` delivery in test
+- **Mailers**: `ApplicationMailer`/`UserMailer`/`NotificationsMailer` via Action Mailer; `letter_opener` in development, `:test` delivery in test; shared `layouts/mailer.html.erb` carries inline-CSS branding used by every transactional email
 - **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
 - **Charts**: Chartkick (view helpers) + Chart.js (JS renderer, bundled via esbuild — `import "chartkick/chart.js"` in `app/javascript/application.js`), `groupdate` gem for month-bucketed trend queries
 - **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
@@ -61,6 +61,7 @@ yarn test:e2e                           # Playwright e2e (starts its own server,
 - **taggings** — join table books ↔ tags (unique per book/tag pair)
 - **reading_challenges** — `user_id`, `year`, `goal` (unique per user/year, `goal > 0` check constraint)
 - **user_badges** — `user_id`, `badge_key`, `awarded_at` (unique per user/badge_key); `badge_key` is validated against the hardcoded `Badge::DEFINITIONS` registry, not a database-backed `badges` table
+- **notifications** — `recipient_id`/`actor_id` (both FK → users), `notifiable` (polymorphic: `Follow` | `ReviewComment` | `ClubPost`), `notification_type`, `read_at`, `digested_at`
 
 ### Enums
 ```ruby
@@ -124,6 +125,7 @@ resources :clubs             ClubsController               (any signed-in user c
 resource :membership, resources :posts, nested under /clubs/:club_id  ClubMembershipsController, ClubPostsController
 resources :reading_challenges, only: [:index, :new, :create, :edit, :update]  ReadingChallengesController  (scoped to current_user, like AccountsController)
 GET  /stats               StatsController#show           (signed-in only; scoped to current_user, like /feed)
+GET  /notifications, PATCH /notifications/:id, PATCH /notifications/mark_all_read  NotificationsController  (signed-in only; scoped to current_user, like /feed)
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
@@ -221,6 +223,13 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `groupdate`'s `group_by_month(..., last: 12)` always backfills every month in the range with a zero count, so a hash's presence/size can't be used to detect "no data yet" — `books_finished_by_month`/`pages_read_by_month` are always non-empty even for a user with zero finished readings. `StatsController#show` computes a separate `@has_finished_readings` (`readings.finished.where.not(finished_on: nil).exists?`) for the view's empty-state checks on those two charts; `genre_breakdown`'s hash is genuinely empty with no matching tags, so it doesn't need the same treatment.
 - Charts render via Chartkick + Chart.js (`pie_chart`/`column_chart`/`line_chart` view helpers) — the JS side is wired with a single `import "chartkick/chart.js"` in `app/javascript/application.js` (this subpath import self-registers the Chart.js adapter and sets up the global `Chartkick` object; importing `chartkick` and `chart.js/auto` separately does not wire them together and silently renders nothing).
 - The admin dashboard (`Admin::DashboardController#index`) adds three site-wide trend line charts (new users, books added, readings logged) alongside its existing totals/leaderboard, each a `group_by_month(:created_at, last: 12)` count — same backfill-zeros behavior as above, but there's no empty-state branch needed since admin trend charts are always shown regardless of whether any given month has data.
+
+### Notifications
+- `Notification` (`recipient_id`, `actor_id`, polymorphic `notifiable`, `notification_type`: `new_follower`/`review_comment`/`club_post`, `read_at`, `digested_at`) is created by `after_create` callbacks on the source model, not directly: `Follow` notifies the followed user, `ReviewComment` notifies the reading's owner (skipped when you comment on your own review), `ClubPost` notifies every other club member (skipped for the poster). Each source model declares the reverse polymorphic association (`has_one`/`has_many :notification(s), as: :notifiable, dependent: :destroy`) so unfollowing, deleting a comment, or deleting a post also removes the notification it generated — including via `User#delete_account!`'s existing cascades through `active_follows`/`review_comments`/`club_posts`, with no extra cleanup code needed there. `User has_many :notifications, foreign_key: :recipient_id, dependent: :destroy` separately cleans up a deleted user's own inbox.
+- `read_at` (viewed in-app) and `digested_at` (already included in a digest email) are tracked independently — reading a notification on the site doesn't stop it from being mailed in that day's digest, and vice versa, since a user might check email before ever opening the app.
+- `/notifications` (`NotificationsController`) — no policy class, same `current_user`-scoped pattern as `/feed` and `/stats`. `#index` lists them newest-first; `#update` (the link each row points to) marks one read and redirects straight to the underlying resource (`NotificationsHelper#notification_path_for`/`#notification_url_for` map `notification_type` to the follower's profile, the reading, or the club — two variants because Rails mailer views need `_url` helpers, not `_path`); `#mark_all_read` bulk-clears everything unread. The navbar bell (`layouts/application.html.erb`) shows `current_user.notifications.unread.count`, capped at "9+".
+- `Notification#message` only dereferences `notifiable` for `review_comment`/`club_post`, not `new_follower` — Bullet's unused-eager-load heuristic flags `NotificationsController#index`'s `includes(:notifiable)` on a page that happens to be all-follower notifications even though the include is needed once the other types are mixed in, so it's safelisted in `config/initializers/bullet.rb` alongside the existing `Series`/`Shelf` entries.
+- `SendNotificationDigestsJob` (recurring via `solid_queue`'s `config/recurring.yml`, daily) finds users with `not_yet_digested` notifications, sends each one `NotificationsMailer#digest`, and marks those specific notifications' `digested_at` — a user who reads everything in-app before the job runs still gets skipped, since the query is on `digested_at`, not `read_at`.
 
 ## Playwright e2e (cross-app parity)
 

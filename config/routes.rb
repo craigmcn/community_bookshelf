@@ -12,6 +12,11 @@ Rails.application.routes.draw do
   get "book_search", to: "book_search#index"
   get "feed", to: "activities#index"
   resource :stats, only: [:show]
+  resources :notifications, only: [:index, :update] do
+    collection do
+      patch :mark_all_read
+    end
+  end
   resources :buddy_reads, only: [:index, :new, :create, :show, :update] do
     resources :messages, only: [:create], controller: "buddy_read_messages"
   end

@@ -94,6 +94,18 @@
 
           <ul class="navbar-nav">
             <% if signed_in? %>
+              <% unread_notifications_count = current_user.notifications.unread.count %>
+              <li class="nav-item">
+                <%= link_to notifications_path, class: "nav-link position-relative" do %>
+                  <i class="fasl fa-bell"></i>
+                  <% if unread_notifications_count.positive? %>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">
+                      <%= unread_notifications_count > 9 ? "9+" : unread_notifications_count %>
+                      <span class="visually-hidden">unread notifications</span>
+                    </span>
+                  <% end %>
+                <% end %>
+              </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
                   <% if current_user.avatar.attached? %>
