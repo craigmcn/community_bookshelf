@@ -53,15 +53,28 @@ yarn test:e2e                           # Playwright e2e (starts its own server,
 ## Domain Model
 
 ### Core Tables
-- **books** — `title`, `author`, `cover_url`, `added_by_id` (FK → users)
+- **books** — `title`, `author`, `cover_url`, `added_by_id` (FK → users), `series_id`/`series_position` (optional FK → series)
+- **series** — `name` (globally unique)
 - **readings** — `user_id`, `book_id`, `status` (enum), `rating` (enum), `review`, `deleted_at` (soft delete)
 - **users** — Clearance authentication (email, encrypted_password, tokens), plus `name`/`bio` (self-service profile), `avatar` (Active Storage attachment), `email_confirmed_at`/`email_confirmation_token` (informational-only confirmation, not enforced)
 - **roles** — `name`: `member | moderator | admin`
 - **role_assignments** — join table users ↔ roles (users can hold multiple roles)
 - **tags** — `name` (globally unique), `category` (`genre | mood | pace`, default `genre`)
 - **taggings** — join table books ↔ tags (unique per book/tag pair)
+- **favorite_genres** — join table users ↔ tags (unique per user/tag pair); user-declared favorite genres, distinct from `taggings` which is book-scoped
+- **shelves** — `user_id`, `name` (unique per user/name)
+- **shelf_books** — join table shelves ↔ books (unique per shelf/book pair)
 - **reading_challenges** — `user_id`, `year`, `goal` (unique per user/year, `goal > 0` check constraint)
 - **user_badges** — `user_id`, `badge_key`, `awarded_at` (unique per user/badge_key); `badge_key` is validated against the hardcoded `Badge::DEFINITIONS` registry, not a database-backed `badges` table
+- **follows** — `follower_id`/`followed_id` (both FK → users, unique per pair); DB check constraint blocks self-follows
+- **activities** — `user_id`, `reading_id`, `action` (`added_book | started_reading | finished_reading | reviewed`); feeds `/feed`
+- **review_likes** — `user_id`, `reading_id` (unique per pair); likes on a reading's public review
+- **review_comments** — `user_id`, `reading_id`, `body`; comments on a reading's public review
+- **buddy_reads** — `book_id`, `initiator_id`/`partner_id` (both FK → users), `status` (`pending | accepted | declined | cancelled | completed`, default `pending`); DB check constraint blocks self-pairing
+- **buddy_read_messages** — `buddy_read_id`, `user_id`, `body`; flat per-pair discussion thread
+- **clubs** — `book_id`, `created_by_id` (FK → users), `name`, `description`
+- **club_memberships** — join table clubs ↔ users (unique per pair)
+- **club_posts** — `club_id`, `user_id`, `body`, `spoiler` (boolean, default `false`)
 - **notifications** — `recipient_id`/`actor_id` (both FK → users), `notifiable` (polymorphic: `Follow` | `ReviewComment` | `ClubPost`), `notification_type`, `read_at`, `digested_at`
 
 ### Enums
