@@ -11,7 +11,7 @@ class GoodreadsImportsController < ApplicationController
 
     result = GoodreadsImport.new(current_user, file.read).call
     notice = "Imported #{result.imported_count} book(s)."
-    notice += " Skipped #{result.skipped_count} row(s) already on your shelf or missing a title/author." if result.skipped_count.positive?
+    notice += " Skipped #{result.skipped_count} row(s) that were missing a title/author, already on your shelf, or invalid." if result.skipped_count.positive?
     redirect_to readings_path, notice: notice
   rescue CSV::MalformedCSVError
     redirect_to new_goodreads_import_path, alert: "That file doesn't look like a valid CSV export."

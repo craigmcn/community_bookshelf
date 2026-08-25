@@ -4,8 +4,10 @@ require "csv"
 # needed, catalog Books) for the given user. Matches each row to an existing
 # Book by ISBN first, then by title+author, before creating a new one — the
 # same "shared catalog" model the manual book-search form uses. A row is
-# skipped (not overwritten) when the user already has a Reading for that book,
-# so re-uploading the same export is a no-op rather than a pile of duplicates.
+# skipped (not overwritten) when the user already has an active Reading for
+# that book, so re-uploading the same export is a no-op rather than a pile of
+# duplicates — a book soft-deleted from the shelf isn't "already on it", so
+# re-importing it creates a fresh Reading.
 class GoodreadsImport
   Result = Struct.new(:imported_count, :skipped_count)
 
@@ -33,7 +35,10 @@ class GoodreadsImport
         next
       end
 
-      reading = Reading.with_deleted.find_or_initialize_by(user: user, book: book)
+      # Default-scoped (active readings only) so a book the member soft-deleted
+      # from their shelf can be re-imported — a matching soft-deleted Reading
+      # doesn't count as "already on your shelf", and a fresh one is created.
+      reading = Reading.find_or_initialize_by(user: user, book: book)
       unless reading.new_record?
         skipped += 1
         next

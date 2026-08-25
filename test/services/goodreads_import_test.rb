@@ -54,6 +54,24 @@ class GoodreadsImportTest < ActiveSupport::TestCase
     assert_equal 1, result.skipped_count
   end
 
+  test "re-imports a book whose reading was soft-deleted from the shelf" do
+    reading = readings(:one)
+    reading.soft_delete
+
+    csv = <<~CSV
+      Title,Author,ISBN,ISBN13,My Rating,Number of Pages,Year Published,Date Read,My Review,Exclusive Shelf
+      #{reading.book.title},#{reading.book.author},,,3,,,,,read
+    CSV
+
+    result = GoodreadsImport.new(reading.user, csv).call
+
+    assert_equal 1, result.imported_count
+    assert_equal 0, result.skipped_count
+
+    new_reading = reading.user.readings.find_by!(book: reading.book)
+    assert_not_equal reading.id, new_reading.id
+  end
+
   test "skips rows missing a title or author" do
     csv = <<~CSV
       Title,Author,ISBN,ISBN13,My Rating,Number of Pages,Year Published,Date Read,My Review,Exclusive Shelf
