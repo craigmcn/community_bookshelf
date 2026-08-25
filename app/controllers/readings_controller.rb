@@ -1,3 +1,5 @@
+require "csv"
+
 class ReadingsController < ApplicationController
   before_action :set_reading, only: %i[show edit update destroy]
 
@@ -35,6 +37,32 @@ class ReadingsController < ApplicationController
 
     @pagy, @readings = pagy(@readings)
     @recommended_books = Book.recommended_for(current_user)
+  end
+
+  def export
+    readings = current_user.readings.includes(:book).order(:created_at)
+
+    csv = CSV.generate(headers: true) do |csv|
+      csv << ["Title", "Author", "ISBN", "Status", "Rating", "Format", "Started On", "Finished On", "Progress Percent", "Review", "Review Public", "Date Added"]
+      readings.each do |reading|
+        csv << [
+          reading.book.title,
+          reading.book.author,
+          reading.book.isbn,
+          reading.status_label,
+          Reading.ratings[reading.rating],
+          reading.format,
+          reading.started_on,
+          reading.finished_on,
+          reading.progress_percent,
+          reading.review,
+          reading.is_review_public,
+          reading.created_at.to_date
+        ]
+      end
+    end
+
+    send_data csv, filename: "my-shelf-#{Date.current.iso8601}.csv", type: "text/csv"
   end
 
   def show

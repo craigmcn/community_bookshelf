@@ -91,8 +91,8 @@ scenarios. Each feature below is tagged:
 
 ## Import/export
 
-- [ ] CSV export of your shelf `[parity: solo]`
-- [ ] Goodreads CSV import `[parity: solo]`
+- [x] CSV export of your shelf `[parity: solo]`
+- [x] Goodreads CSV import `[parity: solo]`
 
 ## Account & profile
 

@@ -124,3 +124,8 @@ The book search at `/book_search` queries the Open Library API via `OpenLibraryS
 
 - `/stats` ("My Stats") shows a signed-in member's own reading charts: genre breakdown of finished books, books finished per month (last 12), and pages read per month (last 12) — rendered with [Chartkick](https://chartkick.com/) + Chart.js.
 - The admin dashboard (`/admin`) adds monthly trend line charts for new users, books added, and readings logged, alongside its existing totals and leaderboard.
+
+## Import & export
+
+- **Export CSV** (`/readings/export.csv`, linked from My Shelf) downloads every reading a member has logged — book, status, rating, format, dates, progress, and review.
+- **Import from Goodreads** (`/goodreads_import/new`, linked from My Shelf) parses a Goodreads "Export Library" CSV: each row is matched to an existing catalog `Book` by ISBN, then by title/author, before a new one is created, then logged as a `Reading` (status/rating/review/date finished mapped from the row). A row is skipped, not overwritten, when the member already has a reading for that book, so re-uploading the same export is a no-op. Capped at 5MB (`GoodreadsImportsController::MAX_FILE_BYTES`).

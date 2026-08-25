@@ -98,6 +98,19 @@ Your shelf paginates 20 readings at a time once it grows past that.
 your shelf page shows a "Recommended for You" row of books that share tags
 with it and aren't already on your shelf.
 
+**Importing and exporting your shelf**: two buttons above your shelf handle
+moving your data in and out:
+
+- **Export CSV** downloads every reading you've logged — book, status,
+  rating, format, dates, progress, and review — as a CSV file.
+- **Import from Goodreads** uploads a CSV file from Goodreads' *My Books →
+  Import and export → Export Library*. Each row is matched to an existing
+  book in the catalog by ISBN or title/author where possible, or added as a
+  new book otherwise, then logged as a reading with the matching status
+  (Read/Currently Reading/To Read), rating, review, and date finished. Books
+  already on your shelf are skipped, so re-uploading the same export is
+  safe. The upload is capped at 5MB.
+
 ## Community Readings
 
 Every book's page has a "Community Readings" table showing what everyone has

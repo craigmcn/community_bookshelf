@@ -1,0 +1,24 @@
+<% content_for :title, "Import from Goodreads" %>
+
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <h1 class="mb-4"><i class="fasl fa-file-import me-2 opacity-75"></i>Import from Goodreads</h1>
+
+    <p>
+      Upload the CSV file from Goodreads' <strong>My Books &rarr; Import and export &rarr; Export Library</strong>.
+      Each row becomes a reading on your shelf, matched to an existing book in the catalog by ISBN or
+      title/author where possible, or added as a new book otherwise. Books already on your shelf are skipped,
+      so it's safe to re-upload the same file.
+    </p>
+
+    <%= form_with url: goodreads_import_path, method: :post, multipart: true do %>
+      <div class="mb-3">
+        <%= label_tag :file, "Goodreads CSV export", class: "form-label" %>
+        <input type="file" name="file" id="file" class="form-control" accept=".csv,text/csv" required>
+      </div>
+
+      <%= submit_tag "Import", class: "btn btn-primary" %>
+      <%= link_to "Cancel", readings_path, class: "btn btn-outline-secondary" %>
+    <% end %>
+  </div>
+</div>
