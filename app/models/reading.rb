@@ -17,9 +17,15 @@ class Reading < ApplicationRecord
   validates :progress_percent, numericality: {only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 100}, allow_nil: true
   validate :finished_on_not_before_started_on
 
-  after_create :record_added_book_activity
-  after_update :record_status_change_activity, if: :saved_change_to_status?
-  after_update :record_review_activity, if: -> { review.present? && is_review_public? && review_before_last_save.blank? }
+  # Set by bulk-creation paths (e.g. GoodreadsImport) to suppress the
+  # per-reading activity-feed entries below — importing dozens of
+  # already-read books shouldn't blast every follower's feed at once.
+  # Badges still award normally; that reflects genuine reading history.
+  attr_accessor :skip_activity_logging
+
+  after_create :record_added_book_activity, unless: :skip_activity_logging
+  after_update :record_status_change_activity, if: -> { saved_change_to_status? && !skip_activity_logging }
+  after_update :record_review_activity, if: -> { !skip_activity_logging && review.present? && is_review_public? && review_before_last_save.blank? }
   after_save :award_badges, if: -> { saved_change_to_status? || saved_change_to_review? }
 
   def self.status_options

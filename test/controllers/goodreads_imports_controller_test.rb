@@ -55,6 +55,13 @@ class GoodreadsImportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Please choose a CSV file to upload.", flash[:alert]
   end
 
+  test "member submitting a plain string instead of a file is redirected, not errored" do
+    sign_in_as users(:member)
+    post goodreads_import_url, params: {file: "not-a-file"}
+    assert_redirected_to new_goodreads_import_url
+    assert_equal "Please choose a CSV file to upload.", flash[:alert]
+  end
+
   test "guest cannot import" do
     file = fixture_file_upload("goodreads_export.csv", "text/csv")
     assert_no_difference "Reading.count" do

@@ -77,4 +77,28 @@ class GoodreadsImportTest < ActiveSupport::TestCase
     reading = users(:member).readings.find_by!(book: Book.find_by!(title: "Some Book"))
     assert_equal "want_to_read", reading.status
   end
+
+  test "handles a binary-encoded upload with a UTF-8 BOM and non-ASCII characters without raising" do
+    csv = <<~CSV
+      Title,Author,ISBN,ISBN13,My Rating,Number of Pages,Year Published,Date Read,My Review,Exclusive Shelf
+      Café de Flore,José Something,,,4,,,,,read
+    CSV
+    binary_content = ("\xEF\xBB\xBF" + csv).dup.force_encoding(Encoding::BINARY)
+
+    result = GoodreadsImport.new(users(:member), binary_content).call
+
+    assert_equal 1, result.imported_count
+    assert Book.exists?(title: "Café de Flore")
+  end
+
+  test "does not create activity-feed entries for imported readings" do
+    csv = <<~CSV
+      Title,Author,ISBN,ISBN13,My Rating,Number of Pages,Year Published,Date Read,My Review,Exclusive Shelf
+      Dune,Frank Herbert,,,5,,,,,read
+    CSV
+
+    assert_no_difference "Activity.count" do
+      GoodreadsImport.new(users(:member), csv).call
+    end
+  end
 end

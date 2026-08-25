@@ -6,7 +6,7 @@ class GoodreadsImportsController < ApplicationController
 
   def create
     file = params[:file]
-    return redirect_to new_goodreads_import_path, alert: "Please choose a CSV file to upload." if file.blank?
+    return redirect_to new_goodreads_import_path, alert: "Please choose a CSV file to upload." if file.blank? || !file.respond_to?(:read)
     return redirect_to new_goodreads_import_path, alert: "That file is too large (maximum is #{MAX_FILE_BYTES / 1.megabyte}MB)." if file.size > MAX_FILE_BYTES
 
     result = GoodreadsImport.new(current_user, file.read).call

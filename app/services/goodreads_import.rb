@@ -24,7 +24,7 @@ class GoodreadsImport
     imported = 0
     skipped = 0
 
-    content = @csv_content.delete_prefix("\xEF\xBB\xBF")
+    content = normalize_encoding(@csv_content)
 
     CSV.parse(content, headers: true, liberal_parsing: true).each do |row|
       book = find_or_create_book(row)
@@ -54,6 +54,17 @@ class GoodreadsImport
 
   attr_reader :user
 
+  # Uploaded file content typically arrives as ASCII-8BIT (binary), so a raw
+  # UTF-8 BOM literal can't be compared/stripped via String methods without
+  # raising Encoding::CompatibilityError. Strip the BOM at the byte level
+  # first, then force UTF-8 and scrub any invalid byte sequences (rather than
+  # raising) so a non-ASCII author/title doesn't crash the whole import.
+  def normalize_encoding(content)
+    content = content.dup.force_encoding(Encoding::BINARY)
+    content = content.byteslice(3..) || +"" if content.start_with?("\xEF\xBB\xBF".b)
+    content.force_encoding(Encoding::UTF_8).scrub
+  end
+
   def find_or_create_book(row)
     title = row["Title"].to_s.strip
     author = row["Author"].to_s.strip
@@ -79,6 +90,7 @@ class GoodreadsImport
   end
 
   def apply_row(reading, row)
+    reading.skip_activity_logging = true
     reading.status = SHELF_STATUS.fetch(row["Exclusive Shelf"].to_s.strip, "want_to_read")
 
     my_rating = row["My Rating"].to_s.strip.to_i
