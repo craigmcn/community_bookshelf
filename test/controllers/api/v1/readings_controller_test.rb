@@ -10,6 +10,11 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "garbage token is rejected" do
+    get api_v1_readings_url, headers: {"Authorization" => "Bearer not-a-real-token"}
+    assert_response :unauthorized
+  end
+
   test "member's index only shows their own readings" do
     Reading.create!(user: users(:admin), book: books(:two), status: :reading)
 

@@ -41,6 +41,9 @@ resend link until you do.
   This can't be undone, and requires re-entering your password to confirm.
   If you're the app's only admin, deletion is blocked until you promote
   someone else to admin first — see the Admin Guide.
+- **API Access** — every account has an API token for scripting against your
+  own data. See the [API Guide](api-guide.md) for how to use it; regenerate
+  it any time from this same page.
 
 ## Browsing books
 

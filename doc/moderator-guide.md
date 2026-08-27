@@ -62,6 +62,14 @@ a red "deleted" badge). This is the moderation queue: use it to find and
 review member feedback without having to browse every book individually.
 From here you can jump to a reading's page, edit it, or delete it.
 
+## Using the API
+
+Everything above is also available through the [API Guide](api-guide.md) —
+your moderator permissions carry over automatically, since API requests are
+authorized against the same policies as the website (update/delete a book,
+delete any reading, etc.), just checked against your API token instead of a
+signed-in session.
+
 ## What moderators can't do
 
 - Access the admin dashboard (`/admin`) or the most-read-books leaderboard —
