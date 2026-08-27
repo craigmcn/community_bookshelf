@@ -5,6 +5,12 @@ updates:
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+  ignore:
+    # 43.x is an unrelated ground-up API rewrite (Pagy::Backend/Frontend and
+    # the extras system are gone), not a compatible upgrade — see CLAUDE.md's
+    # Tech Stack note. Revisit only as a deliberate, tested migration.
+    - dependency-name: pagy
+      update-types: ["version-update:semver-major"]
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
