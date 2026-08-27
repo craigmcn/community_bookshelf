@@ -45,7 +45,9 @@ Rails.application.routes.draw do
     resource :follow, only: [:create, :destroy]
   end
 
-  resource :account, only: [:edit, :update, :destroy]
+  resource :account, only: [:edit, :update, :destroy] do
+    post :regenerate_api_token, on: :collection
+  end
   resource :email_confirmation, only: [:create]
   get "confirm_email/:token", to: "email_confirmations#confirm", as: :confirm_email
 
@@ -53,5 +55,12 @@ Rails.application.routes.draw do
     root "dashboard#index"
     resources :users, only: [:index, :edit, :update]
     resources :readings, only: [:index]
+  end
+
+  namespace :api do
+    namespace :v1 do
+      resources :books
+      resources :readings
+    end
   end
 end
