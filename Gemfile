@@ -36,6 +36,9 @@ gem "faraday"
 # Pagination
 gem "pagy", "~> 9.4"
 
+# Rate limiting for the JSON API
+gem "rack-attack"
+
 # Charts (stats & analytics pages)
 gem "chartkick"
 

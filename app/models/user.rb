@@ -35,6 +35,7 @@ class User < ApplicationRecord
   has_many :user_badges, dependent: :destroy
   has_many :notifications, foreign_key: :recipient_id, inverse_of: :recipient, dependent: :destroy
   has_one_attached :avatar
+  has_secure_token :api_token
 
   # Excludes the system placeholder account from user-facing listings/stats
   # (admin user management, dashboard totals) — it isn't a real account.

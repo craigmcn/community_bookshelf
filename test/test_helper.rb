@@ -18,4 +18,11 @@ class ActionDispatch::IntegrationTest
     user.update_columns(remember_token: token)
     cookies[Clearance.configuration.cookie_name] = token
   end
+
+  # Fixtures bypass AR callbacks, so has_secure_token's before_create never
+  # runs for fixture users — api_token is nil until explicitly regenerated.
+  def auth_headers(user)
+    user.regenerate_api_token if user.api_token.blank?
+    {"Authorization" => "Bearer #{user.api_token}"}
+  end
 end

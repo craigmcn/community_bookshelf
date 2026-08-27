@@ -61,3 +61,7 @@ Book/series management and the reviewed-readings moderation queue
 (`/admin/readings`) work exactly as described in the
 [Moderator Guide](moderator-guide.md) — admins have the same access there as
 moderators, nothing extra.
+
+The admin dashboard and user role management are website-only — there's no
+API equivalent for either. Everything else (books, readings, moderator
+actions) is available through the [API Guide](api-guide.md).

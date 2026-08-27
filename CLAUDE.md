@@ -16,6 +16,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
 - **Charts**: Chartkick (view helpers) + Chart.js (JS renderer, bundled via esbuild — `import "chartkick/chart.js"` in `app/javascript/application.js`), `groupdate` gem for month-bucketed trend queries
 - **Import/export**: `csv` gem (removed from Ruby's default gems since 3.4, so it's an explicit Gemfile dependency) backs shelf CSV export and Goodreads CSV import
+- **JSON API**: `jbuilder` (views) + `rack-attack` (rate limiting) back `/api/v1/*` — see JSON API section below
 - **Testing**: Minitest + Capybara (system tests); Playwright for cross-app e2e parity checks (see below)
 - **CI**: GitHub Actions (Brakeman, bundler-audit, StandardRB, full test suite vs PostgreSQL, Playwright e2e)
 - **Deployment**: Docker + Kamal + Thruster
@@ -126,6 +127,7 @@ resources :readings      ReadingsController           (owner or moderator+)
 GET  /book_search        BookSearchController#index   (Turbo Frame search)
 
 resource :account        AccountsController           (signed-in only; always acts on current_user)
+POST /account/regenerate_api_token  AccountsController#regenerate_api_token  (signed-in only)
 resource :email_confirmation, only: [:create]         (resend, signed-in only)
 GET  /confirm_email/:token  EmailConfirmationsController#confirm  (public)
 GET  /users/:id          ProfilesController#show       (any signed-in user)
@@ -147,6 +149,10 @@ namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
   /admin/readings        AdminReadingsController      (moderator+)
   /admin/users           AdminUsersController         (admin only)
+
+namespace :api do namespace :v1
+  resources :books       Api::V1::BooksController     (token-authenticated; policy tiers same as HTML BooksController)
+  resources :readings    Api::V1::ReadingsController  (token-authenticated; policy tiers same as HTML ReadingsController)
 ```
 
 ## Testing Conventions
@@ -256,6 +262,17 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `Exclusive Shelf` maps `read`/`currently-reading`/`to-read` to `finished`/`reading`/`want_to_read`; anything else (a custom Goodreads shelf) defaults to `want_to_read` rather than raising, since a `Reading` always requires a status.
 - `Reading#skip_activity_logging` (transient `attr_accessor`, not persisted) is set by `GoodreadsImport#apply_row` before every save — without it, each imported reading's `after_create` would fire `record_added_book_activity` same as a normal manual add, so importing dozens of already-read books would blast every follower's `/feed` at once. Badges still award normally (`award_badges` isn't gated by the flag) since a badge reflects genuine reading history regardless of how it was logged.
 - Uploaded CSV content typically arrives ASCII-8BIT (binary) via Rack's multipart parser — comparing/stripping a UTF-8 BOM literal against it directly raises `Encoding::CompatibilityError` for any file containing non-ASCII bytes (e.g. an author name like "José"). `GoodreadsImport#normalize_encoding` strips the BOM at the byte level first, then force-encodes to UTF-8 and `scrub`s invalid byte sequences rather than raising.
+
+### JSON API
+- `/api/v1/books`, `/api/v1/readings` (full CRUD) are backed by `Api::V1::BaseController`, which does **not** inherit `ApplicationController` — it skips Clearance/session auth entirely in favor of a bearer token (`Authorization: Bearer <token>`) resolved against `User#api_token` (`has_secure_token`, plaintext, not hashed — unlike a password, it's meant to be used directly as a credential, auto-generated `before_create` for every new user). `current_user` on this controller tree is the token-resolved user, not Clearance's session-based one — same method name deliberately, so the existing `BookPolicy`/`ReadingPolicy`/`policy_scope` classes work unmodified for both the HTML and API controllers with zero policy-layer changes. `Api::V1::BaseController` forces `request.format = :json` on every request regardless of `Accept` header, since this controller tree only ever renders jbuilder JSON.
+- Every `/api/v1/*` action requires a valid token, including `Book`'s nominally-public `index?`/`show?` — there is no anonymous API access, even though the HTML `BooksController` allows it. Pundit failures render `{"error": "..."}` with 403 (not the HTML flow's flash+redirect); a missing/invalid token renders the same shape with 401.
+- Error shape: `{"error": "message"}` for single-cause failures (401/403/404), `{"errors": ["msg", ...]}` for `ActiveModel::Errors#full_messages` on 422 validation failures — the two keys are the entire contract, chosen because Pundit/auth/not-found failures are always one categorical reason while model validation is inherently a list.
+- `Api::V1::BooksController#create` reuses the same `OpenLibraryService.work_detail(@book.open_library_key)` enrichment as the HTML `BooksController#create`, for behavioral parity. `Api::V1::ReadingsController#destroy` calls `@reading.soft_delete` (matching the HTML controller), not `destroy!`.
+- Index actions (`Api::V1::BooksController#index`/`Api::V1::ReadingsController#index`) deliberately don't eager-load `added_by`/`book` — the index jbuilder views only serialize foreign-key ids, not nested associations (to avoid duplicating data across a paginated list), so an eager-load there would be genuinely unused and Bullet correctly flags it. `Api::V1::ReadingsController#show` does render a nested book, loaded per-request there.
+- `User#regenerate_api_token` (from `has_secure_token :api_token`) is self-service via `POST /account/regenerate_api_token` (`AccountsController#regenerate_api_token`, `UserPolicy#update?`) — regenerating immediately invalidates the prior token (no grace period/rotation overlap). The full token is only ever shown once, via `flash[:api_token]`, immediately after regeneration; `/account/edit` otherwise shows only a masked prefix.
+- Rate limiting via `rack-attack` (`config/initializers/rack_attack.rb`) throttles `/api/*` per-token (120 req/min), not per-IP, since every successfully-authenticated request already carries a token — plus a secondary per-IP throttle (30 req/min) on requests with no valid token, guarding the token check itself from brute-forcing. `Rack::Attack.verified_api_token` resolves the bearer value against `User.exists?(api_token:)` before either throttle keys on it — bucketing on the raw header instead (caught in Copilot PR review on #110) would let an attacker dodge both throttles by sending a different garbage token on every request: each string gets its own untouched "api/token" bucket, and the header is never blank, so "api/ip-unauthenticated" never engages either. No exemption for moderator/admin tokens — a runaway script is equally disruptive regardless of the token owner's role. `rack-attack`'s Railtie auto-registers its middleware; no explicit `config.middleware.use` needed.
+- No API versioning beyond `v1` exists yet — `Api::V1::BaseController` is the only version; a breaking change would need a new `Api::V2` namespace rather than mutating `v1` in place.
+- Fixtures bypass AR callbacks, so `has_secure_token`'s `before_create` never runs for fixture users — `test_helper.rb`'s `auth_headers(user)` calls `user.regenerate_api_token` lazily if blank, mirroring `sign_in_as`'s existing fixture-callback workaround for `remember_token`.
 
 ## Playwright e2e (cross-app parity)
 
