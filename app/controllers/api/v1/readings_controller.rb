@@ -10,10 +10,12 @@ class Api::V1::ReadingsController < Api::V1::BaseController
 
     @readings = @readings.order(updated_at: :desc)
     @pagy, @readings = pagy(@readings)
+    fresh_when @readings
   end
 
   def show
     authorize @reading
+    fresh_when @reading
   end
 
   def create
