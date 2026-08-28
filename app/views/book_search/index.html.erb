@@ -1,8 +1,9 @@
-<turbo-frame id="book-search-results">
+<turbo-frame id="book-search-results" aria-live="polite" aria-atomic="true">
   <% if @results.nil? %>
   <% elsif @results.empty? %>
     <p class="text-muted small mt-2 mb-0">No results found.</p>
   <% else %>
+    <p class="visually-hidden"><%= pluralize(@results.size, "result") %> found.</p>
     <div class="list-group mt-2">
       <% @results.each do |result| %>
         <button type="button"
@@ -16,7 +17,7 @@
             <img src="<%= result[:cover_url] %>" style="height:50px; width:35px; object-fit:cover; flex-shrink:0;" alt="">
           <% else %>
             <div style="height:50px; width:35px; flex-shrink:0;" class="bg-secondary rounded d-flex align-items-center justify-content-center">
-              <small class="text-white">📚</small>
+              <small class="text-white" aria-hidden="true">📚</small>
             </div>
           <% end %>
           <div class="text-start overflow-hidden">
