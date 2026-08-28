@@ -39,6 +39,9 @@ gem "pagy", "~> 9.4"
 # Rate limiting for the JSON API
 gem "rack-attack"
 
+# CORS support for the JSON API, so browser-based third-party clients can call it cross-origin
+gem "rack-cors"
+
 # Charts (stats & analytics pages)
 gem "chartkick"
 
