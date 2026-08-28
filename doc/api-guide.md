@@ -134,6 +134,32 @@ curl -X POST https://<host>/api/v1/readings \
   -d '{"reading": {"book_id": 42, "status": "reading"}}'
 ```
 
+#### Bulk create
+
+`POST /api/v1/readings/bulk` creates several readings in one request — for
+importing a batch of already-read books without burning a rate-limit slot
+per row. Accepts up to 100 readings per request; each one is created (or
+rejected) independently, so one bad row doesn't fail the rest.
+
+```sh
+curl -X POST https://<host>/api/v1/readings/bulk \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"readings": [{"book_id": 42, "status": "finished"}, {"book_id": 7, "status": "want_to_read"}]}'
+```
+
+The response is always `200` (even if every row failed — check each row's
+own `status`) and lists a result per row, in the same order as the request:
+
+```json
+{
+  "results": [
+    {"index": 0, "status": "created", "reading": {"id": 101, "book_id": 42, ...}},
+    {"index": 1, "status": "error", "errors": ["Book must exist"]}
+  ]
+}
+```
+
 ## Rate limits
 
 To keep the API usable for everyone, requests are throttled:
