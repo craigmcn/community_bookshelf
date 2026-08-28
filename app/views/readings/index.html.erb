@@ -38,7 +38,7 @@
     <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by book title or author...">
   </div>
   <div class="col-sm-4 col-md-2">
-    <select name="status" class="form-select" onchange="this.form.requestSubmit()">
+    <select name="status" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
       <option value="">Any status</option>
       <% Reading.status_options.each do |label, value| %>
         <option value="<%= value %>" <%= "selected" if params[:status] == value %>><%= label %></option>
@@ -46,7 +46,7 @@
     </select>
   </div>
   <div class="col-sm-4 col-md-2">
-    <select name="rating" class="form-select" onchange="this.form.requestSubmit()">
+    <select name="rating" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
       <option value="">Any rating</option>
       <% Reading.ratings.each_key do |value| %>
         <option value="<%= value %>" <%= "selected" if params[:rating] == value %>><%= Reading.ratings[value] %> star<%= "s" unless Reading.ratings[value] == 1 %></option>
@@ -54,7 +54,7 @@
     </select>
   </div>
   <div class="col-sm-4 col-md-2">
-    <select name="sort" class="form-select" onchange="this.form.requestSubmit()">
+    <select name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
       <% ReadingsController::SORT_OPTIONS.each do |key, opts| %>
         <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
       <% end %>
