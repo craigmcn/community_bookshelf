@@ -70,6 +70,14 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, books(:two).title
   end
 
+  test "readings index results are wrapped in a promoted turbo frame" do
+    sign_in_as users(:member)
+    get readings_url
+
+    assert_response :success
+    assert_select "turbo-frame#readings-results[data-turbo-action=advance]"
+  end
+
   test "readings index searches by book title or author" do
     Reading.create!(user: users(:member), book: books(:two), status: :reading)
 

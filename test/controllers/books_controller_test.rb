@@ -141,6 +141,12 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_operator body.index(books(:one).title), :<, body.index(books(:two).title)
   end
 
+  test "books index results are wrapped in a promoted turbo frame" do
+    get books_url
+    assert_response :success
+    assert_select "turbo-frame#books-results[data-turbo-action=advance]"
+  end
+
   test "books index search-clear link preserves the current sort" do
     get books_url(q: "gatsby", sort: "author")
     assert_response :success
