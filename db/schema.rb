@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_27_025604) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_162802) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_025604) do
     t.index ["reading_id"], name: "index_activities_on_reading_id"
     t.index ["user_id", "created_at"], name: "index_activities_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "actor_id", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.bigint "subject_id", null: false
+    t.string "subject_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_audit_logs_on_actor_id"
+    t.index ["created_at"], name: "index_audit_logs_on_created_at"
+    t.index ["subject_type", "subject_id"], name: "index_audit_logs_on_subject"
   end
 
   create_table "books", force: :cascade do |t|
@@ -308,6 +321,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_27_025604) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "readings"
   add_foreign_key "activities", "users"
+  add_foreign_key "audit_logs", "users", column: "actor_id"
   add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"
   add_foreign_key "buddy_read_messages", "buddy_reads"
