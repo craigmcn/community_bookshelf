@@ -65,5 +65,8 @@ Rails.application.routes.draw do
         post :bulk, on: :collection
       end
     end
+
+    get "docs", to: "docs#index"
+    get "docs/openapi.yaml", to: "docs#openapi", as: :openapi
   end
 end

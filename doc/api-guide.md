@@ -7,6 +7,11 @@ see the [Member Guide](member-guide.md), [Moderator Guide](moderator-guide.md),
 and [Admin Guide](admin-guide.md) for the equivalent web features and who can
 do what.
 
+This guide is prose; for a machine-readable contract (client codegen,
+Postman/Insomnia import, or just poking at endpoints interactively) see the
+[OpenAPI spec](openapi.yaml), also served live at `/api/docs/openapi.yaml`.
+An interactive Swagger UI explorer is at `/api/docs`.
+
 ## Getting a token
 
 Every account has an API token, generated automatically when it's created.
