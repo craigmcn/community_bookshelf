@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title><%= content_for(:title) || "Community Bookshelf" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -21,6 +21,8 @@
   </head>
 
   <body>
+    <a class="visually-hidden-focusable" href="#main-content">Skip to content</a>
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-0">
       <div class="container">
         <%= link_to root_path, class: "navbar-brand fw-bold d-flex align-items-center" do %>
@@ -28,7 +30,8 @@
           Community Bookshelf
         <% end %>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -96,12 +99,13 @@
             <% if signed_in? %>
               <% unread_notifications_count = current_user.notifications.unread.count %>
               <li class="nav-item">
-                <%= link_to notifications_path, class: "nav-link position-relative" do %>
-                  <i class="fasl fa-bell"></i>
+                <%= link_to notifications_path,
+                      class: "nav-link position-relative",
+                      "aria-label": "Notifications#{" (#{unread_notifications_count} unread)" if unread_notifications_count.positive?}" do %>
+                  <i class="fasl fa-bell" aria-hidden="true"></i>
                   <% if unread_notifications_count.positive? %>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger" aria-hidden="true">
                       <%= unread_notifications_count > 9 ? "9+" : unread_notifications_count %>
-                      <span class="visually-hidden">unread notifications</span>
                     </span>
                   <% end %>
                 <% end %>
@@ -149,7 +153,7 @@
       </div>
     </nav>
 
-    <main class="app-main">
+    <main class="app-main" id="main-content">
       <div class="container">
         <% if notice.present? %>
           <div class="alert alert-success alert-dismissible fade show" role="alert">
