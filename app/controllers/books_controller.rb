@@ -75,8 +75,12 @@ class BooksController < ApplicationController
   def destroy
     authorize @book
     title = @book.title
-    @book.destroy!
-    log_audit_action!(action: "destroy_book", subject: @book, details: {title: title})
+
+    ActiveRecord::Base.transaction do
+      @book.destroy!
+      log_audit_action!(action: "destroy_book", subject: @book, details: {title: title})
+    end
+
     redirect_to books_path, notice: "Book was successfully destroyed.", status: :see_other
   end
 
