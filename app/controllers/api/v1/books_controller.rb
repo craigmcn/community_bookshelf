@@ -11,10 +11,12 @@ class Api::V1::BooksController < Api::V1::BaseController
 
     @books = @books.order(:title)
     @pagy, @books = pagy(@books)
+    fresh_when @books
   end
 
   def show
     authorize @book
+    fresh_when @book
   end
 
   def create
