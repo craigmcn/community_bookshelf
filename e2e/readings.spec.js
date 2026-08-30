@@ -42,7 +42,16 @@ test.describe("Readings", () => {
 
     const row = page.locator("tr", { has: page.getByRole("link", { name: "The Great Gatsby" }) });
     page.once("dialog", (dialog) => dialog.accept());
-    await row.getByRole("button", { name: "Delete" }).click();
+    // .click() resolves as soon as the click event fires, not once Turbo's
+    // fetch/redirect cycle completes — waiting for the response avoids a
+    // flake where the immediate page.goto below races the mutation (see
+    // issue #146). button_to renders a real HTML form (POST + a Rails
+    // _method=delete override field), not an actual HTTP DELETE, so match
+    // on the URL instead of the method.
+    await Promise.all([
+      page.waitForResponse((response) => response.url().includes("/readings/")),
+      row.getByRole("button", { name: "Delete" }).click()
+    ]);
 
     // destroy redirects to the moderator's own shelf; go back to confirm the "deleted" badge
     await page.goto("/admin/readings");
