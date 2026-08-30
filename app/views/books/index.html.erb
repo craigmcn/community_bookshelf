@@ -9,68 +9,70 @@
   <% end %>
 </div>
 
-<%= form_with url: books_path, method: :get, class: "row g-2 align-items-center mb-3" do %>
-  <% if @tag %>
-    <%= hidden_field_tag :tag, @tag.name %>
-  <% end %>
-  <div class="col-sm-6 col-md-5">
-    <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by title or author...">
-  </div>
-  <div class="col-sm-4 col-md-3">
-    <select name="sort" class="form-select" onchange="this.form.requestSubmit()">
-      <% BooksController::SORT_OPTIONS.each do |key, opts| %>
-        <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
-      <% end %>
-    </select>
-  </div>
-  <div class="col-sm-auto">
-    <button type="submit" class="btn btn-outline-primary">Search</button>
-    <% if params[:q].present? %>
-      <%= link_to "Clear", books_path(tag: @tag&.name, sort: params[:sort]), class: "btn btn-outline-secondary" %>
+<%= turbo_frame_tag "books-results", data: {turbo_action: "advance"} do %>
+  <%= form_with url: books_path, method: :get, class: "row g-2 align-items-center mb-3" do %>
+    <% if @tag %>
+      <%= hidden_field_tag :tag, @tag.name %>
     <% end %>
-  </div>
-<% end %>
-
-<% [["Genres", @genre_tags], ["Moods", @mood_tags], ["Pace", @pace_tags]].each do |label, tags| %>
-  <% if tags.any? %>
-    <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
-      <span class="text-muted small me-1">Browse by <%= label.downcase %>:</span>
-      <% tags.each do |tag| %>
-        <%= link_to tag.name, books_path(tag: tag.name, q: params[:q], sort: params[:sort]),
-              class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
+    <div class="col-sm-6 col-md-5">
+      <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by title or author...">
+    </div>
+    <div class="col-sm-4 col-md-3">
+      <select name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+        <% BooksController::SORT_OPTIONS.each do |key, opts| %>
+          <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="col-sm-auto">
+      <button type="submit" class="btn btn-outline-primary">Search</button>
+      <% if params[:q].present? %>
+        <%= link_to "Clear", books_path(tag: @tag&.name, sort: params[:sort]), class: "btn btn-outline-secondary" %>
       <% end %>
     </div>
   <% end %>
-<% end %>
-<% if @tag %>
-  <%= link_to "Clear tag filter", books_path(q: params[:q], sort: params[:sort]), class: "small d-inline-block mb-4" %>
-<% else %>
-  <div class="mb-2"></div>
-<% end %>
 
-<% if params[:tag].present? && @tag.nil? %>
-  <p class="text-muted">No books tagged "<%= params[:tag] %>".</p>
-<% elsif @books.any? %>
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-    <% @books.each do |book| %>
-      <div class="col">
-        <%= link_to book, class: "text-decoration-none text-dark", data: { turbo_prefetch: false } do %>
-          <%= render book %>
+  <% [["Genres", @genre_tags], ["Moods", @mood_tags], ["Pace", @pace_tags]].each do |label, tags| %>
+    <% if tags.any? %>
+      <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+        <span class="text-muted small me-1">Browse by <%= label.downcase %>:</span>
+        <% tags.each do |tag| %>
+          <%= link_to tag.name, books_path(tag: tag.name, q: params[:q], sort: params[:sort]),
+                class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
         <% end %>
       </div>
     <% end %>
-  </div>
-  <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
-<% elsif params[:q].present? %>
-  <p class="text-muted">No books match "<%= params[:q] %>".</p>
-<% else %>
-  <div class="text-center text-muted py-5">
-    <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>
-    <p class="fs-5">No books yet.</p>
-    <% if signed_in? %>
-      <%= link_to new_book_path, class: "btn btn-primary" do %>
-        <i class="fasl fa-plus me-1"></i>Add the first one
+  <% end %>
+  <% if @tag %>
+    <%= link_to "Clear tag filter", books_path(q: params[:q], sort: params[:sort]), class: "small d-inline-block mb-4" %>
+  <% else %>
+    <div class="mb-2"></div>
+  <% end %>
+
+  <% if params[:tag].present? && @tag.nil? %>
+    <p class="text-muted">No books tagged "<%= params[:tag] %>".</p>
+  <% elsif @books.any? %>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      <% @books.each do |book| %>
+        <div class="col">
+          <%= link_to book, class: "text-decoration-none text-dark", data: { turbo_prefetch: false, turbo_frame: "_top" } do %>
+            <%= render book %>
+          <% end %>
+        </div>
       <% end %>
-    <% end %>
-  </div>
+    </div>
+    <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
+  <% elsif params[:q].present? %>
+    <p class="text-muted">No books match "<%= params[:q] %>".</p>
+  <% else %>
+    <div class="text-center text-muted py-5">
+      <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>
+      <p class="fs-5">No books yet.</p>
+      <% if signed_in? %>
+        <%= link_to new_book_path, class: "btn btn-primary", data: {turbo_frame: "_top"} do %>
+          <i class="fasl fa-plus me-1"></i>Add the first one
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
 <% end %>

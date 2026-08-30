@@ -1,0 +1,39 @@
+<% content_for :title, "Audit Log — Admin" %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="mb-0">Audit Log</h1>
+  <span class="text-muted"><%= @pagy.count %> total</span>
+</div>
+
+<% if @audit_logs.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>When</th>
+          <th>Actor</th>
+          <th>Action</th>
+          <th>Subject</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @audit_logs.each do |audit_log| %>
+          <tr>
+            <td><%= audit_log.created_at.strftime("%b %-d, %Y %H:%M") %></td>
+            <td><%= audit_log.actor.display_name %></td>
+            <td><%= audit_log.action.tr("_", " ").capitalize %></td>
+            <td>
+              <%= audit_log.subject_type %>
+              <% if audit_log.details.present? %>
+                — <span class="text-muted small"><%= audit_log.details.map { |k, v| "#{k}: #{v}" }.join(", ") %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
+<% else %>
+  <p class="text-muted">No audit log entries yet.</p>
+<% end %>

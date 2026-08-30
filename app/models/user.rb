@@ -34,6 +34,12 @@ class User < ApplicationRecord
   has_many :reading_challenges, dependent: :destroy
   has_many :user_badges, dependent: :destroy
   has_many :notifications, foreign_key: :recipient_id, inverse_of: :recipient, dependent: :destroy
+  # No dependent: :destroy — an audit log is a record of what an actor did,
+  # not their data; deleting it when they delete their account would erase
+  # the trail exactly for the accounts most likely to have used moderator
+  # powers. Reassigned to the deleted-user placeholder in delete_account!
+  # instead, the same treatment as books/created_clubs below.
+  has_many :audit_logs, foreign_key: :actor_id, inverse_of: :actor
   has_one_attached :avatar
   has_secure_token :api_token
 
@@ -197,15 +203,17 @@ class User < ApplicationRecord
     admin? && self.class.joins(:roles).where(roles: {name: "admin"}).where.not(id: id).none?
   end
 
-  # Reassigns this user's contributed catalog books and any clubs they
-  # created to a shared placeholder account (so that shared community content
-  # isn't disrupted by an account deletion — a club's discussion survives its
-  # creator leaving), then destroys the user — cascading to their own
-  # readings/shelves/role assignments/club posts/etc via dependent: :destroy.
-  # Readings' default scope hides soft-deleted rows from that association, so
-  # they're destroyed explicitly first — otherwise one left behind would
-  # still reference this user's id via its FK and the final destroy! would
-  # fail. Clubs need the same reassignment treatment as books — without it,
+  # Reassigns this user's contributed catalog books, any clubs they created,
+  # and any audit logs where they were the acting moderator/admin to a shared
+  # placeholder account (so that shared community content isn't disrupted by
+  # an account deletion — a club's discussion survives its creator leaving,
+  # and a moderation history survives the moderator's account leaving), then
+  # destroys the user — cascading to their own readings/shelves/role
+  # assignments/club posts/etc via dependent: :destroy. Readings' default
+  # scope hides soft-deleted rows from that association, so they're
+  # destroyed explicitly first — otherwise one left behind would still
+  # reference this user's id via its FK and the final destroy! would fail.
+  # Clubs need the same reassignment treatment as books — without it,
   # destroy! hits the same FK failure via clubs.created_by_id.
   def delete_account!
     raise SoleAdminError, "Can't delete the only admin account." if sole_admin?
@@ -213,6 +221,7 @@ class User < ApplicationRecord
     transaction do
       books.update_all(added_by_id: self.class.deleted_placeholder.id)
       created_clubs.update_all(created_by_id: self.class.deleted_placeholder.id)
+      audit_logs.update_all(actor_id: self.class.deleted_placeholder.id)
       Reading.unscoped.where(user_id: id).destroy_all
       destroy!
     end
