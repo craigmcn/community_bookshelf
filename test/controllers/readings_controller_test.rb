@@ -70,6 +70,33 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, books(:two).title
   end
 
+  test "readings index results are wrapped in a promoted turbo frame" do
+    sign_in_as users(:member)
+    get readings_url
+
+    assert_response :success
+    assert_select "turbo-frame#readings-results[data-turbo-action=advance]"
+  end
+
+  test "readings index row links escape the results frame to the top-level page" do
+    sign_in_as users(:member)
+    get readings_url
+
+    assert_response :success
+    assert_select "a[href=?][data-turbo-frame=_top]", book_path(@reading.book)
+    assert_select "a[href=?][data-turbo-frame=_top]", edit_reading_path(@reading)
+  end
+
+  test "readings index empty-state log-a-reading link escapes the results frame" do
+    Reading.unscoped.where(user: users(:member)).destroy_all
+    sign_in_as users(:member)
+
+    get readings_url
+
+    assert_response :success
+    assert_select "a[href=?][data-turbo-frame=_top]", new_reading_path
+  end
+
   test "readings index searches by book title or author" do
     Reading.create!(user: users(:member), book: books(:two), status: :reading)
 
@@ -254,6 +281,20 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to readings_url
     assert_not_nil @reading.reload.deleted_at
+  end
+
+  test "soft-deleting a reading writes an audit log entry" do
+    moderator = users(:moderator)
+    sign_in_as moderator
+
+    assert_difference "AuditLog.count", 1 do
+      delete reading_url(@reading)
+    end
+
+    audit_log = AuditLog.last
+    assert_equal moderator, audit_log.actor
+    assert_equal "destroy_reading", audit_log.action
+    assert_equal @reading.book.title, audit_log.details["book_title"]
   end
 
   test "guest cannot export readings" do

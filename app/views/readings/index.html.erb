@@ -30,82 +30,84 @@
   </div>
 <% end %>
 
-<%= form_with url: readings_path, method: :get, class: "row g-2 align-items-center mb-3" do %>
-  <% if @tag %>
-    <%= hidden_field_tag :tag, @tag.name %>
-  <% end %>
-  <div class="col-sm-6 col-md-4">
-    <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by book title or author...">
-  </div>
-  <div class="col-sm-4 col-md-2">
-    <select name="status" class="form-select" onchange="this.form.requestSubmit()">
-      <option value="">Any status</option>
-      <% Reading.status_options.each do |label, value| %>
-        <option value="<%= value %>" <%= "selected" if params[:status] == value %>><%= label %></option>
-      <% end %>
-    </select>
-  </div>
-  <div class="col-sm-4 col-md-2">
-    <select name="rating" class="form-select" onchange="this.form.requestSubmit()">
-      <option value="">Any rating</option>
-      <% Reading.ratings.each_key do |value| %>
-        <option value="<%= value %>" <%= "selected" if params[:rating] == value %>><%= Reading.ratings[value] %> star<%= "s" unless Reading.ratings[value] == 1 %></option>
-      <% end %>
-    </select>
-  </div>
-  <div class="col-sm-4 col-md-2">
-    <select name="sort" class="form-select" onchange="this.form.requestSubmit()">
-      <% ReadingsController::SORT_OPTIONS.each do |key, opts| %>
-        <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
-      <% end %>
-    </select>
-  </div>
-  <div class="col-sm-auto">
-    <button type="submit" class="btn btn-outline-primary">Filter</button>
-    <% if params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
-      <%= link_to "Clear", readings_path, class: "btn btn-outline-secondary" %>
+<%= turbo_frame_tag "readings-results", data: {turbo_action: "advance"} do %>
+  <%= form_with url: readings_path, method: :get, class: "row g-2 align-items-center mb-3" do %>
+    <% if @tag %>
+      <%= hidden_field_tag :tag, @tag.name %>
     <% end %>
-  </div>
-<% end %>
-
-<% if @shelf_tags.any? %>
-  <div class="d-flex flex-wrap align-items-center gap-1 mb-4">
-    <span class="text-muted small me-1">Browse by genre:</span>
-    <% @shelf_tags.each do |tag| %>
-      <%= link_to tag.name, readings_path(tag: tag.name, q: params[:q], status: params[:status], rating: params[:rating], sort: params[:sort]),
-            class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
-    <% end %>
-  </div>
-<% end %>
-
-<% if @readings.any? %>
-  <div class="table-responsive">
-    <table class="table table-hover align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th>Book</th>
-          <th>Status</th>
-          <th>Rating</th>
-          <th>Progress</th>
-          <th>Review</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @readings.each do |reading| %>
-          <%= render reading %>
+    <div class="col-sm-6 col-md-4">
+      <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by book title or author...">
+    </div>
+    <div class="col-sm-4 col-md-2">
+      <select name="status" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+        <option value="">Any status</option>
+        <% Reading.status_options.each do |label, value| %>
+          <option value="<%= value %>" <%= "selected" if params[:status] == value %>><%= label %></option>
         <% end %>
-      </tbody>
-    </table>
-  </div>
-  <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
-<% elsif params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
-  <p class="text-muted">No readings match those filters.</p>
-<% else %>
-  <div class="text-center text-muted py-5">
-    <p class="fs-5">Your shelf is empty.</p>
-    <%= link_to new_reading_path, class: "btn btn-primary" do %>
-      <i class="fasl fa-plus me-1"></i>Log your first reading
-    <% end %>
-  </div>
+      </select>
+    </div>
+    <div class="col-sm-4 col-md-2">
+      <select name="rating" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+        <option value="">Any rating</option>
+        <% Reading.ratings.each_key do |value| %>
+          <option value="<%= value %>" <%= "selected" if params[:rating] == value %>><%= Reading.ratings[value] %> star<%= "s" unless Reading.ratings[value] == 1 %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="col-sm-4 col-md-2">
+      <select name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+        <% ReadingsController::SORT_OPTIONS.each do |key, opts| %>
+          <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="col-sm-auto">
+      <button type="submit" class="btn btn-outline-primary">Filter</button>
+      <% if params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
+        <%= link_to "Clear", readings_path, class: "btn btn-outline-secondary" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @shelf_tags.any? %>
+    <div class="d-flex flex-wrap align-items-center gap-1 mb-4">
+      <span class="text-muted small me-1">Browse by genre:</span>
+      <% @shelf_tags.each do |tag| %>
+        <%= link_to tag.name, readings_path(tag: tag.name, q: params[:q], status: params[:status], rating: params[:rating], sort: params[:sort]),
+              class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @readings.any? %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Book</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th>Progress</th>
+            <th>Review</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @readings.each do |reading| %>
+            <%= render reading %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
+  <% elsif params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
+    <p class="text-muted">No readings match those filters.</p>
+  <% else %>
+    <div class="text-center text-muted py-5">
+      <p class="fs-5">Your shelf is empty.</p>
+      <%= link_to new_reading_path, class: "btn btn-primary", data: {turbo_frame: "_top"} do %>
+        <i class="fasl fa-plus me-1"></i>Log your first reading
+      <% end %>
+    </div>
+  <% end %>
 <% end %>

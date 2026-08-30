@@ -1,6 +1,6 @@
 <tr id="<%= dom_id reading %>">
   <td>
-    <%= link_to reading.book.title, reading.book, class: "text-decoration-none fw-semibold" %>
+    <%= link_to reading.book.title, reading.book, class: "text-decoration-none fw-semibold", data: {turbo_frame: "_top"} %>
     <% if reading.deleted? %>
       <span class="badge bg-danger ms-1">deleted</span>
     <% end %>
@@ -38,14 +38,14 @@
   <td class="text-muted"><%= truncate(reading.review, length: 80) %></td>
   <td class="d-flex">
     <% if policy(reading).edit? %>
-      <%= link_to edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary" do %>
+      <%= link_to edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary", data: {turbo_frame: "_top"} do %>
         <i class="fasl fa-pen-to-square"></i>
       <% end %>
     <% end %>
     <% if policy(reading).destroy? %>
       <%= button_to reading, method: :delete,
             class: "btn btn-sm btn-outline-danger ms-1",
-            form: { data: { turbo_confirm: "Remove this reading?" } } do %>
+            form: { data: { turbo_confirm: "Remove this reading?", turbo_frame: "_top" } } do %>
         <i class="fasl fa-trash-can"></i>
       <% end %>
     <% end %>

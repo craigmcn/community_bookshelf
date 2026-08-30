@@ -46,7 +46,8 @@
            data-action="input->book-search#search">
     <turbo-frame id="book-search-results"
                  data-book-search-target="results"
-                 data-action="turbo:before-fetch-request->book-search#showSpinner turbo:frame-load->book-search#hideSpinner turbo:fetch-error->book-search#hideSpinner"></turbo-frame>
+                 data-action="turbo:before-fetch-request->book-search#showSpinner turbo:frame-load->book-search#hideSpinner turbo:fetch-error->book-search#hideSpinner"
+                 aria-live="polite" aria-atomic="true"></turbo-frame>
   </div>
 
   <div class="row">
