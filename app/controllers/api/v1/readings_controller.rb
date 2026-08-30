@@ -54,11 +54,11 @@ class Api::V1::ReadingsController < Api::V1::BaseController
     raw_readings = params[:readings]
 
     if !raw_readings.is_a?(Array) || raw_readings.empty?
-      return render json: {error: "readings must be a non-empty array"}, status: :unprocessable_content
+      return render json: {errors: ["readings must be a non-empty array"]}, status: :unprocessable_content
     end
 
     if raw_readings.size > MAX_BULK_SIZE
-      return render json: {error: "readings cannot contain more than #{MAX_BULK_SIZE} items"}, status: :unprocessable_content
+      return render json: {errors: ["readings cannot contain more than #{MAX_BULK_SIZE} items"]}, status: :unprocessable_content
     end
 
     permitted_readings = params.expect(readings: [bulk_reading_keys])

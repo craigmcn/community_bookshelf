@@ -53,11 +53,10 @@ class Api::V1::ReadingsBulkTest < ActionDispatch::IntegrationTest
   test "rejects a batch larger than the max size" do
     too_many = Array.new(Api::V1::ReadingsController::MAX_BULK_SIZE + 1) { {book_id: books(:one).id, status: "want_to_read"} }
 
-    post bulk_api_v1_readings_url, params: {readings: too_many}, headers: auth_headers(users(:member)), as: :json
-
-    assert_response :unprocessable_content
     assert_no_difference "Reading.count" do
       post bulk_api_v1_readings_url, params: {readings: too_many}, headers: auth_headers(users(:member)), as: :json
     end
+
+    assert_response :unprocessable_content
   end
 end
