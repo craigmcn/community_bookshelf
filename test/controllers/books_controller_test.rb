@@ -147,6 +147,23 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#books-results[data-turbo-action=advance]"
   end
 
+  test "books index book card links escape the results frame to the top-level page" do
+    get books_url
+    assert_response :success
+    assert_select "a[href=?][data-turbo-frame=_top]", book_path(@book)
+  end
+
+  test "books index empty-state add-a-book link escapes the results frame" do
+    Reading.unscoped.destroy_all
+    Book.destroy_all
+    sign_in_as users(:member)
+
+    get books_url
+
+    assert_response :success
+    assert_select "a[href=?][data-turbo-frame=_top]", new_book_path
+  end
+
   test "books index search-clear link preserves the current sort" do
     get books_url(q: "gatsby", sort: "author")
     assert_response :success
