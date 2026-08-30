@@ -1,0 +1,361 @@
+openapi: 3.0.3
+info:
+  title: Community Bookshelf API
+  version: "1"
+  description: |
+    A JSON API for the book catalog and reading logs. See doc/api-guide.md
+    in the repository for the full prose guide (getting a token, rate
+    limits, error shapes) — this spec covers the same endpoints in a
+    machine-readable form for client codegen and interactive exploration.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Books
+  - name: Readings
+
+paths:
+  /books:
+    get:
+      tags: [Books]
+      summary: List books
+      parameters:
+        - name: q
+          in: query
+          description: Search by title or author (ILIKE match)
+          schema: {type: string}
+        - name: page
+          in: query
+          schema: {type: integer, default: 1}
+      responses:
+        "200":
+          description: Paginated list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  books:
+                    type: array
+                    items: {$ref: "#/components/schemas/Book"}
+                  pagination: {$ref: "#/components/schemas/Pagination"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    post:
+      tags: [Books]
+      summary: Create a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [book]
+              properties:
+                book: {$ref: "#/components/schemas/BookInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Book"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /books/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    get:
+      tags: [Books]
+      summary: Show a book
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Book"}
+        "304": {description: Not Modified (ETag matched If-None-Match)}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Books]
+      summary: Update a book (moderator or admin only)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [book]
+              properties:
+                book: {$ref: "#/components/schemas/BookInput"}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Book"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+    delete:
+      tags: [Books]
+      summary: Delete a book (moderator or admin only)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /readings:
+    get:
+      tags: [Readings]
+      summary: List readings (your own; moderators/admins see everyone's)
+      parameters:
+        - name: status
+          in: query
+          schema: {type: string, enum: [want_to_read, reading, finished]}
+        - name: page
+          in: query
+          schema: {type: integer, default: 1}
+      responses:
+        "200":
+          description: Paginated list of readings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  readings:
+                    type: array
+                    items: {$ref: "#/components/schemas/Reading"}
+                  pagination: {$ref: "#/components/schemas/Pagination"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    post:
+      tags: [Readings]
+      summary: Create a reading
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reading]
+              properties:
+                reading: {$ref: "#/components/schemas/ReadingInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReadingWithBook"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /readings/bulk:
+    post:
+      tags: [Readings]
+      summary: Create up to 100 readings in one request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                readings:
+                  type: array
+                  maxItems: 100
+                  items: {$ref: "#/components/schemas/ReadingInput"}
+      responses:
+        "200":
+          description: Always 200 — check each row's own status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index: {type: integer}
+                        status: {type: string, enum: [created, error]}
+                        reading: {$ref: "#/components/schemas/Reading"}
+                        errors: {type: array, items: {type: string}}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /readings/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    get:
+      tags: [Readings]
+      summary: Show a reading (owner, moderator/admin, or anyone if the review is public)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReadingWithBook"}
+        "304": {description: Not Modified (ETag matched If-None-Match)}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Readings]
+      summary: Update a reading (owner, or moderator/admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reading]
+              properties:
+                reading: {$ref: "#/components/schemas/ReadingInput"}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReadingWithBook"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+    delete:
+      tags: [Readings]
+      summary: Soft-delete a reading (moderator or admin only)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Your account's API token, from /account/edit. Every endpoint
+        requires one — there is no anonymous access, even for catalog
+        browsing that's public on the website.
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorMessage"}
+    Forbidden:
+      description: Token is valid, but you're not allowed to do this
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorMessage"}
+    NotFound:
+      description: Resource doesn't exist
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorMessage"}
+    ValidationFailed:
+      description: Validation failed on create/update
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorMessages"}
+
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        error: {type: string}
+    ErrorMessages:
+      type: object
+      properties:
+        errors: {type: array, items: {type: string}}
+    Pagination:
+      type: object
+      properties:
+        page: {type: integer}
+        pages: {type: integer}
+        count: {type: integer}
+    Book:
+      type: object
+      properties:
+        id: {type: integer}
+        title: {type: string}
+        author: {type: string}
+        isbn: {type: string, nullable: true}
+        cover_url: {type: string, nullable: true}
+        page_count: {type: integer, nullable: true}
+        published_on: {type: string, format: date, nullable: true}
+        description: {type: string, nullable: true}
+        subjects: {type: array, items: {type: string}}
+        series_id: {type: integer, nullable: true}
+        series_position: {type: integer, nullable: true}
+        added_by_id: {type: integer}
+        tag_list: {type: string}
+        mood_list: {type: string}
+        pace_list: {type: string}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    BookInput:
+      type: object
+      required: [title, author]
+      properties:
+        title: {type: string}
+        author: {type: string}
+        cover_url: {type: string}
+        isbn: {type: string}
+        page_count: {type: integer}
+        published_on: {type: string, format: date}
+        open_library_key:
+          type: string
+          description: Auto-fills description/subjects from Open Library
+        series_id: {type: integer}
+        series_position: {type: integer}
+        tag_list: {type: string, description: Comma-separated}
+        mood_list: {type: string, description: Comma-separated}
+        pace_list: {type: string, description: Comma-separated}
+    Reading:
+      type: object
+      properties:
+        id: {type: integer}
+        book_id: {type: integer}
+        user_id: {type: integer}
+        status: {type: string, enum: [want_to_read, reading, finished]}
+        rating: {type: string, enum: [one, two, three, four, five], nullable: true}
+        review: {type: string, nullable: true}
+        is_review_public: {type: boolean}
+        started_on: {type: string, format: date, nullable: true}
+        finished_on: {type: string, format: date, nullable: true}
+        progress_percent: {type: integer, nullable: true}
+        format: {type: string, nullable: true}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ReadingWithBook:
+      allOf:
+        - $ref: "#/components/schemas/Reading"
+        - type: object
+          properties:
+            book: {$ref: "#/components/schemas/Book"}
+    ReadingInput:
+      type: object
+      required: [book_id, status]
+      properties:
+        book_id: {type: integer}
+        status: {type: string, enum: [want_to_read, reading, finished]}
+        rating: {type: string, enum: [one, two, three, four, five]}
+        review: {type: string}
+        is_review_public: {type: boolean}
+        started_on: {type: string, format: date}
+        finished_on: {type: string, format: date}
+        progress_percent: {type: integer}
+        format: {type: string}

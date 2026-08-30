@@ -15,7 +15,10 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%# Explicit list, not the :app shorthand (which sweeps in every CSS
+        under app/assets/**/* — including api_docs.css, the Swagger UI
+        stylesheet, which has no business loading on every page). %>
+    <%= stylesheet_link_tag "application", "fonts", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
     <script src="https://kit.fontawesome.com/b41e4928e6.js" crossorigin="anonymous"></script>
   </head>
