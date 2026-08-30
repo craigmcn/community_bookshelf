@@ -100,7 +100,16 @@ class ReadingsController < ApplicationController
 
   def destroy
     authorize @reading
-    @reading.soft_delete
+
+    ActiveRecord::Base.transaction do
+      @reading.soft_delete
+      log_audit_action!(
+        action: "destroy_reading",
+        subject: @reading,
+        details: {owner_email: @reading.user.email, book_title: @reading.book.title}
+      )
+    end
+
     redirect_to readings_path, notice: "Reading was removed.", status: :see_other
   end
 

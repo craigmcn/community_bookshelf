@@ -17,7 +17,14 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  #
+  # The Active Record connection-pool size key is `pool`, not
+  # `max_connections` (which isn't a recognized database.yml key and was
+  # silently doing nothing) — tied to RAILS_MAX_THREADS so each Puma thread
+  # can always get a connection. solid_queue/solid_cache each open their own
+  # pool against their own database (see the `queue`/`cache` entries under
+  # `production` below), so they don't compete with this one.
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 
 development:

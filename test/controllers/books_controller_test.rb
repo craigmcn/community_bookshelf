@@ -317,6 +317,21 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to books_url
   end
 
+  test "destroying a book writes an audit log entry" do
+    admin = users(:admin)
+    title = @book.title
+    sign_in_as admin
+
+    assert_difference "AuditLog.count", 1 do
+      delete book_url(@book)
+    end
+
+    audit_log = AuditLog.last
+    assert_equal admin, audit_log.actor
+    assert_equal "destroy_book", audit_log.action
+    assert_equal title, audit_log.details["title"]
+  end
+
   private
 
   def create_private_reading!

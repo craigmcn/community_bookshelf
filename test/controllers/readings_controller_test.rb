@@ -283,6 +283,20 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @reading.reload.deleted_at
   end
 
+  test "soft-deleting a reading writes an audit log entry" do
+    moderator = users(:moderator)
+    sign_in_as moderator
+
+    assert_difference "AuditLog.count", 1 do
+      delete reading_url(@reading)
+    end
+
+    audit_log = AuditLog.last
+    assert_equal moderator, audit_log.actor
+    assert_equal "destroy_reading", audit_log.action
+    assert_equal @reading.book.title, audit_log.details["book_title"]
+  end
+
   test "guest cannot export readings" do
     get export_readings_url(format: :csv)
     assert_redirected_to sign_in_path
