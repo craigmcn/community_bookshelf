@@ -15,7 +15,10 @@ class Api::V1::ReadingsController < Api::V1::BaseController
 
   def show
     authorize @reading
-    fresh_when @reading
+    # show also nests the reading's book (see show.json.jbuilder) — fresh_when
+    # @reading alone would ignore book-only changes (e.g. a moderator editing
+    # its title) and keep 304ing a client's now-stale cached copy.
+    fresh_when(etag: [@reading, @reading.book], last_modified: [@reading.updated_at, @reading.book.updated_at].max)
   end
 
   def create
