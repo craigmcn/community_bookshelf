@@ -213,6 +213,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "new book form's live region lives outside the turbo-frame it announces for" do
+    sign_in_as users(:member)
+    get new_book_url
+
+    assert_response :success
+    assert_select "turbo-frame#book-search-results:not([aria-live])"
+    assert_select "[data-book-search-target=liveRegion][aria-live=polite][role=status]"
+  end
+
   test "member can create a book" do
     sign_in_as users(:member)
     assert_difference "Book.count" do
