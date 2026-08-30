@@ -70,6 +70,33 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, books(:two).title
   end
 
+  test "readings index results are wrapped in a promoted turbo frame" do
+    sign_in_as users(:member)
+    get readings_url
+
+    assert_response :success
+    assert_select "turbo-frame#readings-results[data-turbo-action=advance]"
+  end
+
+  test "readings index row links escape the results frame to the top-level page" do
+    sign_in_as users(:member)
+    get readings_url
+
+    assert_response :success
+    assert_select "a[href=?][data-turbo-frame=_top]", book_path(@reading.book)
+    assert_select "a[href=?][data-turbo-frame=_top]", edit_reading_path(@reading)
+  end
+
+  test "readings index empty-state log-a-reading link escapes the results frame" do
+    Reading.unscoped.where(user: users(:member)).destroy_all
+    sign_in_as users(:member)
+
+    get readings_url
+
+    assert_response :success
+    assert_select "a[href=?][data-turbo-frame=_top]", new_reading_path
+  end
+
   test "readings index searches by book title or author" do
     Reading.create!(user: users(:member), book: books(:two), status: :reading)
 
