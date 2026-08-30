@@ -18,7 +18,22 @@ class Rack::Attack
     req.ip if req.path.start_with?("/api/") && verified_api_token(req).nil?
   end
 
-  self.throttled_responder = lambda do |_request|
-    [429, {"Content-Type" => "application/json"}, [{error: "Rate limit exceeded"}.to_json]]
+  self.throttled_responder = lambda do |request|
+    match_data = request.env["rack.attack.match_data"]
+    headers = {"Content-Type" => "application/json"}
+    headers.merge!(rate_limit_headers(match_data)) if match_data
+    [429, headers, [{error: "Rate limit exceeded"}.to_json]]
+  end
+
+  # X-RateLimit-* headers on a throttled (429) response — the non-throttled
+  # case is handled separately by Api::V1::BaseController, which has access
+  # to request.env["rack.attack.throttle_data"] (populated for every
+  # matching request, not just throttled ones) via a before_action.
+  def self.rate_limit_headers(data)
+    {
+      "X-RateLimit-Limit" => data[:limit].to_s,
+      "X-RateLimit-Remaining" => [data[:limit] - data[:count], 0].max.to_s,
+      "X-RateLimit-Reset" => (data[:epoch_time] + data[:period]).to_i.to_s
+    }
   end
 end
