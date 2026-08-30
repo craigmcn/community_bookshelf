@@ -28,7 +28,7 @@ class Rack::Attack
   # X-RateLimit-* headers on a throttled (429) response — the non-throttled
   # case is handled separately by Api::V1::BaseController, which has access
   # to request.env["rack.attack.throttle_data"] (populated for every
-  # matching request, not just throttled ones) via an after_action.
+  # matching request, not just throttled ones) via a before_action.
   def self.rate_limit_headers(data)
     {
       "X-RateLimit-Limit" => data[:limit].to_s,
