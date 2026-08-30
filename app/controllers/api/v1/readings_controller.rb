@@ -1,6 +1,10 @@
 class Api::V1::ReadingsController < Api::V1::BaseController
   before_action :set_reading, only: %i[show update destroy]
 
+  # Caps a single bulk request well below the 120/min token throttle, so one
+  # request can't be used to dodge rate limiting by front-loading a huge batch.
+  MAX_BULK_SIZE = 100
+
   def index
     @readings = policy_scope(Reading)
 
@@ -47,6 +51,36 @@ class Api::V1::ReadingsController < Api::V1::BaseController
     head :no_content
   end
 
+  # Accepts { "readings": [{...}, {...}, ...] } and creates each independently
+  # — one request, N readings, rather than N individual POST /readings calls
+  # each burning its own slot against the rate limit. Each row succeeds or
+  # fails on its own; a bad row doesn't roll back the ones that saved.
+  def bulk
+    raw_readings = params[:readings]
+
+    if !raw_readings.is_a?(Array) || raw_readings.empty?
+      return render json: {errors: ["readings must be a non-empty array"]}, status: :unprocessable_content
+    end
+
+    if raw_readings.size > MAX_BULK_SIZE
+      return render json: {errors: ["readings cannot contain more than #{MAX_BULK_SIZE} items"]}, status: :unprocessable_content
+    end
+
+    permitted_readings = params.expect(readings: [bulk_reading_keys])
+
+    @results = permitted_readings.map.with_index do |attrs, index|
+      reading = Reading.new(attrs.to_h.merge(user_id: current_user.id))
+
+      if !ReadingPolicy.new(current_user, reading).create?
+        {index: index, status: "error", errors: ["You are not authorized to perform this action."]}
+      elsif reading.save
+        {index: index, status: "created", reading: reading}
+      else
+        {index: index, status: "error", errors: reading.errors.full_messages}
+      end
+    end
+  end
+
   private
 
   def set_reading
@@ -54,6 +88,10 @@ class Api::V1::ReadingsController < Api::V1::BaseController
   end
 
   def reading_params
-    params.expect(reading: [:book_id, :status, :rating, :review, :is_review_public, :started_on, :finished_on, :progress_percent, :format])
+    params.expect(reading: bulk_reading_keys)
+  end
+
+  def bulk_reading_keys
+    [:book_id, :status, :rating, :review, :is_review_public, :started_on, :finished_on, :progress_percent, :format]
   end
 end

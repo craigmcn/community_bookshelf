@@ -61,7 +61,9 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :books
-      resources :readings
+      resources :readings do
+        post :bulk, on: :collection
+      end
     end
   end
 end
