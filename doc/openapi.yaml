@@ -50,6 +50,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [book]
               properties:
                 book: {$ref: "#/components/schemas/BookInput"}
       responses:
@@ -87,6 +88,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [book]
               properties:
                 book: {$ref: "#/components/schemas/BookInput"}
       responses:
@@ -141,6 +143,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [reading]
               properties:
                 reading: {$ref: "#/components/schemas/ReadingInput"}
       responses:
@@ -214,6 +217,7 @@ paths:
           application/json:
             schema:
               type: object
+              required: [reading]
               properties:
                 reading: {$ref: "#/components/schemas/ReadingInput"}
       responses:
