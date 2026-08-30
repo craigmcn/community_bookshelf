@@ -1,0 +1,2 @@
+# No seed audit-log fixtures — every controller test that exercises
+# audit-logged actions asserts against AuditLog records created live.
