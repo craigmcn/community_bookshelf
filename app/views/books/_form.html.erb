@@ -46,8 +46,14 @@
            data-action="input->book-search#search">
     <turbo-frame id="book-search-results"
                  data-book-search-target="results"
-                 data-action="turbo:before-fetch-request->book-search#showSpinner turbo:frame-load->book-search#hideSpinner turbo:fetch-error->book-search#hideSpinner"
-                 aria-live="polite" aria-atomic="true"></turbo-frame>
+                 data-action="turbo:before-fetch-request->book-search#showSpinner turbo:frame-load->book-search#announceResults turbo:fetch-error->book-search#hideSpinner"></turbo-frame>
+    <%# Lives outside the turbo-frame above so Turbo's full-replace swap never
+        destroys/recreates it — a live region has to already be in the DOM
+        before it changes for most screen readers to announce it. The
+        Stimulus controller copies the just-loaded result frame's status
+        text in here on every search, instead of announcing the whole
+        result list on every keystroke. %>
+    <div class="visually-hidden" aria-live="polite" role="status" data-book-search-target="liveRegion"></div>
   </div>
 
   <div class="row">

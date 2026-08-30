@@ -1,9 +1,9 @@
-<turbo-frame id="book-search-results" aria-live="polite" aria-atomic="true">
+<turbo-frame id="book-search-results">
   <% if @results.nil? %>
   <% elsif @results.empty? %>
-    <p class="text-muted small mt-2 mb-0">No results found.</p>
+    <p class="text-muted small mt-2 mb-0" data-book-search-status>No results found.</p>
   <% else %>
-    <p class="visually-hidden"><%= pluralize(@results.size, "result") %> found.</p>
+    <p class="visually-hidden" data-book-search-status>Showing <%= pluralize(@results.size, "result") %>.</p>
     <div class="list-group mt-2">
       <% @results.each do |result| %>
         <button type="button"

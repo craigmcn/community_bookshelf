@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [
-    "query", "results", "spinner",
+    "query", "results", "spinner", "liveRegion",
     "hiddenTitle", "hiddenAuthor", "hiddenCoverUrl", "hiddenOpenLibraryKey",
     "searchSection", "selectionPreview",
     "previewTitle", "previewAuthor", "previewCover",
@@ -26,6 +26,7 @@ export default class extends Controller {
     if (value.length < 2) {
       this.resultsTarget.src = ""
       this.resultsTarget.innerHTML = ""
+      this.liveRegionTarget.textContent = ""
       return
     }
 
@@ -40,6 +41,17 @@ export default class extends Controller {
 
   hideSpinner() {
     this.spinnerTarget.classList.add("d-none")
+  }
+
+  // Copies the just-loaded results frame's status text ("Showing N
+  // results." / "No results found.") into the persistent live region
+  // outside the frame, rather than announcing the whole result list on
+  // every keystroke — the frame's own content is fully replaced on every
+  // search, so it can't reliably host the live region itself.
+  announceResults() {
+    this.hideSpinner()
+    const status = this.resultsTarget.querySelector("[data-book-search-status]")
+    this.liveRegionTarget.textContent = status ? status.textContent : ""
   }
 
   selectBook(event) {
@@ -64,6 +76,7 @@ export default class extends Controller {
     this.queryTarget.value = ""
     this.resultsTarget.src = ""
     this.resultsTarget.innerHTML = ""
+    this.liveRegionTarget.textContent = ""
     this.hideSpinner()
     this.queryTarget.focus()
   }
