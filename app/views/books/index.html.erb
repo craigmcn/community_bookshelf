@@ -55,7 +55,7 @@
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
       <% @books.each do |book| %>
         <div class="col">
-          <%= link_to book, class: "text-decoration-none text-dark", data: { turbo_prefetch: false } do %>
+          <%= link_to book, class: "text-decoration-none text-dark", data: { turbo_prefetch: false, turbo_frame: "_top" } do %>
             <%= render book %>
           <% end %>
         </div>
@@ -69,7 +69,7 @@
       <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>
       <p class="fs-5">No books yet.</p>
       <% if signed_in? %>
-        <%= link_to new_book_path, class: "btn btn-primary" do %>
+        <%= link_to new_book_path, class: "btn btn-primary", data: {turbo_frame: "_top"} do %>
           <i class="fasl fa-plus me-1"></i>Add the first one
         <% end %>
       <% end %>
