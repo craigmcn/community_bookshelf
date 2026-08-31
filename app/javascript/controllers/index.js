@@ -4,8 +4,11 @@
 
 import { application } from "./application"
 
+import AutoSubmitController from "./auto_submit_controller"
+application.register("auto-submit", AutoSubmitController)
+
 import BookSearchController from "./book_search_controller"
 application.register("book-search", BookSearchController)
 
-import AutoSubmitController from "./auto_submit_controller"
-application.register("auto-submit", AutoSubmitController)
+import PaginationNavController from "./pagination_nav_controller"
+application.register("pagination-nav", PaginationNavController)

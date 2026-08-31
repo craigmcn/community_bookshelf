@@ -61,7 +61,7 @@
         </div>
       <% end %>
     </div>
-    <div class="mt-4"><%== @pagy.series_nav(:bootstrap) if @pagy.pages > 1 %></div>
+    <div class="mt-4"><%= render "shared/pagy_nav", pagy: @pagy %></div>
   <% elsif params[:q].present? %>
     <p class="text-muted">No books match "<%= params[:q] %>".</p>
   <% else %>

@@ -184,6 +184,19 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "books index nav is wrapped for progressive-enhancement collapsing, with all links visible server-side" do
+    26.times { |n| Book.create!(title: "Extra Book #{n}", author: "Author #{n}", added_by: users(:member)) }
+
+    get books_url
+
+    assert_response :success
+    assert_select "div[data-controller=pagination-nav]" do
+      assert_select "template[data-pagination-nav-target=gapTemplate]"
+      assert_select "nav.pagy-bootstrap li.page-item:not([hidden])", minimum: 1
+      assert_select "li.page-item[hidden]", false
+    end
+  end
+
   test "books index groups tag browsing by category" do
     books(:one).update!(tag_list: "fantasy", mood_list: "dark", pace_list: "fast-paced")
 

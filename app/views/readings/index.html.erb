@@ -99,7 +99,7 @@
         </tbody>
       </table>
     </div>
-    <div class="mt-4"><%== @pagy.series_nav(:bootstrap) if @pagy.pages > 1 %></div>
+    <div class="mt-4"><%= render "shared/pagy_nav", pagy: @pagy %></div>
   <% elsif params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
     <p class="text-muted">No readings match those filters.</p>
   <% else %>
