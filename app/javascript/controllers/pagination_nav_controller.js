@@ -15,8 +15,14 @@ export default class extends Controller {
     this.items = Array.from(this.list.querySelectorAll(":scope > li.page-item:not(.previous):not(.next)"))
     this.currentIndex = this.items.findIndex((li) => li.classList.contains("active"))
 
-    this.resizeObserver = new ResizeObserver(() => this.render())
-    this.resizeObserver.observe(this.element)
+    // allow_browser versions: :modern (ApplicationController) already rules
+    // out any browser old enough to lack ResizeObserver, but guard it
+    // anyway — cheap, and still renders once so the initial collapse
+    // happens even where live re-collapse-on-resize isn't available.
+    if (typeof ResizeObserver !== "undefined") {
+      this.resizeObserver = new ResizeObserver(() => this.render())
+      this.resizeObserver.observe(this.element)
+    }
     this.render()
   }
 
