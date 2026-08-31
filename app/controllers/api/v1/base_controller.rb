@@ -3,7 +3,7 @@
 class Api::V1::BaseController < ActionController::Base
   # standard:enable Rails/ApplicationController
   include Pundit::Authorization
-  include Pagy::Backend
+  include Pagy::Method
 
   skip_forgery_protection
   before_action { request.format = :json }
