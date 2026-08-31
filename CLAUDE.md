@@ -13,7 +13,7 @@ A Rails 8 community reading-list app where members track books, log readings, an
 - **Background jobs / Cache**: solid_queue, solid_cache (DB-backed)
 - **File uploads**: Active Storage, local disk service (`config/storage.yml`) in every environment
 - **Mailers**: `ApplicationMailer`/`UserMailer`/`NotificationsMailer` via Action Mailer; `letter_opener` in development, `:test` delivery in test; shared `layouts/mailer.html.erb` carries inline-CSS branding used by every transactional email
-- **Pagination**: Pagy (`~> 9.4` — pinned below the unrelated v43 API rewrite), Bootstrap nav extra
+- **Pagination**: Pagy (`~> 43.6`), Bootstrap-styled nav via `@pagy.series_nav(:bootstrap)`
 - **Charts**: Chartkick (view helpers) + Chart.js (JS renderer, bundled via esbuild — `import "chartkick/chart.js"` in `app/javascript/application.js`), `groupdate` gem for month-bucketed trend queries
 - **Import/export**: `csv` gem (removed from Ruby's default gems since 3.4, so it's an explicit Gemfile dependency) backs shelf CSV export and Goodreads CSV import
 - **JSON API**: `jbuilder` (views) + `rack-attack` (rate limiting) back `/api/v1/*` — see JSON API section below
@@ -188,7 +188,7 @@ Inherit from `Admin::BaseController` — it enforces `moderator_or_above?` and p
 Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` running). Compiled output lands in `app/assets/builds/`.
 
 ### Discovery & search (catalog + "My Shelf")
-- `BooksController#index` / `ReadingsController#index` each support `q` (ILIKE title/author search), `sort` (see each controller's `SORT_OPTIONS` constant), and pagination via `pagy` (`ApplicationController` includes `Pagy::Backend`, `ApplicationHelper` includes `Pagy::Frontend`; views render `pagy_bootstrap_nav`).
+- `BooksController#index` / `ReadingsController#index` each support `q` (ILIKE title/author search), `sort` (see each controller's `SORT_OPTIONS` constant), and pagination via `pagy` (`ApplicationController`/`Api::V1::BaseController` include `Pagy::Method`; views render nav directly on the pager object via `@pagy.series_nav(:bootstrap)`).
 - `ReadingsController#index` additionally filters by `status`, `rating`, and `tag` (via the reading's book).
 - Tags have a `category` (genre/mood/pace, see Domain Model above); `Book#tag_list` / `#mood_list` / `#pace_list` are per-category virtual attributes on the book form — each only touches taggings for its own category when assigned, so partial updates leave the other categories alone.
 - `Book#similar_books` and `Book.recommended_for(user)` rank by shared-tag count (no ML/vector infra) — the former excludes the book itself, the latter excludes books already on the user's shelf and seeds from books the user finished or rated 4-5 stars.

@@ -13,7 +13,7 @@
     <% end %>
   </div>
 
-  <div class="mt-4"><%== pagy_bootstrap_nav(@pagy) if @pagy.pages > 1 %></div>
+  <div class="mt-4"><%== @pagy.series_nav(:bootstrap) if @pagy.pages > 1 %></div>
 <% else %>
   <p class="text-muted">
     Nobody you follow has any reading updates yet.
