@@ -10,12 +10,12 @@
 Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src :self
-    policy.font_src :self, :data, "https://ka-f.fontawesome.com"
+    policy.font_src :self, :data, "https://ka-p.fontawesome.com"
     policy.img_src :self, :data, "https://covers.openlibrary.org"
     policy.object_src :none
     policy.script_src :self, "https://kit.fontawesome.com"
     policy.style_src :self, :unsafe_inline
-    policy.connect_src :self, "https://ka-f.fontawesome.com"
+    policy.connect_src :self, "https://ka-p.fontawesome.com"
     policy.base_uri :self
     policy.form_action :self
   end
