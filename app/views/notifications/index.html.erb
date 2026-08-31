@@ -24,7 +24,7 @@
     <% end %>
   </div>
 
-  <%== @pagy.series_nav(:bootstrap) if @pagy.pages > 1 %>
+  <%= render "shared/pagy_nav", pagy: @pagy %>
 <% else %>
   <p class="text-muted">You don't have any notifications yet.</p>
 <% end %>
