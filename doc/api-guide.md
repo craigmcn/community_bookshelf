@@ -14,21 +14,38 @@ An interactive Swagger UI explorer is at `/api/docs`.
 
 ## Getting a token
 
-Every account has an API token, generated automatically when it's created.
-Find (or rotate) yours from `/account/edit` under **API Access**:
+Tokens are created from `/api_tokens` (linked from **API Access** on
+`/account/edit`). You can hold multiple tokens at once — one per script or
+integration — each independently revocable:
 
-- If you've never regenerated it, you'll see a masked preview of your
-  current token.
-- Click **Regenerate API Token** to get a fresh one. The full value is shown
-  exactly once, right after regenerating — copy it immediately, since the
-  page only ever shows the masked version afterward.
-- Regenerating immediately invalidates the previous token. There's no grace
-  period — anything still using the old token starts getting `401`s right
-  away.
+- Give it a name, pick which **scopes** it needs (`read:books`,
+  `write:books`, `read:readings`, `write:readings`), and optionally an
+  expiration (30 days, 90 days, 1 year, or never).
+- The full value is shown exactly once, right after creation — copy it
+  immediately. The list afterward only ever shows a short prefix
+  (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
+- Click **Revoke** on any token to kill it immediately — this only affects
+  that one token, not any others you've created.
 
-Treat your token like a password: anyone who has it can act as you,
-including creating, editing, and (if you're a moderator or admin) deleting
-content.
+Treat every token like a password: anyone who has it can act as you, within
+whatever scopes it was granted (and, if you're a moderator or admin, with
+those permissions too).
+
+### Scopes
+
+| Scope | Grants |
+|---|---|
+| `read:books` | `GET` requests to `/api/v1/books` |
+| `write:books` | `POST`/`PATCH`/`DELETE` on `/api/v1/books` |
+| `read:readings` | `GET` requests to `/api/v1/readings` |
+| `write:readings` | `POST`/`PATCH`/`DELETE` on `/api/v1/readings` (including `/bulk`) |
+
+A request with a token missing the required scope gets a `403` — the same
+status a Pundit permission failure returns, but with a distinct message
+(`"Token missing required scope: ..."`) so you can tell the two apart.
+Scope checks and Pundit's role/ownership checks are independent: a token
+needs both the right scope *and* the signed-in user needs the right
+role/ownership to succeed.
 
 ## Making a request
 

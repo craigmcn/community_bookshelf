@@ -1,0 +1,61 @@
+<% content_for :title, "API Tokens" %>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="mb-0"><i class="fasl fa-key me-2 opacity-75"></i>API Tokens</h1>
+      <%= link_to new_api_token_path, class: "btn btn-primary" do %>
+        <i class="fasl fa-plus me-1"></i>New Token
+      <% end %>
+    </div>
+
+    <% if flash[:new_token] %>
+      <div class="alert alert-success">
+        <strong>Your new token (shown once — copy it now):</strong>
+        <p class="mb-0 mt-1"><code><%= flash[:new_token] %></code></p>
+      </div>
+    <% end %>
+
+    <% if @api_tokens.any? %>
+      <% @api_tokens.each do |token| %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5 class="card-title mb-1"><%= token.name %></h5>
+                <p class="text-muted small mb-1"><code><%= token.token_prefix %>&hellip;</code></p>
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                  <% token.scopes.each do |scope| %>
+                    <span class="badge text-bg-secondary"><%= scope %></span>
+                  <% end %>
+                </div>
+                <p class="text-muted small mb-0">
+                  <% if token.expires_at.present? %>
+                    Expires <%= token.expired? ? "expired" : "on" %> <%= token.expires_at.to_date %>
+                  <% else %>
+                    Never expires
+                  <% end %>
+                  &middot;
+                  <% if token.last_used_at.present? %>
+                    Last used <%= time_ago_in_words(token.last_used_at) %> ago
+                  <% else %>
+                    Never used
+                  <% end %>
+                </p>
+              </div>
+              <%= button_to "Revoke", api_token_path(token), method: :delete, class: "btn btn-sm btn-outline-danger",
+                    data: {turbo_confirm: "Revoke \"#{token.name}\"? Anything using it will start getting 401s immediately."} %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-center text-muted py-5">
+        <p class="fs-5">You haven't created an API token yet.</p>
+        <%= link_to new_api_token_path, class: "btn btn-primary" do %>
+          <i class="fasl fa-plus me-1"></i>Create one
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

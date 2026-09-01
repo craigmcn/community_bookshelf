@@ -19,15 +19,6 @@ class AccountsController < ApplicationController
     end
   end
 
-  def regenerate_api_token
-    @user = current_user
-    authorize @user, :update?
-
-    @user.regenerate_api_token
-    flash[:api_token] = @user.api_token
-    redirect_to edit_account_path, notice: "API token regenerated."
-  end
-
   def destroy
     @user = current_user
     authorize @user

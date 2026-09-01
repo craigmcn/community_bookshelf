@@ -113,17 +113,16 @@
 
     <div class="card mb-4">
       <div class="card-body">
-        <h5 class="card-title mb-3"><i class="fasl fa-key me-2 opacity-75"></i>API Access</h5>
-        <% if flash[:api_token] %>
-          <p class="text-muted small mb-2">Your new token (shown once — copy it now):</p>
-          <p class="mb-2"><code><%= flash[:api_token] %></code></p>
-        <% elsif @user.api_token.present? %>
-          <p class="text-muted small mb-2">Token: <code><%= @user.api_token[0..7] %>&hellip;</code></p>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0"><i class="fasl fa-key me-2 opacity-75"></i>API Access</h5>
+          <%= link_to "Manage", api_tokens_path, class: "btn btn-sm btn-outline-secondary" %>
+        </div>
+        <% token_count = @user.api_tokens.count %>
+        <% if token_count.positive? %>
+          <p class="text-muted small mb-0"><%= pluralize(token_count, "active API token") %></p>
         <% else %>
-          <p class="text-muted mb-2">No API token yet.</p>
+          <p class="text-muted mb-0">No API tokens yet.</p>
         <% end %>
-        <%= button_to "Regenerate API Token", regenerate_api_token_account_path, method: :post, class: "btn btn-sm btn-outline-secondary",
-              data: {turbo_confirm: @user.api_token.present? ? "This invalidates your current token. Continue?" : nil} %>
       </div>
     </div>
 

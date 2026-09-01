@@ -19,10 +19,11 @@ class ActionDispatch::IntegrationTest
     cookies[Clearance.configuration.cookie_name] = token
   end
 
-  # Fixtures bypass AR callbacks, so has_secure_token's before_create never
-  # runs for fixture users — api_token is nil until explicitly regenerated.
-  def auth_headers(user)
-    user.regenerate_api_token if user.api_token.blank?
-    {"Authorization" => "Bearer #{user.api_token}"}
+  def auth_headers(user, scopes: ApiToken::SCOPES)
+    {"Authorization" => "Bearer #{api_token_for(user, scopes: scopes).plaintext_token}"}
+  end
+
+  def api_token_for(user, scopes: ApiToken::SCOPES)
+    ApiToken.generate!(user: user, name: "test token", scopes: scopes)
   end
 end

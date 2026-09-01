@@ -31,12 +31,19 @@ class Api::V1::BaseController < ActionController::Base
 
   def authenticate_via_token!
     token = request.authorization&.split(" ")&.last
-    @current_api_user = User.find_by(api_token: token) if token.present?
-    render json: {error: "Invalid or missing API token"}, status: :unauthorized unless @current_api_user
+    @current_api_token = ApiToken.authenticate(token) if token.present?
+    @current_api_token&.touch_last_used!
+    render json: {error: "Invalid or missing API token"}, status: :unauthorized unless @current_api_token
   end
 
   def current_user
-    @current_api_user
+    @current_api_token&.user
+  end
+
+  def require_scope!(scope)
+    return if @current_api_token.scopes.include?(scope.to_s)
+
+    render json: {error: "Token missing required scope: #{scope}"}, status: :forbidden
   end
 
   def render_forbidden

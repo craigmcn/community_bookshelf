@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   resources :books
   resources :series
   resources :reading_challenges, only: [:index, :new, :create, :edit, :update]
+  resources :api_tokens, only: [:index, :new, :create, :destroy]
   resources :shelves do
     resources :shelf_books, only: [:create, :destroy], path: "books"
   end
@@ -45,9 +46,7 @@ Rails.application.routes.draw do
     resource :follow, only: [:create, :destroy]
   end
 
-  resource :account, only: [:edit, :update, :destroy] do
-    post :regenerate_api_token, on: :collection
-  end
+  resource :account, only: [:edit, :update, :destroy]
   resource :email_confirmation, only: [:create]
   get "confirm_email/:token", to: "email_confirmations#confirm", as: :confirm_email
 

@@ -1,0 +1,45 @@
+<% content_for :title, "New API Token" %>
+
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <h1 class="mb-4">New API Token</h1>
+
+    <%= form_with model: @api_token, url: api_tokens_path do |form| %>
+      <% if @api_token.errors.any? %>
+        <div class="alert alert-danger">
+          <strong><%= pluralize(@api_token.errors.count, "error") %> prevented this token from being created:</strong>
+          <ul class="mb-0 mt-1">
+            <% @api_token.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-3">
+        <%= form.label :name, class: "form-label" %>
+        <%= form.text_field :name, class: "form-control", placeholder: "e.g. reading tracker script" %>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label d-block">Scopes</label>
+        <% ApiToken::SCOPES.each do |scope| %>
+          <div class="form-check">
+            <%= check_box_tag "api_token[scopes][]", scope, Array(@api_token.scopes).include?(scope), id: "scope_#{scope.parameterize}", class: "form-check-input" %>
+            <%= label_tag "scope_#{scope.parameterize}", scope, class: "form-check-label" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mb-3">
+        <%= label_tag "api_token[expires_in]", "Expiration", class: "form-label" %>
+        <%= select_tag "api_token[expires_in]", options_for_select([["30 days", "30"], ["90 days", "90"], ["1 year", "365"], ["Never", "never"]], params.dig(:api_token, :expires_in) || "never"), class: "form-select" %>
+      </div>
+
+      <div class="d-flex gap-2">
+        <%= form.submit "Create Token", class: "btn btn-primary" %>
+        <%= link_to "Cancel", api_tokens_path, class: "btn btn-outline-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -28,11 +28,12 @@ class Api::RateLimitHeadersTest < ActionDispatch::IntegrationTest
     Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
 
     member = users(:member)
-    headers = auth_headers(member)
+    token = api_token_for(member)
+    headers = {"Authorization" => "Bearer #{token.plaintext_token}"}
     # Rack::Attack's default throttle_discriminator_normalizer downcases
     # every discriminator before it's used in the cache key, so the seeded
     # bucket has to match that normalized (lowercased) form too.
-    discriminator = Rack::Attack.throttle_discriminator_normalizer.call(member.api_token)
+    discriminator = Rack::Attack.throttle_discriminator_normalizer.call(token.token_prefix)
     120.times { Rack::Attack.cache.count("api/token:#{discriminator}", 60) }
 
     get api_v1_books_url, headers: headers

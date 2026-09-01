@@ -1,4 +1,6 @@
 class Api::V1::ReadingsController < Api::V1::BaseController
+  before_action -> { require_scope!("read:readings") }, only: %i[index show]
+  before_action -> { require_scope!("write:readings") }, only: %i[create update destroy bulk]
   before_action :set_reading, only: %i[show update destroy]
 
   # Caps a single bulk request well below the 120/min token throttle, so one

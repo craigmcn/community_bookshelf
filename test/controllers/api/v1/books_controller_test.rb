@@ -85,4 +85,21 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :no_content
   end
+
+  test "a read:books-only token can list books" do
+    get api_v1_books_url, headers: auth_headers(users(:member), scopes: ["read:books"])
+    assert_response :success
+  end
+
+  test "a read:books-only token cannot create a book" do
+    assert_no_difference "Book.count" do
+      post api_v1_books_url, params: {book: {title: "New Book", author: "Some Author"}}, headers: auth_headers(users(:member), scopes: ["read:books"])
+    end
+    assert_response :forbidden
+  end
+
+  test "a write:books-only token cannot list books" do
+    get api_v1_books_url, headers: auth_headers(users(:member), scopes: ["write:books"])
+    assert_response :forbidden
+  end
 end

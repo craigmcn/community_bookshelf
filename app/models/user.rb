@@ -40,8 +40,8 @@ class User < ApplicationRecord
   # powers. Reassigned to the deleted-user placeholder in delete_account!
   # instead, the same treatment as books/created_clubs below.
   has_many :audit_logs, foreign_key: :actor_id, inverse_of: :actor
+  has_many :api_tokens, dependent: :destroy
   has_one_attached :avatar
-  has_secure_token :api_token
 
   # Excludes the system placeholder account from user-facing listings/stats
   # (admin user management, dashboard totals) — it isn't a real account.
