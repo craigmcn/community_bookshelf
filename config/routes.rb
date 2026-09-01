@@ -63,6 +63,9 @@ Rails.application.routes.draw do
       resources :readings do
         post :bulk, on: :collection
       end
+      resources :shelves do
+        resources :shelf_books, only: [:create, :destroy], path: "books"
+      end
     end
 
     get "docs", to: "docs#index"

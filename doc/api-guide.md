@@ -19,8 +19,9 @@ Tokens are created from `/api_tokens` (linked from **API Access** on
 integration — each independently revocable:
 
 - Give it a name, pick which **scopes** it needs (`read:books`,
-  `write:books`, `read:readings`, `write:readings`), and optionally an
-  expiration (30 days, 90 days, 1 year, or never).
+  `write:books`, `read:readings`, `write:readings`, `read:shelves`,
+  `write:shelves`), and optionally an expiration (30 days, 90 days, 1 year,
+  or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -39,6 +40,8 @@ those permissions too).
 | `write:books` | `POST`/`PATCH`/`DELETE` on `/api/v1/books` |
 | `read:readings` | `GET` requests to `/api/v1/readings` |
 | `write:readings` | `POST`/`PATCH`/`DELETE` on `/api/v1/readings` (including `/bulk`) |
+| `read:shelves` | `GET` requests to `/api/v1/shelves` |
+| `write:shelves` | `POST`/`PATCH`/`DELETE` on `/api/v1/shelves` and its nested `/books` (add/remove) |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -181,6 +184,39 @@ own `status`) and lists a result per row, in the same order as the request:
   ]
 }
 ```
+
+### Shelves
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/shelves` | Anyone with a token — always your own lists only, same as the website |
+| GET | `/api/v1/shelves/:id` | The owner only |
+| POST | `/api/v1/shelves` | Anyone with a token |
+| PATCH | `/api/v1/shelves/:id` | The owner only |
+| DELETE | `/api/v1/shelves/:id` | The owner only |
+| POST | `/api/v1/shelves/:shelf_id/books` | The owner only — adds a book, pass `book_id` |
+| DELETE | `/api/v1/shelves/:shelf_id/books/:id` | The owner only — `:id` is the shelf/book pairing's id |
+
+Shelves are personal book-collection lists — there's no moderator override,
+unlike books/readings. A shelf id that isn't yours gets a `404`, not a `403`
+(same as the website — you can't tell another user's shelf exists). `GET
+/api/v1/shelves/:id` nests the shelf's books; the index response doesn't
+(same reasoning as readings' index above).
+
+```sh
+curl -X POST https://<host>/api/v1/shelves \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"shelf": {"name": "Beach reads"}}'
+
+curl -X POST https://<host>/api/v1/shelves/1/books \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"book_id": 42}'
+```
+
+Adding a book already on the shelf is a no-op (`201`, not a duplicate row) —
+the same idempotent behavior as the website's add-to-shelf button.
 
 ## Rate limits
 
