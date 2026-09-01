@@ -201,7 +201,12 @@ Shelves are personal book-collection lists — there's no moderator override,
 unlike books/readings. A shelf id that isn't yours gets a `404`, not a `403`
 (same as the website — you can't tell another user's shelf exists). `GET
 /api/v1/shelves/:id` nests the shelf's books; the index response doesn't
-(same reasoning as readings' index above).
+(same reasoning as readings' index above). A shelf's book list isn't
+paginated, so each nested book is a *summary* — the same fields as
+`GET /api/v1/books/:id` minus `tag_list`/`mood_list`/`pace_list` (each of
+those runs its own query; omitting them here avoids a per-book query
+fan-out on a large shelf). Fetch `GET /api/v1/books/:id` separately if you
+need those.
 
 ```sh
 curl -X POST https://<host>/api/v1/shelves \

@@ -34,7 +34,7 @@ class Api::V1::ShelvesController < Api::V1::BaseController
 
   def destroy
     authorize @shelf
-    @shelf.destroy
+    @shelf.destroy!
     head :no_content
   end
 

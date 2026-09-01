@@ -19,7 +19,7 @@ class Api::V1::ShelfBooksController < Api::V1::BaseController
   def destroy
     authorize @shelf, :update?
     shelf_book = @shelf.shelf_books.find(params.expect(:id))
-    shelf_book.destroy
+    shelf_book.destroy!
     head :no_content
   end
 

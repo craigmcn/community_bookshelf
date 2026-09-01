@@ -513,12 +513,35 @@ components:
               type: array
               items:
                 allOf:
-                  - $ref: "#/components/schemas/Book"
+                  - $ref: "#/components/schemas/BookSummary"
                   - type: object
                     properties:
                       shelf_book_id:
                         type: integer
                         description: The shelf/book pairing's id — pass as :id to DELETE /shelves/{shelf_id}/books/{id}
+    BookSummary:
+      description: |
+        A book as nested inside a shelf response — the same fields as Book
+        minus tag_list/mood_list/pace_list (each of those runs its own
+        query, and a shelf's book list isn't paginated, so they're omitted
+        here to avoid a large per-book query fan-out). Fetch
+        GET /books/{id} if you need those.
+      type: object
+      properties:
+        id: {type: integer}
+        title: {type: string}
+        author: {type: string}
+        isbn: {type: string, nullable: true}
+        cover_url: {type: string, nullable: true}
+        page_count: {type: integer, nullable: true}
+        published_on: {type: string, format: date, nullable: true}
+        description: {type: string, nullable: true}
+        subjects: {type: array, items: {type: string}}
+        series_id: {type: integer, nullable: true}
+        series_position: {type: integer, nullable: true}
+        added_by_id: {type: integer}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
     ShelfInput:
       type: object
       required: [name]
