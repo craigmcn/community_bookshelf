@@ -7,7 +7,10 @@ class Rack::Attack
   # missing or garbage — throttles by IP instead.
   def self.verified_api_token(req)
     token = req.get_header("HTTP_AUTHORIZATION")&.split(" ")&.last
-    token if token.present? && User.exists?(api_token: token)
+    return nil if token.blank?
+
+    prefix = token[0, ApiToken::DISPLAY_PREFIX_LENGTH]
+    prefix if ApiToken.active.exists?(token_prefix: prefix)
   end
 
   throttle("api/token", limit: 120, period: 1.minute) do |req|

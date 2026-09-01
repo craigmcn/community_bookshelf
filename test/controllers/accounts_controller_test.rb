@@ -12,23 +12,6 @@ class AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "guest cannot regenerate an api token" do
-    post regenerate_api_token_account_url
-    assert_redirected_to sign_in_path
-  end
-
-  test "member can regenerate their api token" do
-    sign_in_as users(:member)
-    original_token = users(:member).api_token
-
-    post regenerate_api_token_account_url
-
-    assert_redirected_to edit_account_url
-    users(:member).reload
-    assert users(:member).api_token.present?
-    assert_not_equal original_token, users(:member).api_token
-  end
-
   test "member can update their name and bio" do
     sign_in_as users(:member)
     patch account_url, params: {user: {name: "Sam Reader", bio: "I like fantasy novels."}}

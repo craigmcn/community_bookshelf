@@ -87,4 +87,16 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :no_content
     assert_not_nil @reading.reload.deleted_at
   end
+
+  test "a read:readings-only token cannot create a reading" do
+    assert_no_difference "Reading.unscoped.count" do
+      post api_v1_readings_url, params: {reading: {book_id: books(:two).id, status: "want_to_read"}}, headers: auth_headers(users(:member), scopes: ["read:readings"])
+    end
+    assert_response :forbidden
+  end
+
+  test "a write:readings-only token cannot list readings" do
+    get api_v1_readings_url, headers: auth_headers(users(:member), scopes: ["write:readings"])
+    assert_response :forbidden
+  end
 end

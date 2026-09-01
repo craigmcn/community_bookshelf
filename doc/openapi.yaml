@@ -245,9 +245,11 @@ components:
       type: http
       scheme: bearer
       description: |
-        Your account's API token, from /account/edit. Every endpoint
-        requires one — there is no anonymous access, even for catalog
-        browsing that's public on the website.
+        A scoped, optionally-expiring personal access token, created from
+        /api_tokens. Every endpoint requires one with the relevant scope
+        (read:books, write:books, read:readings, write:readings) — there is
+        no anonymous access, even for catalog browsing that's public on the
+        website.
 
   responses:
     Unauthorized:

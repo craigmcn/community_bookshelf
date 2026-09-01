@@ -24,18 +24,6 @@ class UserTest < ActiveSupport::TestCase
     assert user.roles.exists?(name: "member")
   end
 
-  test "new user is assigned an api_token on create" do
-    user = User.create!(email: "newuser@example.com", password: User::DEFAULT_PASSWORD)
-    assert user.api_token.present?
-  end
-
-  test "regenerate_api_token changes the token" do
-    user = User.create!(email: "newuser@example.com", password: User::DEFAULT_PASSWORD)
-    original_token = user.api_token
-    user.regenerate_api_token
-    assert_not_equal original_token, user.api_token
-  end
-
   test "display_name falls back to email when name is blank" do
     user = users(:member)
     assert_nil user.name

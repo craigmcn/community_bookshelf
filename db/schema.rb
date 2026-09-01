@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_162802) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_165300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_162802) do
     t.index ["reading_id"], name: "index_activities_on_reading_id"
     t.index ["user_id", "created_at"], name: "index_activities_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.string "scopes", default: [], null: false, array: true
+    t.string "token_digest", null: false
+    t.string "token_prefix", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["token_prefix"], name: "index_api_tokens_on_token_prefix", unique: true
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
   create_table "audit_logs", force: :cascade do |t|
@@ -298,7 +312,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_162802) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "api_token"
     t.text "bio"
     t.string "confirmation_token", limit: 128
     t.datetime "created_at", null: false
@@ -310,7 +323,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_162802) do
     t.string "name"
     t.string "remember_token", limit: 128
     t.datetime "updated_at", null: false
-    t.index ["api_token"], name: "index_users_on_api_token", unique: true
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["email_confirmation_token"], name: "index_users_on_email_confirmation_token", unique: true
@@ -321,6 +333,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_162802) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "readings"
   add_foreign_key "activities", "users"
+  add_foreign_key "api_tokens", "users"
   add_foreign_key "audit_logs", "users", column: "actor_id"
   add_foreign_key "books", "series"
   add_foreign_key "books", "users", column: "added_by_id"

@@ -59,4 +59,15 @@ class Api::V1::ReadingsBulkTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
   end
+
+  test "a read:readings-only token cannot bulk create" do
+    assert_no_difference "Reading.count" do
+      post bulk_api_v1_readings_url,
+        params: {readings: [{book_id: books(:one).id, status: "finished"}]},
+        headers: auth_headers(users(:member), scopes: ["read:readings"]),
+        as: :json
+    end
+
+    assert_response :forbidden
+  end
 end
