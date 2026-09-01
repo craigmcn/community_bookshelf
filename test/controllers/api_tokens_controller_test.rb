@@ -53,6 +53,21 @@ class ApiTokensControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
   end
 
+  # A real browser omits api_token[scopes] entirely when every checkbox is
+  # unchecked (check_box_tag has no hidden fallback field) — distinct from
+  # the test above's explicit scopes: [], and the case that actually crashed
+  # the re-render before scopes was defaulted to [] in the controller.
+  test "create with the scopes param omitted entirely re-renders the form with an error" do
+    sign_in_as users(:member)
+
+    assert_no_difference "ApiToken.count" do
+      post api_tokens_url, params: {api_token: {name: "my script", expires_in: "never"}}
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.body, "prevented this token from being created"
+  end
+
   test "member can revoke their own token" do
     token = api_token_for(users(:member))
     sign_in_as users(:member)

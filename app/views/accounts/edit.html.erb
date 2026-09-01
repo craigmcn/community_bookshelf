@@ -117,8 +117,9 @@
           <h5 class="card-title mb-0"><i class="fasl fa-key me-2 opacity-75"></i>API Access</h5>
           <%= link_to "Manage", api_tokens_path, class: "btn btn-sm btn-outline-secondary" %>
         </div>
-        <% if @user.api_tokens.any? %>
-          <p class="text-muted small mb-0"><%= pluralize(@user.api_tokens.count, "active API token") %></p>
+        <% token_count = @user.api_tokens.count %>
+        <% if token_count.positive? %>
+          <p class="text-muted small mb-0"><%= pluralize(token_count, "active API token") %></p>
         <% else %>
           <p class="text-muted mb-0">No API tokens yet.</p>
         <% end %>

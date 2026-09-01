@@ -16,7 +16,12 @@ class ApiTokensController < ApplicationController
   end
 
   def create
-    @api_token = current_user.api_tokens.build(scopes: params.dig(:api_token, :scopes)&.reject(&:blank?))
+    # Unchecking every scope checkbox omits api_token[scopes] from the
+    # request entirely (check_box_tag has no hidden fallback field), so
+    # scopes must default to [] here rather than staying nil — otherwise the
+    # re-rendered form's @api_token.scopes.include?(scope) raises instead of
+    # showing the "can't be blank" validation error.
+    @api_token = current_user.api_tokens.build(scopes: params.dig(:api_token, :scopes)&.reject(&:blank?) || [])
     authorize @api_token
 
     expires_at = expires_at_from_param(params.dig(:api_token, :expires_in))

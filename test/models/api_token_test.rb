@@ -46,6 +46,32 @@ class ApiTokenTest < ActiveSupport::TestCase
     assert_match(/unknown scope/, token.errors[:scopes].first)
   end
 
+  test "touch_last_used! writes when last_used_at is blank" do
+    token = ApiToken.generate!(user: users(:member), name: "test", scopes: ["read:books"])
+
+    assert_changes -> { token.reload.last_used_at } do
+      token.touch_last_used!
+    end
+  end
+
+  test "touch_last_used! is a no-op when already touched recently" do
+    token = ApiToken.generate!(user: users(:member), name: "test", scopes: ["read:books"])
+    token.update_column(:last_used_at, 1.minute.ago)
+
+    assert_no_changes -> { token.reload.last_used_at } do
+      token.touch_last_used!
+    end
+  end
+
+  test "touch_last_used! writes again once stale" do
+    token = ApiToken.generate!(user: users(:member), name: "test", scopes: ["read:books"])
+    token.update_column(:last_used_at, (ApiToken::LAST_USED_STALENESS + 1.minute).ago)
+
+    assert_changes -> { token.reload.last_used_at } do
+      token.touch_last_used!
+    end
+  end
+
   test "expired? is true only once expires_at has passed" do
     future = ApiToken.new(expires_at: 1.day.from_now)
     past = ApiToken.new(expires_at: 1.day.ago)

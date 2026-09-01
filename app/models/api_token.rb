@@ -5,6 +5,7 @@ class ApiToken < ApplicationRecord
   # enough entropy that prefix collisions are statistically irrelevant, while
   # staying short enough to show as a display fragment (cb_a1b2c3d4...).
   DISPLAY_PREFIX_LENGTH = TOKEN_PREFIX.length + 8
+  LAST_USED_STALENESS = 5.minutes
 
   belongs_to :user
 
@@ -46,7 +47,12 @@ class ApiToken < ApplicationRecord
     expires_at.present? && expires_at.past?
   end
 
+  # Skips the write when already touched recently — a token authenticated on
+  # every request (up to 120/min under the API throttle) would otherwise
+  # issue a DB write on every single one, just to update a display field.
   def touch_last_used!
+    return if last_used_at.present? && last_used_at > LAST_USED_STALENESS.ago
+
     update_column(:last_used_at, Time.current)
   end
 

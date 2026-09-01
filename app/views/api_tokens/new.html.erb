@@ -25,7 +25,7 @@
         <label class="form-label d-block">Scopes</label>
         <% ApiToken::SCOPES.each do |scope| %>
           <div class="form-check">
-            <%= check_box_tag "api_token[scopes][]", scope, @api_token.scopes.include?(scope), id: "scope_#{scope.parameterize}", class: "form-check-input" %>
+            <%= check_box_tag "api_token[scopes][]", scope, Array(@api_token.scopes).include?(scope), id: "scope_#{scope.parameterize}", class: "form-check-input" %>
             <%= label_tag "scope_#{scope.parameterize}", scope, class: "form-check-label" %>
           </div>
         <% end %>
@@ -33,7 +33,7 @@
 
       <div class="mb-3">
         <%= label_tag "api_token[expires_in]", "Expiration", class: "form-label" %>
-        <%= select_tag "api_token[expires_in]", options_for_select([["30 days", "30"], ["90 days", "90"], ["1 year", "365"], ["Never", "never"]], "never"), class: "form-select" %>
+        <%= select_tag "api_token[expires_in]", options_for_select([["30 days", "30"], ["90 days", "90"], ["1 year", "365"], ["Never", "never"]], params.dig(:api_token, :expires_in) || "never"), class: "form-select" %>
       </div>
 
       <div class="d-flex gap-2">
