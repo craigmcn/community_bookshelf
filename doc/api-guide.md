@@ -231,10 +231,11 @@ the same idempotent behavior as the website's add-to-shelf button.
 | POST | `/api/v1/users/:user_id/follow` | Anyone with a token — can't follow yourself |
 | DELETE | `/api/v1/users/:user_id/follow` | Anyone with a token — unfollows your own relationship |
 
-Following someone you already follow returns `422` (unlike adding a book to
-a shelf, this isn't idempotent — mirrors the website silently no-opping the
-same case). Unfollowing is idempotent: calling it when you're not following
-that user is still a `204`, not a `404`.
+Following someone you already follow returns `422` — unlike the website,
+which treats a duplicate follow as a silent no-op with no user-facing
+error, the API surfaces it explicitly so a script doesn't mistake a failed
+follow for a successful one. Unfollowing is idempotent, though: calling it
+when you're not following that user is still a `204`, not a `404`.
 
 ```sh
 curl -X POST https://<host>/api/v1/users/42/follow \

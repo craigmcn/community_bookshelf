@@ -11,6 +11,12 @@ class Api::V1::FollowsController < Api::V1::BaseController
     else
       render json: {errors: @follow.errors.full_messages}, status: :unprocessable_content
     end
+  rescue ActiveRecord::RecordNotUnique
+    # The uniqueness validation above already covers the common case; this
+    # catches the narrow race where a concurrent request wins between that
+    # validation's SELECT and this one's INSERT, so it still gets a clean
+    # 422 instead of an unhandled 500.
+    render json: {errors: ["Followed has already been taken"]}, status: :unprocessable_content
   end
 
   # Idempotent, matching the HTML FollowsController — unfollowing twice (or
