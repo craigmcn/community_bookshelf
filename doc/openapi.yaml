@@ -14,6 +14,7 @@ security:
 tags:
   - name: Books
   - name: Readings
+  - name: Shelves
 
 paths:
   /books:
@@ -239,6 +240,139 @@ paths:
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
 
+  /shelves:
+    get:
+      tags: [Shelves]
+      summary: List your own shelves
+      parameters:
+        - name: page
+          in: query
+          schema: {type: integer, default: 1}
+      responses:
+        "200":
+          description: Paginated list of shelves
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shelves:
+                    type: array
+                    items: {$ref: "#/components/schemas/Shelf"}
+                  pagination: {$ref: "#/components/schemas/Pagination"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+    post:
+      tags: [Shelves]
+      summary: Create a shelf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shelf]
+              properties:
+                shelf: {$ref: "#/components/schemas/ShelfInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ShelfWithBooks"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /shelves/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    get:
+      tags: [Shelves]
+      summary: Show a shelf and its books (owner only)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ShelfWithBooks"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Shelves]
+      summary: Rename a shelf (owner only)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shelf]
+              properties:
+                shelf: {$ref: "#/components/schemas/ShelfInput"}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ShelfWithBooks"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+    delete:
+      tags: [Shelves]
+      summary: Delete a shelf (owner only)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /shelves/{shelf_id}/books:
+    parameters:
+      - name: shelf_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [Shelves]
+      summary: Add a book to a shelf (owner only, idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [book_id]
+              properties:
+                book_id: {type: integer}
+      responses:
+        "201":
+          description: Created (or already present — adding is idempotent)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ShelfWithBooks"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /shelves/{shelf_id}/books/{id}:
+    parameters:
+      - name: shelf_id
+        in: path
+        required: true
+        schema: {type: integer}
+      - name: id
+        in: path
+        required: true
+        description: The shelf/book pairing's id (not the book's own id)
+        schema: {type: integer}
+    delete:
+      tags: [Shelves]
+      summary: Remove a book from a shelf (owner only)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -247,9 +381,9 @@ components:
       description: |
         A scoped, optionally-expiring personal access token, created from
         /api_tokens. Every endpoint requires one with the relevant scope
-        (read:books, write:books, read:readings, write:readings) — there is
-        no anonymous access, even for catalog browsing that's public on the
-        website.
+        (read:books, write:books, read:readings, write:readings,
+        read:shelves, write:shelves) — there is no anonymous access, even
+        for catalog browsing that's public on the website.
 
   responses:
     Unauthorized:
@@ -361,3 +495,55 @@ components:
         finished_on: {type: string, format: date}
         progress_percent: {type: integer}
         format: {type: string}
+    Shelf:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        user_id: {type: integer}
+        book_count: {type: integer}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ShelfWithBooks:
+      allOf:
+        - $ref: "#/components/schemas/Shelf"
+        - type: object
+          properties:
+            books:
+              type: array
+              items:
+                allOf:
+                  - $ref: "#/components/schemas/BookSummary"
+                  - type: object
+                    properties:
+                      shelf_book_id:
+                        type: integer
+                        description: The shelf/book pairing's id — pass as :id to DELETE /shelves/{shelf_id}/books/{id}
+    BookSummary:
+      description: |
+        A book as nested inside a shelf response — the same fields as Book
+        minus tag_list/mood_list/pace_list (each of those runs its own
+        query, and a shelf's book list isn't paginated, so they're omitted
+        here to avoid a large per-book query fan-out). Fetch
+        GET /books/{id} if you need those.
+      type: object
+      properties:
+        id: {type: integer}
+        title: {type: string}
+        author: {type: string}
+        isbn: {type: string, nullable: true}
+        cover_url: {type: string, nullable: true}
+        page_count: {type: integer, nullable: true}
+        published_on: {type: string, format: date, nullable: true}
+        description: {type: string, nullable: true}
+        subjects: {type: array, items: {type: string}}
+        series_id: {type: integer, nullable: true}
+        series_position: {type: integer, nullable: true}
+        added_by_id: {type: integer}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ShelfInput:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string}
