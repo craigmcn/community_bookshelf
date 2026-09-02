@@ -15,6 +15,7 @@ tags:
   - name: Books
   - name: Readings
   - name: Shelves
+  - name: Follows
 
 paths:
   /books:
@@ -373,6 +374,33 @@ paths:
         "401": {$ref: "#/components/responses/Unauthorized"}
         "404": {$ref: "#/components/responses/NotFound"}
 
+  /users/{user_id}/follow:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [Follows]
+      summary: Follow a user (can't follow yourself)
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Follow"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+    delete:
+      tags: [Follows]
+      summary: Unfollow a user (idempotent — 204 even if not currently following)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -382,8 +410,8 @@ components:
         A scoped, optionally-expiring personal access token, created from
         /api_tokens. Every endpoint requires one with the relevant scope
         (read:books, write:books, read:readings, write:readings,
-        read:shelves, write:shelves) — there is no anonymous access, even
-        for catalog browsing that's public on the website.
+        read:shelves, write:shelves, write:follows) — there is no anonymous
+        access, even for catalog browsing that's public on the website.
 
   responses:
     Unauthorized:
@@ -547,3 +575,10 @@ components:
       required: [name]
       properties:
         name: {type: string}
+    Follow:
+      type: object
+      properties:
+        id: {type: integer}
+        follower_id: {type: integer}
+        followed_id: {type: integer}
+        created_at: {type: string, format: date-time}

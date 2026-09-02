@@ -66,6 +66,9 @@ Rails.application.routes.draw do
       resources :shelves do
         resources :shelf_books, only: [:create, :destroy], path: "books"
       end
+      resources :users, only: [] do
+        resource :follow, only: [:create, :destroy]
+      end
     end
 
     get "docs", to: "docs#index"

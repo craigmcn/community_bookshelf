@@ -1,5 +1,5 @@
 class ApiToken < ApplicationRecord
-  SCOPES = %w[read:books write:books read:readings write:readings read:shelves write:shelves].freeze
+  SCOPES = %w[read:books write:books read:readings write:readings read:shelves write:shelves write:follows].freeze
   TOKEN_PREFIX = "cb_"
   # 8 hex chars of the secret, in addition to the fixed TOKEN_PREFIX literal —
   # enough entropy that prefix collisions are statistically irrelevant, while
