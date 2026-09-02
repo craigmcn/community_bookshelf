@@ -20,8 +20,8 @@ integration — each independently revocable:
 
 - Give it a name, pick which **scopes** it needs (`read:books`,
   `write:books`, `read:readings`, `write:readings`, `read:shelves`,
-  `write:shelves`), and optionally an expiration (30 days, 90 days, 1 year,
-  or never).
+  `write:shelves`, `write:follows`), and optionally an expiration (30 days,
+  90 days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -42,6 +42,7 @@ those permissions too).
 | `write:readings` | `POST`/`PATCH`/`DELETE` on `/api/v1/readings` (including `/bulk`) |
 | `read:shelves` | `GET` requests to `/api/v1/shelves` |
 | `write:shelves` | `POST`/`PATCH`/`DELETE` on `/api/v1/shelves` and its nested `/books` (add/remove) |
+| `write:follows` | `POST`/`DELETE` on `/api/v1/users/:user_id/follow` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -222,6 +223,31 @@ curl -X POST https://<host>/api/v1/shelves/1/books \
 
 Adding a book already on the shelf is a no-op (`201`, not a duplicate row) —
 the same idempotent behavior as the website's add-to-shelf button.
+
+### Follows
+
+| Method | Path | Who |
+|---|---|---|
+| POST | `/api/v1/users/:user_id/follow` | Anyone with a token — can't follow yourself |
+| DELETE | `/api/v1/users/:user_id/follow` | Anyone with a token — unfollows your own relationship |
+
+Following someone you already follow returns `422` — unlike the website,
+which treats a duplicate follow as a silent no-op with no user-facing
+error, the API surfaces it explicitly so a script doesn't mistake a failed
+follow for a successful one. Unfollowing is idempotent, though: calling it
+when you're not following that user is still a `204`, not a `404`.
+
+```sh
+curl -X POST https://<host>/api/v1/users/42/follow \
+  -H "Authorization: Bearer <your-token>"
+
+curl -X DELETE https://<host>/api/v1/users/42/follow \
+  -H "Authorization: Bearer <your-token>"
+```
+
+There's no `GET` endpoint here for a user's followers/following lists yet —
+that's likely to land alongside a future `/api/v1/users/:id` profile
+endpoint rather than under `/follow` itself.
 
 ## Rate limits
 
