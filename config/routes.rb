@@ -69,6 +69,7 @@ Rails.application.routes.draw do
       resources :users, only: [] do
         resource :follow, only: [:create, :destroy]
       end
+      resources :reading_challenges, only: [:index, :create, :update]
     end
 
     get "docs", to: "docs#index"

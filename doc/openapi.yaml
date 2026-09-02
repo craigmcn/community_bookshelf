@@ -16,6 +16,7 @@ tags:
   - name: Readings
   - name: Shelves
   - name: Follows
+  - name: ReadingChallenges
 
 paths:
   /books:
@@ -402,6 +403,76 @@ paths:
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
 
+  /reading_challenges:
+    get:
+      tags: [ReadingChallenges]
+      summary: List your own reading challenges
+      responses:
+        "200":
+          description: List of reading challenges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reading_challenges:
+                    type: array
+                    items: {$ref: "#/components/schemas/ReadingChallenge"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [ReadingChallenges]
+      summary: Create a reading challenge (one per calendar year)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reading_challenge]
+              properties:
+                reading_challenge: {$ref: "#/components/schemas/ReadingChallengeInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReadingChallenge"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /reading_challenges/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    patch:
+      tags: [ReadingChallenges]
+      summary: Update a reading challenge's goal (owner only — year is immutable)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reading_challenge]
+              properties:
+                reading_challenge:
+                  type: object
+                  properties:
+                    goal: {type: integer}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReadingChallenge"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -411,8 +482,9 @@ components:
         A scoped, optionally-expiring personal access token, created from
         /api_tokens. Every endpoint requires one with the relevant scope
         (read:books, write:books, read:readings, write:readings,
-        read:shelves, write:shelves, write:follows) — there is no anonymous
-        access, even for catalog browsing that's public on the website.
+        read:shelves, write:shelves, write:follows, read:reading_challenges,
+        write:reading_challenges) — there is no anonymous access, even for
+        catalog browsing that's public on the website.
 
   responses:
     Unauthorized:
@@ -583,3 +655,21 @@ components:
         follower_id: {type: integer}
         followed_id: {type: integer}
         created_at: {type: string, format: date-time}
+    ReadingChallenge:
+      type: object
+      properties:
+        id: {type: integer}
+        user_id: {type: integer}
+        year: {type: integer}
+        goal: {type: integer}
+        books_finished_count: {type: integer}
+        progress_percent: {type: integer, description: Capped at 100}
+        completed: {type: boolean}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ReadingChallengeInput:
+      type: object
+      required: [year, goal]
+      properties:
+        year: {type: integer, minimum: 2000, maximum: 2200}
+        goal: {type: integer, minimum: 1}
