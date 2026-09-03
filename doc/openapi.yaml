@@ -20,6 +20,7 @@ tags:
   - name: Stats
   - name: Clubs
   - name: BuddyReads
+  - name: Notifications
 
 paths:
   /books:
@@ -764,6 +765,64 @@ paths:
         "404": {$ref: "#/components/responses/NotFound"}
         "422": {$ref: "#/components/responses/ValidationFailed"}
 
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List your own notifications
+      parameters:
+        - name: page
+          in: query
+          schema: {type: integer, default: 1}
+      responses:
+        "200":
+          description: Paginated list of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items: {$ref: "#/components/schemas/Notification"}
+                  pagination: {$ref: "#/components/schemas/Pagination"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+
+  /notifications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    patch:
+      tags: [Notifications]
+      summary: Mark a notification read (recipient only)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Notification"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /notifications/mark_all_read:
+    patch:
+      tags: [Notifications]
+      summary: Mark every unread notification read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  marked_read: {type: integer, description: How many notifications were just marked read}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -775,8 +834,9 @@ components:
         (read:books, write:books, read:readings, write:readings,
         read:shelves, write:shelves, write:follows, read:reading_challenges,
         write:reading_challenges, read:stats, read:clubs, write:clubs,
-        read:buddy_reads, write:buddy_reads) — there is no anonymous
-        access, even for catalog browsing that's public on the website.
+        read:buddy_reads, write:buddy_reads, read:notifications,
+        write:notifications) — there is no anonymous access, even for
+        catalog browsing that's public on the website.
 
   responses:
     Unauthorized:
@@ -1089,3 +1149,22 @@ components:
       required: [body]
       properties:
         body: {type: string, maxLength: 1000}
+    Notification:
+      type: object
+      description: |
+        target_type/target_id let a client build its own follow-up
+        request, since a JSON response can't carry a Rails path the way
+        the website's notification links do.
+      properties:
+        id: {type: integer}
+        notification_type: {type: string, enum: [new_follower, review_comment, club_post]}
+        message: {type: string}
+        read_at: {type: string, format: date-time, nullable: true}
+        actor:
+          type: object
+          properties:
+            id: {type: integer}
+            display_name: {type: string}
+        target_type: {type: string, enum: [user, reading, club]}
+        target_id: {type: integer}
+        created_at: {type: string, format: date-time}

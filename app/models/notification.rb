@@ -34,4 +34,23 @@ class Notification < ApplicationRecord
     when "club_post" then "#{actor.display_name} posted in #{notifiable.club.name}"
     end
   end
+
+  # Structured counterpart to NotificationsHelper#notification_path_for, for
+  # the JSON API — a client can't follow a Rails path, so it gets a
+  # resource type + id instead and builds its own request from that.
+  def target_type
+    case notification_type
+    when "new_follower" then "user"
+    when "review_comment" then "reading"
+    when "club_post" then "club"
+    end
+  end
+
+  def target_id
+    case notification_type
+    when "new_follower" then actor_id
+    when "review_comment" then notifiable.reading_id
+    when "club_post" then notifiable.club_id
+    end
+  end
 end

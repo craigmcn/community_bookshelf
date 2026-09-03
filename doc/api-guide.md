@@ -22,8 +22,9 @@ integration — each independently revocable:
   `write:books`, `read:readings`, `write:readings`, `read:shelves`,
   `write:shelves`, `write:follows`, `read:reading_challenges`,
   `write:reading_challenges`, `read:stats`, `read:clubs`, `write:clubs`,
-  `read:buddy_reads`, `write:buddy_reads`), and optionally an expiration
-  (30 days, 90 days, 1 year, or never).
+  `read:buddy_reads`, `write:buddy_reads`, `read:notifications`,
+  `write:notifications`), and optionally an expiration (30 days, 90 days,
+  1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -52,6 +53,8 @@ those permissions too).
 | `write:clubs` | `POST`/`PATCH`/`DELETE` on `/api/v1/clubs`, its nested `/membership`, and its nested `/posts` |
 | `read:buddy_reads` | `GET` requests to `/api/v1/buddy_reads` |
 | `write:buddy_reads` | `POST`/`PATCH` on `/api/v1/buddy_reads` and `POST` on its nested `/messages` |
+| `read:notifications` | `GET` requests to `/api/v1/notifications` |
+| `write:notifications` | `PATCH` on `/api/v1/notifications/:id` and `/mark_all_read` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -387,6 +390,35 @@ curl -X PATCH https://<host>/api/v1/buddy_reads/1 \
 `POST .../messages` accepts `{"buddy_read_message": {"body": "..."}}` and
 is blocked once the pairing is `declined`/`cancelled` (`completed` and
 `accepted` can both still be messaged).
+
+### Notifications
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/notifications` | Anyone with a token — always your own, paginated 20 at a time |
+| PATCH | `/api/v1/notifications/:id` | The recipient only — marks it read |
+| PATCH | `/api/v1/notifications/mark_all_read` | Anyone with a token — marks every unread one read |
+
+Notifications cover new followers, comments on your reviews, and posts in
+clubs you belong to. Unlike the website (which marks a notification read
+and redirects to the thing it's about), `PATCH /api/v1/notifications/:id`
+just returns the updated notification — there's no path for a script to
+follow. Instead, each notification includes `target_type`/`target_id`
+(e.g. `"user"`/`42`, `"reading"`/`7`, `"club"`/`3`) so a client can build
+its own follow-up request (`GET /api/v1/books/:id` doesn't apply here, but
+e.g. `target_type: "reading"` maps to `GET /api/v1/readings/:id`).
+
+```sh
+curl https://<host>/api/v1/notifications -H "Authorization: Bearer <your-token>"
+
+curl -X PATCH https://<host>/api/v1/notifications/1 -H "Authorization: Bearer <your-token>"
+
+curl -X PATCH https://<host>/api/v1/notifications/mark_all_read \
+  -H "Authorization: Bearer <your-token>"
+```
+
+`mark_all_read` returns `{"marked_read": <count>}` rather than a bare
+`204`, so a script can tell how many were actually cleared.
 
 ## Rate limits
 
