@@ -19,6 +19,7 @@ tags:
   - name: ReadingChallenges
   - name: Stats
   - name: Clubs
+  - name: BuddyReads
 
 paths:
   /books:
@@ -650,6 +651,119 @@ paths:
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
 
+  /buddy_reads:
+    get:
+      tags: [BuddyReads]
+      summary: List your own buddy reads (as initiator or partner)
+      responses:
+        "200":
+          description: List of buddy reads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  buddy_reads:
+                    type: array
+                    items: {$ref: "#/components/schemas/BuddyRead"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [BuddyReads]
+      summary: Invite another member to a buddy read (can't invite yourself)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [buddy_read]
+              properties:
+                buddy_read: {$ref: "#/components/schemas/BuddyReadInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/BuddyReadWithMessages"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /buddy_reads/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    get:
+      tags: [BuddyReads]
+      summary: Show a buddy read and its messages (either participant only)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/BuddyReadWithMessages"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [BuddyReads]
+      summary: Drive the status state machine (accept/decline/cancel/complete)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: {type: string, enum: [accepted, declined, cancelled, completed]}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/BuddyReadWithMessages"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422":
+          description: Invalid transition (e.g. the initiator trying to accept their own invite) or unrecognized status
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ErrorMessages"}
+
+  /buddy_reads/{buddy_read_id}/messages:
+    parameters:
+      - name: buddy_read_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [BuddyReads]
+      summary: Post a message (either participant, while the pairing is still active)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [buddy_read_message]
+              properties:
+                buddy_read_message: {$ref: "#/components/schemas/BuddyReadMessageInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/BuddyReadMessage"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -660,9 +774,9 @@ components:
         /api_tokens. Every endpoint requires one with the relevant scope
         (read:books, write:books, read:readings, write:readings,
         read:shelves, write:shelves, write:follows, read:reading_challenges,
-        write:reading_challenges, read:stats, read:clubs, write:clubs) —
-        there is no anonymous access, even for catalog browsing that's
-        public on the website.
+        write:reading_challenges, read:stats, read:clubs, write:clubs,
+        read:buddy_reads, write:buddy_reads) — there is no anonymous
+        access, even for catalog browsing that's public on the website.
 
   responses:
     Unauthorized:
@@ -925,3 +1039,53 @@ components:
       properties:
         body: {type: string, maxLength: 2000}
         spoiler: {type: boolean, default: false}
+    BuddyReadParticipant:
+      type: object
+      properties:
+        id: {type: integer}
+        display_name: {type: string}
+    BuddyRead:
+      type: object
+      properties:
+        id: {type: integer}
+        book_id: {type: integer}
+        initiator_id: {type: integer}
+        partner_id: {type: integer}
+        status: {type: string, enum: [pending, accepted, declined, cancelled, completed]}
+        book:
+          type: object
+          properties:
+            id: {type: integer}
+            title: {type: string}
+        initiator: {$ref: "#/components/schemas/BuddyReadParticipant"}
+        partner: {$ref: "#/components/schemas/BuddyReadParticipant"}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    BuddyReadWithMessages:
+      allOf:
+        - $ref: "#/components/schemas/BuddyRead"
+        - type: object
+          properties:
+            messages:
+              type: array
+              items: {$ref: "#/components/schemas/BuddyReadMessage"}
+    BuddyReadInput:
+      type: object
+      required: [book_id, partner_id]
+      properties:
+        book_id: {type: integer}
+        partner_id: {type: integer}
+    BuddyReadMessage:
+      type: object
+      properties:
+        id: {type: integer}
+        buddy_read_id: {type: integer}
+        user_id: {type: integer}
+        user: {$ref: "#/components/schemas/BuddyReadParticipant"}
+        body: {type: string}
+        created_at: {type: string, format: date-time}
+    BuddyReadMessageInput:
+      type: object
+      required: [body]
+      properties:
+        body: {type: string, maxLength: 1000}

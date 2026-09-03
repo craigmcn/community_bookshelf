@@ -75,6 +75,9 @@ Rails.application.routes.draw do
         resource :membership, only: [:create, :destroy], controller: "club_memberships"
         resources :posts, only: [:create, :destroy], controller: "club_posts"
       end
+      resources :buddy_reads, only: [:index, :create, :show, :update] do
+        resources :messages, only: [:create], controller: "buddy_read_messages"
+      end
     end
 
     get "docs", to: "docs#index"

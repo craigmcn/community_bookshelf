@@ -21,8 +21,9 @@ integration — each independently revocable:
 - Give it a name, pick which **scopes** it needs (`read:books`,
   `write:books`, `read:readings`, `write:readings`, `read:shelves`,
   `write:shelves`, `write:follows`, `read:reading_challenges`,
-  `write:reading_challenges`, `read:stats`, `read:clubs`, `write:clubs`),
-  and optionally an expiration (30 days, 90 days, 1 year, or never).
+  `write:reading_challenges`, `read:stats`, `read:clubs`, `write:clubs`,
+  `read:buddy_reads`, `write:buddy_reads`), and optionally an expiration
+  (30 days, 90 days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -49,6 +50,8 @@ those permissions too).
 | `read:stats` | `GET` requests to `/api/v1/stats` |
 | `read:clubs` | `GET` requests to `/api/v1/clubs` |
 | `write:clubs` | `POST`/`PATCH`/`DELETE` on `/api/v1/clubs`, its nested `/membership`, and its nested `/posts` |
+| `read:buddy_reads` | `GET` requests to `/api/v1/buddy_reads` |
+| `write:buddy_reads` | `POST`/`PATCH` on `/api/v1/buddy_reads` and `POST` on its nested `/messages` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -340,6 +343,50 @@ curl -X POST https://<host>/api/v1/clubs/1/posts \
   -H "Content-Type: application/json" \
   -d '{"club_post": {"body": "Loving this so far!", "spoiler": false}}'
 ```
+
+### Buddy Reads
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/buddy_reads` | Anyone with a token — always your own (as initiator or partner) |
+| GET | `/api/v1/buddy_reads/:id` | Either participant only |
+| POST | `/api/v1/buddy_reads` | Anyone with a token — can't invite yourself |
+| PATCH | `/api/v1/buddy_reads/:id` | Either participant, depending on the transition (see below) |
+| POST | `/api/v1/buddy_reads/:buddy_read_id/messages` | Either participant, while the pairing is still active |
+
+A buddy read is a private two-person space — there's no moderator
+override, unlike clubs/reviews. `index`/`show` nest `book` (`id`, `title`)
+and both `initiator`/`partner` (`id`, `display_name`) — a client always
+gets both sides, matching the website.
+
+`PATCH` drives a small fixed state machine via a `status` param, not a
+general update:
+
+| From | `status` | Who | To |
+|---|---|---|---|
+| `pending` | `accepted` / `declined` | The partner only | `accepted` / `declined` |
+| `pending` or `accepted` | `cancelled` | Either participant | `cancelled` |
+| `accepted` | `completed` | Either participant | `completed` |
+
+Unlike the website (which silently ignores an invalid transition), an
+invalid or unrecognized `status` returns `422` with an explanatory error —
+useful for a script to know its request didn't do anything.
+
+```sh
+curl -X POST https://<host>/api/v1/buddy_reads \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"buddy_read": {"book_id": 42, "partner_id": 7}}'
+
+curl -X PATCH https://<host>/api/v1/buddy_reads/1 \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "accepted"}'
+```
+
+`POST .../messages` accepts `{"buddy_read_message": {"body": "..."}}` and
+is blocked once the pairing is `declined`/`cancelled` (`completed` and
+`accepted` can both still be messaged).
 
 ## Rate limits
 
