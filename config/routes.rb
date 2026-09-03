@@ -71,6 +71,10 @@ Rails.application.routes.draw do
       end
       resources :reading_challenges, only: [:index, :create, :update]
       resource :stats, only: [:show]
+      resources :clubs do
+        resource :membership, only: [:create, :destroy], controller: "club_memberships"
+        resources :posts, only: [:create, :destroy], controller: "club_posts"
+      end
     end
 
     get "docs", to: "docs#index"

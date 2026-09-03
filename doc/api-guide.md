@@ -21,8 +21,8 @@ integration — each independently revocable:
 - Give it a name, pick which **scopes** it needs (`read:books`,
   `write:books`, `read:readings`, `write:readings`, `read:shelves`,
   `write:shelves`, `write:follows`, `read:reading_challenges`,
-  `write:reading_challenges`, `read:stats`), and optionally an expiration
-  (30 days, 90 days, 1 year, or never).
+  `write:reading_challenges`, `read:stats`, `read:clubs`, `write:clubs`),
+  and optionally an expiration (30 days, 90 days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -47,6 +47,8 @@ those permissions too).
 | `read:reading_challenges` | `GET` requests to `/api/v1/reading_challenges` |
 | `write:reading_challenges` | `POST`/`PATCH` on `/api/v1/reading_challenges` |
 | `read:stats` | `GET` requests to `/api/v1/stats` |
+| `read:clubs` | `GET` requests to `/api/v1/clubs` |
+| `write:clubs` | `POST`/`PATCH`/`DELETE` on `/api/v1/clubs`, its nested `/membership`, and its nested `/posts` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -297,6 +299,46 @@ is zero.
 
 ```sh
 curl https://<host>/api/v1/stats -H "Authorization: Bearer <your-token>"
+```
+
+### Clubs
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/clubs` | Anyone with a token — clubs are discoverable/joinable by anyone |
+| GET | `/api/v1/clubs/:id` | Anyone with a token |
+| POST | `/api/v1/clubs` | Anyone with a token — creating one auto-joins you |
+| PATCH | `/api/v1/clubs/:id` | The creator, or a moderator/admin |
+| DELETE | `/api/v1/clubs/:id` | The creator, or a moderator/admin |
+| POST | `/api/v1/clubs/:club_id/membership` | Anyone with a token — join a club |
+| DELETE | `/api/v1/clubs/:club_id/membership` | Anyone with a token — idempotent, leaves your own membership |
+| POST | `/api/v1/clubs/:club_id/posts` | Members of that club only |
+| DELETE | `/api/v1/clubs/:club_id/posts/:id` | The post's author, or a moderator/admin |
+
+Unlike shelves and reading challenges, clubs aren't personal — any
+signed-in token can browse and join any club, matching the website's
+"join to participate, browse to preview" model. `POST .../membership` is
+blocked (`403`) if you're already a member, before any duplicate row is
+attempted; leaving is idempotent (`204` whether or not you were a member).
+
+`GET /api/v1/clubs/:id` nests `club_posts`. A post flagged `spoiler` is
+hidden from a member until they have a *finished* `Reading` for the club's
+book — its own author and moderators/admins always see it regardless. A
+hidden post's `body` is `null` and `hidden` is `true`; the post's other
+fields (`id`, `user_id`, `spoiler`, `created_at`) are still visible, so a
+client can show "someone posted, hidden until you finish" rather than the
+post not existing at all.
+
+```sh
+curl -X POST https://<host>/api/v1/clubs \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"club": {"name": "Sci-Fi Society", "book_id": 42}}'
+
+curl -X POST https://<host>/api/v1/clubs/1/posts \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"club_post": {"body": "Loving this so far!", "spoiler": false}}'
 ```
 
 ## Rate limits
