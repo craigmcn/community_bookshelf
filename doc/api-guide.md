@@ -20,8 +20,9 @@ integration — each independently revocable:
 
 - Give it a name, pick which **scopes** it needs (`read:books`,
   `write:books`, `read:readings`, `write:readings`, `read:shelves`,
-  `write:shelves`, `write:follows`), and optionally an expiration (30 days,
-  90 days, 1 year, or never).
+  `write:shelves`, `write:follows`, `read:reading_challenges`,
+  `write:reading_challenges`), and optionally an expiration (30 days, 90
+  days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -43,6 +44,8 @@ those permissions too).
 | `read:shelves` | `GET` requests to `/api/v1/shelves` |
 | `write:shelves` | `POST`/`PATCH`/`DELETE` on `/api/v1/shelves` and its nested `/books` (add/remove) |
 | `write:follows` | `POST`/`DELETE` on `/api/v1/users/:user_id/follow` |
+| `read:reading_challenges` | `GET` requests to `/api/v1/reading_challenges` |
+| `write:reading_challenges` | `POST`/`PATCH` on `/api/v1/reading_challenges` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -248,6 +251,31 @@ curl -X DELETE https://<host>/api/v1/users/42/follow \
 There's no `GET` endpoint here for a user's followers/following lists yet —
 that's likely to land alongside a future `/api/v1/users/:id` profile
 endpoint rather than under `/follow` itself.
+
+### Reading Challenges
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/reading_challenges` | Anyone with a token — always your own challenges only |
+| POST | `/api/v1/reading_challenges` | Anyone with a token — one per calendar year |
+| PATCH | `/api/v1/reading_challenges/:id` | The owner only |
+
+There's no `show` or `destroy` — same action set as the website. Each
+challenge includes computed progress fields alongside the raw `year`/`goal`
+columns: `books_finished_count`, `progress_percent` (capped at 100), and
+`completed`.
+
+`year` is only accepted on create — a challenge's year is part of its
+identity (one per user per calendar year) and can't be changed afterward,
+so `PATCH` only accepts `goal`; a `year` in the request body is silently
+ignored, same as the website's edit form disabling the field.
+
+```sh
+curl -X POST https://<host>/api/v1/reading_challenges \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"reading_challenge": {"year": 2027, "goal": 24}}'
+```
 
 ## Rate limits
 
