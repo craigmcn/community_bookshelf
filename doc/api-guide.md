@@ -21,8 +21,8 @@ integration — each independently revocable:
 - Give it a name, pick which **scopes** it needs (`read:books`,
   `write:books`, `read:readings`, `write:readings`, `read:shelves`,
   `write:shelves`, `write:follows`, `read:reading_challenges`,
-  `write:reading_challenges`), and optionally an expiration (30 days, 90
-  days, 1 year, or never).
+  `write:reading_challenges`, `read:stats`), and optionally an expiration
+  (30 days, 90 days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -46,6 +46,7 @@ those permissions too).
 | `write:follows` | `POST`/`DELETE` on `/api/v1/users/:user_id/follow` |
 | `read:reading_challenges` | `GET` requests to `/api/v1/reading_challenges` |
 | `write:reading_challenges` | `POST`/`PATCH` on `/api/v1/reading_challenges` |
+| `read:stats` | `GET` requests to `/api/v1/stats` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -275,6 +276,27 @@ curl -X POST https://<host>/api/v1/reading_challenges \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{"reading_challenge": {"year": 2027, "goal": 24}}'
+```
+
+### Stats
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/stats` | Anyone with a token — always your own stats |
+
+Returns the same three datasets as the website's `/stats` page, each as an
+array rather than the website's chart-library-shaped hash:
+
+- `genre_breakdown`: one entry per genre tag across your finished books, e.g. `{"genre": "Fantasy", "count": 5}`.
+- `books_finished_by_month` / `pages_read_by_month`: always exactly 12 entries (the trailing 12 calendar months, zero-filled for months with no activity — same `groupdate` backfill behavior as the website), e.g. `{"month": "2026-08-01", "count": 3}` / `{"month": "2026-08-01", "pages": 840}`.
+
+Unlike the website, there's no separate "have you finished anything yet"
+flag — `books_finished_by_month`/`pages_read_by_month` are zero-filled
+either way, so a client can just check whether every `count`/`pages` value
+is zero.
+
+```sh
+curl https://<host>/api/v1/stats -H "Authorization: Bearer <your-token>"
 ```
 
 ## Rate limits

@@ -70,6 +70,7 @@ Rails.application.routes.draw do
         resource :follow, only: [:create, :destroy]
       end
       resources :reading_challenges, only: [:index, :create, :update]
+      resource :stats, only: [:show]
     end
 
     get "docs", to: "docs#index"
