@@ -20,7 +20,7 @@ class Api::V1::ReadingChallengesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [@challenge.id], ids
   end
 
-  test "show includes computed progress fields" do
+  test "index includes computed progress fields on each challenge" do
     ReadingChallenge.create!(user: @member, year: 2027, goal: 5)
 
     get api_v1_reading_challenges_url, headers: auth_headers(@member)
@@ -53,9 +53,10 @@ class Api::V1::ReadingChallengesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update ignores a submitted year and leaves it unchanged" do
+    original_year = @challenge.year
     patch api_v1_reading_challenge_url(@challenge), params: {reading_challenge: {year: 1999, goal: 30}}, headers: auth_headers(@member)
     assert_response :success
-    assert_equal 2026, @challenge.reload.year
+    assert_equal original_year, @challenge.reload.year
   end
 
   test "member cannot update another user's challenge" do

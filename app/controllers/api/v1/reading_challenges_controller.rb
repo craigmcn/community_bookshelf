@@ -5,7 +5,12 @@ class Api::V1::ReadingChallengesController < Api::V1::BaseController
 
   def index
     authorize ReadingChallenge
-    @reading_challenges = current_user.reading_challenges.order(year: :desc)
+    # .includes(:user) matters here unlike other index actions in this
+    # namespace — current_user.reading_challenges would get each record's
+    # :user association back-filled for free via Rails' inverse_of caching,
+    # but policy_scope's bare where(user:) doesn't, and #books_finished_count
+    # below calls back through :user, so without this it's a real N+1.
+    @reading_challenges = policy_scope(ReadingChallenge).includes(:user).order(year: :desc)
   end
 
   def create
