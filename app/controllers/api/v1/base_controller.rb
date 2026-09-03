@@ -6,6 +6,11 @@ class Api::V1::BaseController < ActionController::Base
   include Pagy::Method
 
   skip_forgery_protection
+  # Needed so far only by the club_posts spoiler-visibility check in jbuilder
+  # views (app/views/api/v1/clubs/show.json.jbuilder) — current_user is
+  # otherwise only ever used from controller code, which can already call
+  # private methods directly.
+  helper_method :current_user
   before_action { request.format = :json }
   # Runs before authenticate_via_token! (and unlike an after_action, still
   # runs even when that before_action halts the chain with a 401 render) so

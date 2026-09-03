@@ -18,6 +18,7 @@ tags:
   - name: Follows
   - name: ReadingChallenges
   - name: Stats
+  - name: Clubs
   - name: BuddyReads
 
 paths:
@@ -488,6 +489,168 @@ paths:
         "401": {$ref: "#/components/responses/Unauthorized"}
         "403": {$ref: "#/components/responses/Forbidden"}
 
+  /clubs:
+    get:
+      tags: [Clubs]
+      summary: List all clubs
+      responses:
+        "200":
+          description: List of clubs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clubs:
+                    type: array
+                    items: {$ref: "#/components/schemas/Club"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [Clubs]
+      summary: Create a club (auto-joins you as a member)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [club]
+              properties:
+                club: {$ref: "#/components/schemas/ClubInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ClubWithPosts"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /clubs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    get:
+      tags: [Clubs]
+      summary: Show a club and its posts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ClubWithPosts"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      tags: [Clubs]
+      summary: Update a club (creator, or moderator/admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [club]
+              properties:
+                club: {$ref: "#/components/schemas/ClubInput"}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ClubWithPosts"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+    delete:
+      tags: [Clubs]
+      summary: Delete a club (creator, or moderator/admin)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /clubs/{club_id}/membership:
+    parameters:
+      - name: club_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [Clubs]
+      summary: Join a club
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ClubWithPosts"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    delete:
+      tags: [Clubs]
+      summary: Leave a club (idempotent — 204 even if not a member)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /clubs/{club_id}/posts:
+    parameters:
+      - name: club_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [Clubs]
+      summary: Post to a club (members only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [club_post]
+              properties:
+                club_post: {$ref: "#/components/schemas/ClubPostInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ClubPost"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /clubs/{club_id}/posts/{id}:
+    parameters:
+      - name: club_id
+        in: path
+        required: true
+        schema: {type: integer}
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    delete:
+      tags: [Clubs]
+      summary: Delete a club post (author, or moderator/admin)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
   /buddy_reads:
     get:
       tags: [BuddyReads]
@@ -611,9 +774,9 @@ components:
         /api_tokens. Every endpoint requires one with the relevant scope
         (read:books, write:books, read:readings, write:readings,
         read:shelves, write:shelves, write:follows, read:reading_challenges,
-        write:reading_challenges, read:stats, read:buddy_reads,
-        write:buddy_reads) — there is no anonymous access, even for
-        catalog browsing that's public on the website.
+        write:reading_challenges, read:stats, read:clubs, write:clubs,
+        read:buddy_reads, write:buddy_reads) — there is no anonymous
+        access, even for catalog browsing that's public on the website.
 
   responses:
     Unauthorized:
@@ -829,6 +992,53 @@ components:
             properties:
               month: {type: string, format: date}
               pages: {type: integer}
+    Club:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        description: {type: string, nullable: true}
+        book_id: {type: integer}
+        created_by_id: {type: integer}
+        member_count: {type: integer}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ClubWithPosts:
+      allOf:
+        - $ref: "#/components/schemas/Club"
+        - type: object
+          properties:
+            club_posts:
+              type: array
+              items: {$ref: "#/components/schemas/ClubPost"}
+    ClubInput:
+      type: object
+      required: [name, book_id]
+      properties:
+        name: {type: string, maxLength: 100}
+        description: {type: string, maxLength: 1000}
+        book_id: {type: integer}
+    ClubPost:
+      type: object
+      description: |
+        A post flagged spoiler is hidden from a member until they have a
+        finished Reading for the club's book (its own author and
+        moderators/admins always see it) — body is null and hidden is true
+        when withheld from the current viewer.
+      properties:
+        id: {type: integer}
+        club_id: {type: integer}
+        user_id: {type: integer}
+        spoiler: {type: boolean}
+        hidden: {type: boolean}
+        body: {type: string, nullable: true}
+        created_at: {type: string, format: date-time}
+    ClubPostInput:
+      type: object
+      required: [body]
+      properties:
+        body: {type: string, maxLength: 2000}
+        spoiler: {type: boolean, default: false}
     BuddyReadParticipant:
       type: object
       properties:
