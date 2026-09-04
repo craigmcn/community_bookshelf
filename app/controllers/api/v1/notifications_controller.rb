@@ -5,7 +5,12 @@ class Api::V1::NotificationsController < Api::V1::BaseController
   # No policy class: inherently scoped to current_user, same pattern as the
   # HTML NotificationsController.
   def index
-    @notifications = current_user.notifications.includes(:actor, :notifiable).recent
+    # notifiable: [:club, {reading: :book}] preloads the type-specific
+    # associations #message/#target_id dereference (review_comment ->
+    # reading -> book, club_post -> club) — Rails' preloader groups
+    # notifiable by its actual class, so this doesn't error for the
+    # new_follower rows that have neither association.
+    @notifications = current_user.notifications.includes(:actor, notifiable: [:club, {reading: :book}]).recent
     @pagy, @notifications = pagy(@notifications)
   end
 

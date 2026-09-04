@@ -27,6 +27,35 @@ class Api::V1::NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @member.id, json.first["target_id"]
   end
 
+  test "index renders review_comment and club_post notifications without an N+1" do
+    # Two of each type, not one — Bullet's N+1 detector only flags a
+    # repeated lazy-load pattern within a request, so a single notification
+    # of a type wouldn't have caught the missing preload this test guards.
+    reading_one = Reading.create!(user: @member, book: books(:one), status: :finished, review: "Loved it", is_review_public: true)
+    reading_two = Reading.create!(user: @member, book: books(:two), status: :finished, review: "So good", is_review_public: true)
+    ReviewComment.create!(reading: reading_one, user: @moderator, body: "Nice review!")
+    ReviewComment.create!(reading: reading_two, user: @admin, body: "Agreed!")
+
+    club_one = Club.create!(name: "Sci-Fi Society", book: books(:one), created_by: @member)
+    club_two = Club.create!(name: "Classics Club", book: books(:two), created_by: @member)
+    club_one.club_memberships.create!(user: @moderator)
+    club_two.club_memberships.create!(user: @admin)
+    ClubPost.create!(club: club_one, user: @moderator, body: "Hi everyone!")
+    ClubPost.create!(club: club_two, user: @admin, body: "Hi from here too!")
+
+    get api_v1_notifications_url, headers: auth_headers(@member)
+    assert_response :success
+
+    json = JSON.parse(response.body)["notifications"]
+    review_comment_json = json.find { |n| n["target_id"] == reading_one.id }
+    assert_equal "reading", review_comment_json["target_type"]
+    assert_includes review_comment_json["message"], reading_one.book.title
+
+    club_post_json = json.find { |n| n["target_id"] == club_one.id }
+    assert_equal "club", club_post_json["target_type"]
+    assert_includes club_post_json["message"], club_one.name
+  end
+
   test "index is empty for a user with no notifications" do
     get api_v1_notifications_url, headers: auth_headers(@member)
     assert_response :success

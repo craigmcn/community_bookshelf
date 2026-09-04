@@ -43,6 +43,7 @@ class Notification < ApplicationRecord
     when "new_follower" then "user"
     when "review_comment" then "reading"
     when "club_post" then "club"
+    else raise ArgumentError, "Unhandled notification_type: #{notification_type.inspect}"
     end
   end
 
@@ -51,6 +52,7 @@ class Notification < ApplicationRecord
     when "new_follower" then actor_id
     when "review_comment" then notifiable.reading_id
     when "club_post" then notifiable.club_id
+    else raise ArgumentError, "Unhandled notification_type: #{notification_type.inspect}"
     end
   end
 end

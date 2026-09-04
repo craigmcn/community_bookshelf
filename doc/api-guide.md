@@ -54,7 +54,7 @@ those permissions too).
 | `read:buddy_reads` | `GET` requests to `/api/v1/buddy_reads` |
 | `write:buddy_reads` | `POST`/`PATCH` on `/api/v1/buddy_reads` and `POST` on its nested `/messages` |
 | `read:notifications` | `GET` requests to `/api/v1/notifications` |
-| `write:notifications` | `PATCH` on `/api/v1/notifications/:id` and `/mark_all_read` |
+| `write:notifications` | `PATCH` on `/api/v1/notifications/:id` and its nested `/mark_all_read` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
