@@ -81,9 +81,12 @@ class Api::V1::ShelvesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  # No new/edit actions exist for this JSON API — /new and /:id/edit should
-  # 404 as "shelf not found" (falling through to show/:id), not raise an
-  # unhandled ActionView::MissingTemplate.
+  # No new/edit actions exist for this JSON API. /new (a 2-segment path)
+  # falls through to the show route with id="new" and 404s via the
+  # controller's generic not-found handler; /:id/edit has no matching
+  # route at all now that edit is gone, so it 404s at the routing layer
+  # before ever reaching the controller. Neither raises the unhandled
+  # ActionView::MissingTemplate this used to produce.
   test "GET /new and /:id/edit have no route of their own" do
     get "/api/v1/shelves/new", headers: auth_headers(users(:member))
     assert_response :not_found
