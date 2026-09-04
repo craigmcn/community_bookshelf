@@ -83,6 +83,8 @@ Rails.application.routes.draw do
           patch :mark_all_read
         end
       end
+      resources :tags, only: [:index]
+      resources :favorite_genres, only: [:index, :create, :destroy]
     end
 
     get "docs", to: "docs#index"
