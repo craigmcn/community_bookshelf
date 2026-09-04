@@ -106,4 +106,15 @@ class Api::V1::ClubsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :forbidden
   end
+
+  # No new/edit actions exist for this JSON API — /new and /:id/edit should
+  # 404 as "club not found" (falling through to show/:id), not raise an
+  # unhandled ActionView::MissingTemplate.
+  test "GET /new and /:id/edit have no route of their own" do
+    get "/api/v1/clubs/new", headers: auth_headers(@member)
+    assert_response :not_found
+
+    get "/api/v1/clubs/#{@club.id}/edit", headers: auth_headers(@member)
+    assert_response :not_found
+  end
 end

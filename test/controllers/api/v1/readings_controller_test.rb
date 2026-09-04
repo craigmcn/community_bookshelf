@@ -99,4 +99,15 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     get api_v1_readings_url, headers: auth_headers(users(:member), scopes: ["write:readings"])
     assert_response :forbidden
   end
+
+  # No new/edit actions exist for this JSON API — /new and /:id/edit should
+  # 404 as "reading not found" (falling through to show/:id), not raise an
+  # unhandled ActionView::MissingTemplate.
+  test "GET /new and /:id/edit have no route of their own" do
+    get "/api/v1/readings/new", headers: auth_headers(users(:member))
+    assert_response :not_found
+
+    get "/api/v1/readings/#{@reading.id}/edit", headers: auth_headers(users(:member))
+    assert_response :not_found
+  end
 end
