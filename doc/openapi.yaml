@@ -247,6 +247,86 @@ paths:
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
 
+  /readings/{reading_id}/review_like:
+    parameters:
+      - name: reading_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [Readings]
+      summary: Like a reading's review (requires a public, non-blank review)
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReviewLike"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+    delete:
+      tags: [Readings]
+      summary: Unlike a reading's review (idempotent — 204 even if not liked)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
+  /readings/{reading_id}/review_comments:
+    parameters:
+      - name: reading_id
+        in: path
+        required: true
+        schema: {type: integer}
+    post:
+      tags: [Readings]
+      summary: Comment on a reading's review (requires a public, non-blank review)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [review_comment]
+              properties:
+                review_comment:
+                  type: object
+                  required: [body]
+                  properties:
+                    body: {type: string, maxLength: 1000}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReviewComment"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/ValidationFailed"}
+
+  /readings/{reading_id}/review_comments/{id}:
+    parameters:
+      - name: reading_id
+        in: path
+        required: true
+        schema: {type: integer}
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    delete:
+      tags: [Readings]
+      summary: Delete a review comment (author, or moderator/admin)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
   /shelves:
     get:
       tags: [Shelves]
@@ -919,8 +999,9 @@ components:
         write:reading_challenges, read:stats, read:clubs, write:clubs,
         read:buddy_reads, write:buddy_reads, read:notifications,
         write:notifications, read:tags, read:favorite_genres,
-        write:favorite_genres) — there is no anonymous access, even for
-        catalog browsing that's public on the website.
+        write:favorite_genres, write:review_likes, write:review_comments)
+        — there is no anonymous access, even for catalog browsing that's
+        public on the website.
 
   responses:
     Unauthorized:
@@ -1264,4 +1345,24 @@ components:
         id: {type: integer}
         tag_id: {type: integer}
         tag: {$ref: "#/components/schemas/Tag"}
+        created_at: {type: string, format: date-time}
+    ReviewLike:
+      type: object
+      properties:
+        id: {type: integer}
+        user_id: {type: integer}
+        reading_id: {type: integer}
+        created_at: {type: string, format: date-time}
+    ReviewComment:
+      type: object
+      properties:
+        id: {type: integer}
+        reading_id: {type: integer}
+        user_id: {type: integer}
+        body: {type: string}
+        user:
+          type: object
+          properties:
+            id: {type: integer}
+            display_name: {type: string}
         created_at: {type: string, format: date-time}
