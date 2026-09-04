@@ -23,8 +23,9 @@ integration — each independently revocable:
   `write:shelves`, `write:follows`, `read:reading_challenges`,
   `write:reading_challenges`, `read:stats`, `read:clubs`, `write:clubs`,
   `read:buddy_reads`, `write:buddy_reads`, `read:notifications`,
-  `write:notifications`), and optionally an expiration (30 days, 90 days,
-  1 year, or never).
+  `write:notifications`, `read:tags`, `read:favorite_genres`,
+  `write:favorite_genres`), and optionally an expiration (30 days, 90
+  days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -55,6 +56,9 @@ those permissions too).
 | `write:buddy_reads` | `POST`/`PATCH` on `/api/v1/buddy_reads` and `POST` on its nested `/messages` |
 | `read:notifications` | `GET` requests to `/api/v1/notifications` |
 | `write:notifications` | `PATCH` on `/api/v1/notifications/:id` and its nested `/mark_all_read` |
+| `read:tags` | `GET` requests to `/api/v1/tags` |
+| `read:favorite_genres` | `GET` requests to `/api/v1/favorite_genres` |
+| `write:favorite_genres` | `POST`/`DELETE` on `/api/v1/favorite_genres` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -419,6 +423,38 @@ curl -X PATCH https://<host>/api/v1/notifications/mark_all_read \
 
 `mark_all_read` returns `{"marked_read": <count>}` rather than a bare
 `204`, so a script can tell how many were actually cleared.
+
+### Tags & Favorite Genres
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/tags` | Anyone with a token |
+| GET | `/api/v1/favorite_genres` | Anyone with a token — always your own |
+| POST | `/api/v1/favorite_genres` | Anyone with a token — idempotent, pass an existing `tag_id` |
+| DELETE | `/api/v1/favorite_genres/:id` | The owner only |
+
+`GET /api/v1/tags` lists every tag across all three categories
+(`genre`/`mood`/`pace`), optionally filtered with `?category=`; an
+unrecognized category is ignored rather than erroring, returning the
+unfiltered list. There's no tag creation endpoint — the website has no
+dedicated tag-browsing page either, since tags are only ever created
+indirectly by assigning `tag_list`/`mood_list`/`pace_list` on a book.
+
+`favorite_genres` operates directly on the join model (`tag_id`), not
+through the website's comma-separated `favorite_genre_list` form field —
+pass an existing genre tag's id (from `GET /api/v1/tags?category=genre`).
+Favoriting a genre you already favorite is a no-op success (`201`, not a
+duplicate row), same idempotent pattern as adding a book to a shelf.
+Passing a non-genre tag's id (a mood or pace tag) returns `422`.
+
+```sh
+curl "https://<host>/api/v1/tags?category=genre" -H "Authorization: Bearer <your-token>"
+
+curl -X POST https://<host>/api/v1/favorite_genres \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"tag_id": 5}'
+```
 
 ## Rate limits
 

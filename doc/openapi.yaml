@@ -21,6 +21,7 @@ tags:
   - name: Clubs
   - name: BuddyReads
   - name: Notifications
+  - name: Tags
 
 paths:
   /books:
@@ -823,6 +824,88 @@ paths:
         "401": {$ref: "#/components/responses/Unauthorized"}
         "403": {$ref: "#/components/responses/Forbidden"}
 
+  /tags:
+    get:
+      tags: [Tags]
+      summary: List all tags, optionally filtered by category
+      parameters:
+        - name: category
+          in: query
+          description: genre, mood, or pace — an unrecognized value is ignored, returning the unfiltered list
+          schema: {type: string, enum: [genre, mood, pace]}
+      responses:
+        "200":
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items: {$ref: "#/components/schemas/Tag"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+
+  /favorite_genres:
+    get:
+      tags: [Tags]
+      summary: List your own favorite genres
+      responses:
+        "200":
+          description: List of favorite genres
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  favorite_genres:
+                    type: array
+                    items: {$ref: "#/components/schemas/FavoriteGenre"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+    post:
+      tags: [Tags]
+      summary: Favorite a genre (idempotent — pass an existing genre tag's id)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tag_id]
+              properties:
+                tag_id: {type: integer}
+      responses:
+        "201":
+          description: Created (or already favorited — this is idempotent)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/FavoriteGenre"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422":
+          description: The tag_id isn't a genre-category tag
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ErrorMessages"}
+
+  /favorite_genres/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer}
+    delete:
+      tags: [Tags]
+      summary: Unfavorite a genre (owner only)
+      responses:
+        "204": {description: No Content}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+
 components:
   securitySchemes:
     bearerAuth:
@@ -835,7 +918,8 @@ components:
         read:shelves, write:shelves, write:follows, read:reading_challenges,
         write:reading_challenges, read:stats, read:clubs, write:clubs,
         read:buddy_reads, write:buddy_reads, read:notifications,
-        write:notifications) — there is no anonymous access, even for
+        write:notifications, read:tags, read:favorite_genres,
+        write:favorite_genres) — there is no anonymous access, even for
         catalog browsing that's public on the website.
 
   responses:
@@ -1167,4 +1251,17 @@ components:
             display_name: {type: string}
         target_type: {type: string, enum: [user, reading, club]}
         target_id: {type: integer}
+        created_at: {type: string, format: date-time}
+    Tag:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        category: {type: string, enum: [genre, mood, pace]}
+    FavoriteGenre:
+      type: object
+      properties:
+        id: {type: integer}
+        tag_id: {type: integer}
+        tag: {$ref: "#/components/schemas/Tag"}
         created_at: {type: string, format: date-time}
