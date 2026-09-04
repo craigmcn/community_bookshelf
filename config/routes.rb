@@ -78,6 +78,11 @@ Rails.application.routes.draw do
       resources :buddy_reads, only: [:index, :create, :show, :update] do
         resources :messages, only: [:create], controller: "buddy_read_messages"
       end
+      resources :notifications, only: [:index, :update] do
+        collection do
+          patch :mark_all_read
+        end
+      end
     end
 
     get "docs", to: "docs#index"
