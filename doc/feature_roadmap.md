@@ -1,6 +1,6 @@
 # Feature Roadmap: Toward a Fully-Featured Reading List App
 
-_Last updated: 2026-08-23_
+_Last updated: 2026-09-04_
 
 This is a gap analysis, not a commitment or a sprint plan. It compares
 community_bookshelf's current feature set against established reading-tracker apps —
@@ -103,7 +103,7 @@ scenarios. Each feature below is tagged:
 
 ## API
 
-- [ ] Expose a JSON API for books/readings (the `jbuilder` gem is already a dependency but unused) `[parity: solo — but directly relevant to bookshelf-api, the sibling API-first implementation]`
+- [x] Expose a JSON API (grew from books/readings into full coverage across all 13 resources — shelves, follows, reading_challenges, stats, clubs, buddy_reads, notifications, tags, favorite_genres, and review likes/comments — see `doc/api-guide.md`/`doc/openapi.yaml`) `[parity: solo — but directly relevant to bookshelf-api, the sibling API-first implementation]`
 
 ## Prioritization
 
