@@ -11,7 +11,11 @@ class Api::V1::ShelfBooksController < Api::V1::BaseController
     begin
       @shelf_book = @shelf.shelf_books.find_or_create_by(book: @book)
     rescue ActiveRecord::RecordNotUnique
-      @shelf_book = @shelf.shelf_books.find_by(book: @book)
+      # find_by! rather than find_by — a concurrent delete in the narrow
+      # window between the rescue and this lookup should surface as the
+      # same clean 404 Api::V1::BaseController already renders for
+      # ActiveRecord::RecordNotFound, not an unhandled nil downstream.
+      @shelf_book = @shelf.shelf_books.find_by!(book: @book)
     end
     render "api/v1/shelves/show", status: :created
   end
