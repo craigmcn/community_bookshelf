@@ -25,7 +25,11 @@ class Api::V1::FavoriteGenresController < Api::V1::BaseController
     begin
       @favorite_genre = current_user.favorite_genres.find_or_create_by(tag: tag)
     rescue ActiveRecord::RecordNotUnique
-      @favorite_genre = current_user.favorite_genres.find_by(tag: tag)
+      # find_by! rather than find_by — a concurrent delete in the narrow
+      # window between the rescue and this lookup should surface as the
+      # same clean 404 Api::V1::BaseController already renders for
+      # ActiveRecord::RecordNotFound, not an unhandled nil downstream.
+      @favorite_genre = current_user.favorite_genres.find_by!(tag: tag)
     end
     render :show, status: :created
   end
