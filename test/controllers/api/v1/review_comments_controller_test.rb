@@ -11,7 +11,7 @@ class Api::V1::ReviewCommentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  test "member can comment on a public review" do
+  test "another user can comment on a public review" do
     assert_difference "@reading.review_comments.count" do
       post api_v1_reading_review_comments_url(@reading), params: {review_comment: {body: "Nice!"}}, headers: auth_headers(@moderator)
     end
@@ -22,7 +22,7 @@ class Api::V1::ReviewCommentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @moderator.display_name, json["user"]["display_name"]
   end
 
-  test "member cannot comment on a private review" do
+  test "another user cannot comment on a private review" do
     @reading.update!(is_review_public: false)
 
     assert_no_difference "@reading.review_comments.count" do

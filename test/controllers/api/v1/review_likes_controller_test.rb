@@ -11,7 +11,7 @@ class Api::V1::ReviewLikesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  test "member can like a public review" do
+  test "another user can like a public review" do
     assert_difference "@reading.review_likes.count" do
       post api_v1_reading_review_like_url(@reading), headers: auth_headers(@moderator)
     end
@@ -19,7 +19,7 @@ class Api::V1::ReviewLikesControllerTest < ActionDispatch::IntegrationTest
     assert_equal @moderator.id, JSON.parse(response.body)["user_id"]
   end
 
-  test "member cannot like a private review" do
+  test "another user cannot like a private review" do
     @reading.update!(is_review_public: false)
 
     assert_no_difference "@reading.review_likes.count" do
@@ -28,7 +28,7 @@ class Api::V1::ReviewLikesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "member can unlike" do
+  test "another user can unlike" do
     ReviewLike.create!(user: @moderator, reading: @reading)
 
     assert_difference "@reading.review_likes.count", -1 do
