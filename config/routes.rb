@@ -59,11 +59,11 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :books
-      resources :readings do
+      resources :books, only: [:index, :show, :create, :update, :destroy]
+      resources :readings, only: [:index, :show, :create, :update, :destroy] do
         post :bulk, on: :collection
       end
-      resources :shelves do
+      resources :shelves, only: [:index, :show, :create, :update, :destroy] do
         resources :shelf_books, only: [:create, :destroy], path: "books"
       end
       resources :users, only: [] do
@@ -71,7 +71,7 @@ Rails.application.routes.draw do
       end
       resources :reading_challenges, only: [:index, :create, :update]
       resource :stats, only: [:show]
-      resources :clubs do
+      resources :clubs, only: [:index, :show, :create, :update, :destroy] do
         resource :membership, only: [:create, :destroy], controller: "club_memberships"
         resources :posts, only: [:create, :destroy], controller: "club_posts"
       end

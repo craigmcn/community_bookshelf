@@ -102,4 +102,18 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     get api_v1_books_url, headers: auth_headers(users(:member), scopes: ["write:books"])
     assert_response :forbidden
   end
+
+  # No new/edit actions exist for this JSON API. /new (a 2-segment path)
+  # falls through to the show route with id="new" and 404s via the
+  # controller's generic not-found handler; /:id/edit has no matching
+  # route at all now that edit is gone, so it 404s at the routing layer
+  # before ever reaching the controller. Neither raises the unhandled
+  # ActionView::MissingTemplate this used to produce.
+  test "GET /new and /:id/edit have no route of their own" do
+    get "/api/v1/books/new", headers: auth_headers(users(:member))
+    assert_response :not_found
+
+    get "/api/v1/books/#{@book.id}/edit", headers: auth_headers(users(:member))
+    assert_response :not_found
+  end
 end
