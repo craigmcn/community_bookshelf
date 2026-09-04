@@ -62,6 +62,8 @@ Rails.application.routes.draw do
       resources :books, only: [:index, :show, :create, :update, :destroy]
       resources :readings, only: [:index, :show, :create, :update, :destroy] do
         post :bulk, on: :collection
+        resource :review_like, only: [:create, :destroy]
+        resources :review_comments, only: [:create, :destroy]
       end
       resources :shelves, only: [:index, :show, :create, :update, :destroy] do
         resources :shelf_books, only: [:create, :destroy], path: "books"

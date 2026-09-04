@@ -24,8 +24,8 @@ integration — each independently revocable:
   `write:reading_challenges`, `read:stats`, `read:clubs`, `write:clubs`,
   `read:buddy_reads`, `write:buddy_reads`, `read:notifications`,
   `write:notifications`, `read:tags`, `read:favorite_genres`,
-  `write:favorite_genres`), and optionally an expiration (30 days, 90
-  days, 1 year, or never).
+  `write:favorite_genres`, `write:review_likes`, `write:review_comments`),
+  and optionally an expiration (30 days, 90 days, 1 year, or never).
 - The full value is shown exactly once, right after creation — copy it
   immediately. The list afterward only ever shows a short prefix
   (`cb_a1b2c3d4…`), enough to tell your tokens apart, never the full secret.
@@ -59,6 +59,8 @@ those permissions too).
 | `read:tags` | `GET` requests to `/api/v1/tags` |
 | `read:favorite_genres` | `GET` requests to `/api/v1/favorite_genres` |
 | `write:favorite_genres` | `POST`/`DELETE` on `/api/v1/favorite_genres` |
+| `write:review_likes` | `POST`/`DELETE` on `/api/v1/readings/:reading_id/review_like` |
+| `write:review_comments` | `POST`/`DELETE` on `/api/v1/readings/:reading_id/review_comments` |
 
 A request with a token missing the required scope gets a `403` — the same
 status a Pundit permission failure returns, but with a distinct message
@@ -200,6 +202,33 @@ own `status`) and lists a result per row, in the same order as the request:
     {"index": 1, "status": "error", "errors": ["Book must exist"]}
   ]
 }
+```
+
+#### Review likes & comments
+
+| Method | Path | Who |
+|---|---|---|
+| POST | `/api/v1/readings/:reading_id/review_like` | Anyone with a token, if the reading's review is public and non-blank |
+| DELETE | `/api/v1/readings/:reading_id/review_like` | Anyone with a token — idempotent, unlikes your own like |
+| POST | `/api/v1/readings/:reading_id/review_comments` | Same gate as liking |
+| DELETE | `/api/v1/readings/:reading_id/review_comments/:id` | The comment's author, or a moderator/admin |
+
+Both are gated on the *reading's* review being public and non-blank —
+independently of whether you can otherwise view the reading, since a
+moderator can view a private reading's page but still shouldn't be able
+to like or comment on it as if it were public. There's no `GET` for
+either — likes/comments would naturally nest under `GET
+/api/v1/readings/:id` if that endpoint is ever extended to include them,
+rather than getting their own listing endpoint.
+
+```sh
+curl -X POST https://<host>/api/v1/readings/101/review_like \
+  -H "Authorization: Bearer <your-token>"
+
+curl -X POST https://<host>/api/v1/readings/101/review_comments \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"review_comment": {"body": "Great review!"}}'
 ```
 
 ### Shelves
