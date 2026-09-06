@@ -220,19 +220,20 @@ while book_specs.size < TARGET_BOOK_COUNT
 end
 
 book_specs.each do |spec|
-  spec[:page_count] = rand(120..820)
+  spec_rng = seeded_rng("book-spec", spec[:title], spec[:author])
+  spec[:page_count] = spec_rng.rand(120..820)
   spec[:published_on] = Faker::Date.between(from: "1850-01-01", to: Date.current)
   spec[:isbn] = Faker::Code.isbn
   spec[:description] = Faker::Lorem.paragraph(sentence_count: 4)
-  spec[:subjects] = Array.new(rand(1..4)) { Faker::Book.genre }.uniq
-  spec[:tag_list] = genre_tags.sample(rand(1..3)).map(&:name).join(", ")
-  spec[:mood_list] = mood_tags.sample(rand(0..2)).map(&:name).join(", ")
-  spec[:pace_list] = pace_tags.sample(1).map(&:name).join(", ")
+  spec[:subjects] = Array.new(spec_rng.rand(1..4)) { Faker::Book.genre }.uniq
+  spec[:tag_list] = genre_tags.sample(spec_rng.rand(1..3), random: spec_rng).map(&:name).join(", ")
+  spec[:mood_list] = mood_tags.sample(spec_rng.rand(0..2), random: spec_rng).map(&:name).join(", ")
+  spec[:pace_list] = pace_tags.sample(1, random: spec_rng).map(&:name).join(", ")
 end
 
 books = book_specs.map do |spec|
   Book.find_or_create_by!(title: spec[:title], author: spec[:author]) do |b|
-    b.added_by = all_users.sample
+    b.added_by = all_users.sample(random: seeded_rng("book-added-by", spec[:title], spec[:author]))
     b.series = spec[:series]
     b.series_position = spec[:series_position]
     b.page_count = spec[:page_count]
@@ -265,31 +266,32 @@ all_users.each do |user|
     end
     next unless reading.previously_new_record?
 
-    final_status = statuses.sample
+    attrs_rng = seeded_rng("reading-attrs", user.id, book.id)
+    final_status = statuses.sample(random: attrs_rng)
     next if final_status == "want_to_read"
 
-    attrs = {status: final_status, format: formats.sample}
+    attrs = {status: final_status, format: formats.sample(random: attrs_rng)}
 
     if final_status == "finished"
       started = Faker::Date.between(from: 2.years.ago, to: 30.days.ago)
       attrs[:started_on] = started
       attrs[:finished_on] = Faker::Date.between(from: started, to: Date.current)
       attrs[:progress_percent] = 100
-      attrs[:rating] = ratings.sample
-      if rand < 0.5
-        attrs[:review] = Faker::Lorem.paragraph(sentence_count: rand(2..6))
-        attrs[:is_review_public] = rand < 0.85
+      attrs[:rating] = ratings.sample(random: attrs_rng)
+      if attrs_rng.rand < 0.5
+        attrs[:review] = Faker::Lorem.paragraph(sentence_count: attrs_rng.rand(2..6))
+        attrs[:is_review_public] = attrs_rng.rand < 0.85
       end
     elsif final_status == "reading"
       attrs[:started_on] = Faker::Date.between(from: 60.days.ago, to: Date.current)
-      attrs[:progress_percent] = rand(5..95)
+      attrs[:progress_percent] = attrs_rng.rand(5..95)
     elsif final_status == "dnf"
       attrs[:started_on] = Faker::Date.between(from: 1.year.ago, to: 30.days.ago)
-      attrs[:progress_percent] = rand(5..80)
+      attrs[:progress_percent] = attrs_rng.rand(5..80)
     end
 
     reading.update!(attrs)
-    soft_deleted_readings << reading if rand < 0.02
+    soft_deleted_readings << reading if attrs_rng.rand < 0.02
   end
 end
 
@@ -346,7 +348,7 @@ public_reviews.find_each do |reading|
   other_users.sample(engagement_rng.rand(1..3), random: engagement_rng).each do |commenter|
     next if ReviewComment.exists?(user: commenter, reading: reading)
 
-    ReviewComment.create!(user: commenter, reading: reading, body: Faker::Lorem.sentence(word_count: rand(6..20)))
+    ReviewComment.create!(user: commenter, reading: reading, body: Faker::Lorem.sentence(word_count: engagement_rng.rand(6..20)))
   end
 end
 
@@ -367,7 +369,7 @@ buddy_statuses = BuddyRead.statuses.keys
   next unless %w[accepted completed].include?(status)
 
   participants = [initiator, partner]
-  rand(2..6).times { |n| buddy_read.messages.create!(user: participants[n % 2], body: Faker::Lorem.sentence(word_count: rand(5..15))) }
+  buddy_rng.rand(2..6).times { |n| buddy_read.messages.create!(user: participants[n % 2], body: Faker::Lorem.sentence(word_count: buddy_rng.rand(5..15))) }
 end
 
 # ---------------------------------------------------------------------------
@@ -393,9 +395,9 @@ CLUB_GENRE_LABELS = ["Fantasy", "Science Fiction", "Romance", "Mystery", "Thrill
   end
 
   post_rng = seeded_rng("club-posts", club.id)
-  club.members.sample(post_rng.rand(2..6), random: post_rng).each do
+  post_rng.rand(2..6).times do
     author = club.members.sample(random: post_rng)
-    ClubPost.create!(club: club, user: author, body: Faker::Lorem.paragraph(sentence_count: rand(1..5)), spoiler: rand < 0.2)
+    ClubPost.create!(club: club, user: author, body: Faker::Lorem.paragraph(sentence_count: post_rng.rand(1..5)), spoiler: post_rng.rand < 0.2)
   end
 end
 
@@ -437,7 +439,8 @@ User.find_each(&:award_badges!)
 # ---------------------------------------------------------------------------
 puts "Marking some notifications read..."
 Notification.where(read_at: nil).where("id % 3 != 0").find_each do |notification|
-  notification.update_column(:read_at, notification.created_at + rand(1..48).hours)
+  notification_rng = seeded_rng("notification-read-at", notification.id)
+  notification.update_column(:read_at, notification.created_at + notification_rng.rand(1..48).hours)
 end
 
 # ---------------------------------------------------------------------------

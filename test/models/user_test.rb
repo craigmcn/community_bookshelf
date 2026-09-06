@@ -281,6 +281,23 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  test "award_badges! does not poison the transaction when a duplicate badge insert is rescued" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current,
+      review: "Great book, would read again.", is_review_public: true)
+
+    # The Reading save above already auto-awarded books_finished_1 via its
+    # after_save callback. Forcing pluck to return [] simulates a race —
+    # another process's insert landed between this call's earned-badges
+    # snapshot and its own insert attempt — forcing a genuine duplicate-insert
+    # rescue partway through the loop.
+    association = member.user_badges
+    association.define_singleton_method(:pluck) { |*| [] }
+    member.award_badges!
+
+    assert member.user_badges.exists?(badge_key: "reviews_written_1")
+  end
+
   test "badges returns earned Badge definitions" do
     member = users(:member)
     UserBadge.create!(user: member, badge_key: "books_finished_1", awarded_at: Time.current)
