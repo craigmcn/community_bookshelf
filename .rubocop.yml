@@ -17,3 +17,9 @@ AllCops:
   SuggestExtensions: false
   Exclude:
     - "db/migrate/**/*"
+
+# db:seed is an interactive console script — puts is the right tool for
+# progress output here, not Rails.logger (which may not print to the console).
+Rails/Output:
+  Exclude:
+    - "db/seeds.rb"

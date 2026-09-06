@@ -170,7 +170,14 @@ class User < ApplicationRecord
       next unless definition.criteria.call(self)
 
       begin
-        user_badges.create!(badge_key: definition.key, awarded_at: Time.current)
+        # requires_new: true opens a savepoint — award_badges! runs inside
+        # Reading's own save transaction, and a rescued RecordNotUnique still
+        # leaves a plain (non-savepoint) transaction aborted at the Postgres
+        # level, breaking every query the caller runs afterward in the same
+        # transaction (e.g. the next badge tier's criteria check).
+        ActiveRecord::Base.transaction(requires_new: true) do
+          user_badges.create!(badge_key: definition.key, awarded_at: Time.current)
+        end
       rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
         next
       end
