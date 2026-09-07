@@ -84,6 +84,10 @@ group :development, :test do
 
   # Flags N+1 queries and unused eager loads; raises in test so CI catches them
   gem "bullet"
+
+  # Generates realistic demo data for db/seeds.rb; CI replants seeds against
+  # RAILS_ENV=test (config/ci.rb), so this needs both envs, not just dev.
+  gem "faker"
 end
 
 group :development do
