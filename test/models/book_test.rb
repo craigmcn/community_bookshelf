@@ -14,6 +14,19 @@ class BookTest < ActiveSupport::TestCase
     end
   end
 
+  test "destroying a book destroys its clubs, memberships, and posts" do
+    book = Book.create!(title: "Test", author: "Author", added_by: users(:member))
+    club = Club.create!(name: "Classics Club", book: book, created_by: users(:member))
+    membership = club.club_memberships.create!(user: users(:moderator))
+    post = ClubPost.create!(club: club, user: users(:member), body: "Great book!")
+
+    book.destroy!
+
+    assert_not Club.exists?(club.id)
+    assert_not ClubMembership.exists?(membership.id)
+    assert_not ClubPost.exists?(post.id)
+  end
+
   test "invalid without title" do
     assert_not Book.new(author: "Author", added_by: users(:member)).valid?
   end
