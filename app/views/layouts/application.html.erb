@@ -106,17 +106,39 @@
           <ul class="navbar-nav">
             <% if signed_in? %>
               <% unread_notifications_count = current_user.notifications.unread.count %>
-              <li class="nav-item">
-                <%= link_to notifications_path,
-                      class: "nav-link position-relative",
-                      "aria-label": "Notifications#{" (#{unread_notifications_count} unread)" if unread_notifications_count.positive?}" do %>
+              <% recent_notifications = current_user.notifications.includes(:actor, :notifiable).recent.limit(5) %>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle position-relative" href="#" data-bs-toggle="dropdown"
+                   aria-label="Notifications<%= " (#{unread_notifications_count} unread)" if unread_notifications_count.positive? %>">
                   <i class="fasl fa-bell" aria-hidden="true"></i>
                   <% if unread_notifications_count.positive? %>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger" aria-hidden="true">
                       <%= unread_notifications_count > 9 ? "9+" : unread_notifications_count %>
                     </span>
                   <% end %>
-                <% end %>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width: 320px;">
+                  <li><h6 class="dropdown-header">Notifications</h6></li>
+                  <% if recent_notifications.any? %>
+                    <% recent_notifications.each do |notification| %>
+                      <li>
+                        <%= button_to notification_path(notification), method: :patch,
+                              class: ["dropdown-item text-wrap", ("bg-body-tertiary" unless notification.read?)] do %>
+                          <i class="fasl <%= notification_icon_for(notification) %> me-2 opacity-75"></i>
+                          <%= notification.message %>
+                          <div class="text-muted small"><%= time_ago_in_words(notification.created_at) %> ago</div>
+                        <% end %>
+                      </li>
+                    <% end %>
+                    <li><hr class="dropdown-divider"></li>
+                    <% if unread_notifications_count.positive? %>
+                      <li><%= button_to "Mark all as read", mark_all_read_notifications_path, method: :patch, class: "dropdown-item" %></li>
+                    <% end %>
+                  <% else %>
+                    <li><span class="dropdown-item-text text-muted">No notifications yet.</span></li>
+                  <% end %>
+                  <li><%= link_to "View all notifications", notifications_path, class: "dropdown-item text-center" %></li>
+                </ul>
               </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
