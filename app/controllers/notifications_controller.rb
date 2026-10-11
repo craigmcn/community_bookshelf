@@ -6,6 +6,7 @@ class NotificationsController < ApplicationController
   def index
     @notifications = current_user.notifications.includes(:actor, :notifiable).recent
     @pagy, @notifications = pagy(@notifications)
+    @notifications = Notification.preload_notifiable_details(@notifications)
   end
 
   # Marks a single notification read as its link is followed, then redirects

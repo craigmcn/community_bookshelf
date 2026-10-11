@@ -106,7 +106,7 @@
           <ul class="navbar-nav">
             <% if signed_in? %>
               <% unread_notifications_count = current_user.notifications.unread.count %>
-              <% recent_notifications = current_user.notifications.includes(:actor, :notifiable).recent.limit(5) %>
+              <% recent_notifications = Notification.preload_notifiable_details(current_user.notifications.includes(:actor, :notifiable).recent.limit(5)) %>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle position-relative" href="#" data-bs-toggle="dropdown"
                    aria-label="Notifications<%= " (#{unread_notifications_count} unread)" if unread_notifications_count.positive? %>">

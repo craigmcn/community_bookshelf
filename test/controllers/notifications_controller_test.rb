@@ -45,6 +45,21 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_not notification.reload.read?
   end
 
+  test "index and the navbar dropdown render without N+1ing on nested notifiable associations" do
+    ReviewComment.create!(user: users(:moderator), reading: readings(:one), body: "Nice review!")
+    ReviewComment.create!(user: users(:admin), reading: readings(:one), body: "Agreed!")
+
+    club = Club.create!(name: "Sci-Fi Society", book: books(:two), created_by: users(:moderator))
+    club.club_memberships.create!(user: readings(:one).user)
+    ClubPost.create!(club: club, user: users(:moderator), body: "Excited to start!")
+    ClubPost.create!(club: club, user: users(:moderator), body: "Chapter 1 thoughts?")
+
+    sign_in_as readings(:one).user
+    get notifications_url
+
+    assert_response :success
+  end
+
   test "mark_all_read marks every unread notification read" do
     Follow.create!(follower: users(:member), followed: users(:moderator))
     Follow.create!(follower: users(:admin), followed: users(:moderator))

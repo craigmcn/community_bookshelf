@@ -68,4 +68,22 @@ class NotificationTest < ActiveSupport::TestCase
     follow = Follow.create!(follower: users(:member), followed: users(:moderator))
     assert_equal "#{users(:member).display_name} started following you", follow.notification.message
   end
+
+  test "preload_notifiable_details avoids N+1 queries across review_comment and club_post notifications" do
+    ReviewComment.create!(user: users(:moderator), reading: readings(:one), body: "Nice review!")
+    ReviewComment.create!(user: users(:admin), reading: readings(:one), body: "Agreed!")
+
+    club = Club.create!(name: "Sci-Fi Society", book: books(:two), created_by: users(:admin))
+    club.club_memberships.create!(user: readings(:one).user)
+    ClubPost.create!(club: club, user: users(:admin), body: "Excited to start!")
+    ClubPost.create!(club: club, user: users(:admin), body: "Chapter 1 thoughts?")
+
+    notifications = Notification.preload_notifiable_details(
+      Notification.includes(:actor, :notifiable).where(recipient: readings(:one).user)
+    )
+
+    assert_no_queries do
+      notifications.each(&:message)
+    end
+  end
 end

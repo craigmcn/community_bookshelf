@@ -19,6 +19,27 @@ class Notification < ApplicationRecord
   # notification that would otherwise have been mailed.
   scope :not_yet_digested, -> { where(digested_at: nil) }
 
+  NESTED_NOTIFIABLE_ASSOCIATIONS = {
+    "ReviewComment" => {reading: :book},
+    "ClubPost" => :club
+  }.freeze
+
+  # #message/#target_type reach through notifiable into a further nested
+  # association (reading.book, club) that a polymorphic `includes` can't
+  # preload in one shot, since different notifiable types don't share an
+  # association name. Callers rendering several notifications (inbox, bell
+  # dropdown) run this once up front instead of N+1ing per row.
+  def self.preload_notifiable_details(notifications)
+    notifications = notifications.to_a
+    notifications.group_by(&:notifiable_type).each do |type, group|
+      associations = NESTED_NOTIFIABLE_ASSOCIATIONS[type]
+      next unless associations
+
+      ActiveRecord::Associations::Preloader.new(records: group.map(&:notifiable), associations: associations).call
+    end
+    notifications
+  end
+
   def read?
     read_at.present?
   end
