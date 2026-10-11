@@ -14,6 +14,23 @@ class BookTest < ActiveSupport::TestCase
     end
   end
 
+  test "destroying a book destroys its clubs, memberships, posts, and post notifications" do
+    book = Book.create!(title: "Test", author: "Author", added_by: users(:member))
+    club = Club.create!(name: "Classics Club", book: book, created_by: users(:member))
+    membership = club.club_memberships.create!(user: users(:moderator))
+    post = ClubPost.create!(club: club, user: users(:member), body: "Great book!")
+    # Polymorphic notifiable has no FK, so a broken cascade would orphan this
+    # silently rather than raise — assert it explicitly.
+    notification = Notification.find_by!(notifiable: post, recipient: users(:moderator))
+
+    book.destroy!
+
+    assert_not Club.exists?(club.id)
+    assert_not ClubMembership.exists?(membership.id)
+    assert_not ClubPost.exists?(post.id)
+    assert_not Notification.exists?(notification.id)
+  end
+
   test "invalid without title" do
     assert_not Book.new(author: "Author", added_by: users(:member)).valid?
   end
