@@ -45,11 +45,23 @@ class LayoutAccessibilityTest < ActionDispatch::IntegrationTest
     assert_select "a.dropdown-item[href=?]", notifications_path, text: "View all notifications"
   end
 
-  test "notification bell dropdown has no mark-all-read action once everything is read" do
+  test "notification bell dropdown shows an empty state when there are no notifications" do
     sign_in_as users(:member)
     get books_url
 
     assert_select "form[action=?]", mark_all_read_notifications_path, count: 0
     assert_select "span.dropdown-item-text", text: "No notifications yet."
+  end
+
+  test "notification bell dropdown still previews read notifications but has no mark-all-read action" do
+    member = users(:member)
+    Follow.create!(follower: users(:admin), followed: member)
+    member.notifications.update_all(read_at: Time.current)
+
+    sign_in_as member
+    get books_url
+
+    assert_select "form[action=?] button.dropdown-item", notification_path(member.notifications.last), text: /started following you/
+    assert_select "form[action=?]", mark_all_read_notifications_path, count: 0
   end
 end

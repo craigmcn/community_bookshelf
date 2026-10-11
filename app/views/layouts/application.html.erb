@@ -126,7 +126,7 @@
                               class: ["dropdown-item text-wrap", ("bg-body-tertiary" unless notification.read?)] do %>
                           <i class="fasl <%= notification_icon_for(notification) %> me-2 opacity-75"></i>
                           <%= notification.message %>
-                          <div class="text-muted small"><%= time_ago_in_words(notification.created_at) %> ago</div>
+                          <span class="d-block text-muted small"><%= time_ago_in_words(notification.created_at) %> ago</span>
                         <% end %>
                       </li>
                     <% end %>
