@@ -4,7 +4,7 @@ class NotificationsController < ApplicationController
   # No policy class: inherently scoped to current_user, the same pattern
   # ActivitiesController (/feed) and StatsController (/stats) use.
   def index
-    @notifications = current_user.notifications.includes(:actor, :notifiable).recent
+    @notifications = current_user.notifications.with_message_associations.recent
     @pagy, @notifications = pagy(@notifications)
   end
 

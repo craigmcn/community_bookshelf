@@ -26,7 +26,7 @@ if Rails.env.local?
     # as the Series safelist above.
     Bullet.add_safelist type: :unused_eager_loading, class_name: "Shelf", association: :shelf_books
 
-    # NotificationsController#index eager-loads :notifiable to render each
+    # Notification.with_message_associations eager-loads :notifiable to render each
     # notification's message, but that method only dereferences notifiable
     # for review_comment/club_post types, not new_follower — a page of
     # notifications that happens to be all new-follower rows trips Bullet's

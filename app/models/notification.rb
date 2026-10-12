@@ -19,6 +19,11 @@ class Notification < ApplicationRecord
   # notification that would otherwise have been mailed.
   scope :not_yet_digested, -> { where(digested_at: nil) }
 
+  # Everything #message/#target_id dereference, for any list of notifications.
+  # Rails' preloader groups notifiable by class, so :club only applies to
+  # ClubPost and reading: :book only to ReviewComment (Follow gets neither).
+  scope :with_message_associations, -> { includes(:actor, notifiable: [:club, {reading: :book}]) }
+
   def read?
     read_at.present?
   end
