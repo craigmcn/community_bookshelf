@@ -38,12 +38,14 @@ class Badge
         criteria: ->(user) { user.current_streak >= n }
       )
     end,
+    # .reload: this runs inside ReadingChallenge's after_save, before Rails
+    # appends an association-create!'d record to the cached target.
     Definition.new(
       key: "challenge_completed",
       name: "Challenge Completed",
       description: "Reach your goal in an annual reading challenge.",
       category: "challenge",
-      criteria: ->(user) { user.reading_challenges.any?(&:completed?) }
+      criteria: ->(user) { user.reading_challenges.reload.any?(&:completed?) }
     )
   ].freeze
 
