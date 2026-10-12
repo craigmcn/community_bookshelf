@@ -38,11 +38,8 @@ class Badge
         criteria: ->(user) { user.current_streak >= n }
       )
     end,
-    # .reload, not a bare .reading_challenges: this criteria runs from
-    # ReadingChallenge's own after_save callback, whose just-saved record
-    # Rails doesn't append to the owner's cached collection target until
-    # after the whole create (and its callbacks) finishes — a bare read
-    # here would never see the record that triggered this very check.
+    # .reload: this runs inside ReadingChallenge's after_save, before Rails
+    # appends an association-create!'d record to the cached target.
     Definition.new(
       key: "challenge_completed",
       name: "Challenge Completed",

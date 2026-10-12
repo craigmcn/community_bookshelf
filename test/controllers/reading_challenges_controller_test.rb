@@ -24,6 +24,16 @@ class ReadingChallengesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reading_challenges_url
   end
 
+  test "creating an already-met challenge awards challenge_completed" do
+    moderator = users(:moderator)
+    Reading.create!(user: moderator, book: books(:one), status: :finished, finished_on: Date.current)
+    sign_in_as moderator
+
+    post reading_challenges_url, params: {reading_challenge: {year: Date.current.year, goal: 1}}
+
+    assert moderator.user_badges.exists?(badge_key: "challenge_completed")
+  end
+
   test "member cannot create a duplicate-year challenge" do
     sign_in_as users(:member)
     assert_no_difference "ReadingChallenge.count" do
