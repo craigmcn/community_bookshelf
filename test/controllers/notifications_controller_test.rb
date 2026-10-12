@@ -46,6 +46,8 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index and the navbar dropdown render without N+1ing on nested notifiable associations" do
+    # Two of each type, not one — Bullet only flags a lazy load repeated
+    # across records from the same query, so one per type wouldn't catch it.
     ReviewComment.create!(user: users(:moderator), reading: readings(:one), body: "Nice review!")
     ReviewComment.create!(user: users(:admin), reading: readings(:one), body: "Agreed!")
 

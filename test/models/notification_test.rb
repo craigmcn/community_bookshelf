@@ -69,7 +69,7 @@ class NotificationTest < ActiveSupport::TestCase
     assert_equal "#{users(:member).display_name} started following you", follow.notification.message
   end
 
-  test "preload_notifiable_details avoids N+1 queries across review_comment and club_post notifications" do
+  test "with_message_associations avoids N+1 queries across review_comment and club_post notifications" do
     ReviewComment.create!(user: users(:moderator), reading: readings(:one), body: "Nice review!")
     ReviewComment.create!(user: users(:admin), reading: readings(:one), body: "Agreed!")
 
@@ -78,9 +78,7 @@ class NotificationTest < ActiveSupport::TestCase
     ClubPost.create!(club: club, user: users(:admin), body: "Excited to start!")
     ClubPost.create!(club: club, user: users(:admin), body: "Chapter 1 thoughts?")
 
-    notifications = Notification.preload_notifiable_details(
-      Notification.includes(:actor, :notifiable).where(recipient: readings(:one).user)
-    )
+    notifications = Notification.with_message_associations.where(recipient: readings(:one).user).to_a
 
     assert_no_queries do
       notifications.each(&:message)
