@@ -272,6 +272,24 @@ class UserTest < ActiveSupport::TestCase
     assert member.reload.user_badges.exists?(badge_key: "books_finished_1")
   end
 
+  test "award_badges! awards a streak badge once the tier is reached" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: 2.days.ago.to_date)
+    Reading.create!(user: member, book: books(:two), status: :finished, finished_on: 1.day.ago.to_date)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current)
+
+    assert member.reload.user_badges.exists?(badge_key: "streak_3")
+  end
+
+  test "award_badges! awards challenge_completed as soon as the completing challenge is created" do
+    member = users(:member)
+    Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current)
+
+    member.reading_challenges.create!(year: Date.current.year, goal: 1)
+
+    assert member.reload.user_badges.exists?(badge_key: "challenge_completed")
+  end
+
   test "award_badges! does not re-award an already-earned badge" do
     member = users(:member)
     Reading.create!(user: member, book: books(:one), status: :finished, finished_on: Date.current)
