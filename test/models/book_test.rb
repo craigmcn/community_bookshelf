@@ -137,6 +137,14 @@ class BookTest < ActiveSupport::TestCase
     assert_not Tag.exists?(name: "gothic")
   end
 
+  test "an existing name typed into two lists is reported once" do
+    book = books(:two)
+
+    assert_not book.update(tag_list: tags(:one).name, mood_list: tags(:one).name)
+
+    assert_equal ["Moods: '#{tags(:one).name}' is already a genre tag"], book.errors[:base]
+  end
+
   test "reusing a name within its own category is still allowed" do
     book = books(:two)
     book.update!(mood_list: "dark")

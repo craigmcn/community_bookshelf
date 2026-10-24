@@ -31,7 +31,7 @@ class Book < ApplicationRecord
   # leave that category's existing tags alone.
   attr_writer :tag_list, :mood_list, :pace_list
 
-  TAG_LIST_LABELS = {"genre" => "Genres", "mood" => "Moods", "pace" => "Pace"}.freeze
+  TAG_LIST_LABELS = {"genre" => "Genres / Tags", "mood" => "Moods", "pace" => "Pace"}.freeze
 
   def tag_list
     @tag_list || tags.genre.order(:name).pluck(:name).join(", ")
@@ -108,12 +108,14 @@ class Book < ApplicationRecord
     submitted = {"genre" => @tag_list, "mood" => @mood_list, "pace" => @pace_list}.compact
       .transform_values { |raw_list| Tag.parse_list(raw_list) }
 
+    reported = []
     submitted.each do |category, names|
       Tag.where(name: names).where.not(category: category).order(:name).each do |tag|
         errors.add(:base, "#{TAG_LIST_LABELS[category]}: '#{tag.name}' is already a #{tag.category} tag")
+        reported << tag.name
       end
     end
-    submitted.values.flatten.tally.select { |_name, count| count > 1 }.each_key do |name|
+    submitted.values.flatten.tally.select { |name, count| count > 1 && reported.exclude?(name) }.each_key do |name|
       errors.add(:base, "'#{name}' can only be used in one of genres, moods, or pace")
     end
   end

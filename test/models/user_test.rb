@@ -72,6 +72,18 @@ class UserTest < ActiveSupport::TestCase
     assert_empty user.reload.favorite_genre_tags
   end
 
+  test "a favorite misfiled before #184 doesn't block saving and is dropped on resubmit" do
+    mood = Tag.create!(name: "dark", category: "mood")
+    user = users(:member)
+    user.favorite_genres.create!(tag: mood)
+    user.update!(favorite_genre_list: "fantasy")
+    user.favorite_genres.create!(tag: mood)
+
+    assert user.reload.update(bio: "New bio", favorite_genre_list: user.favorite_genre_list)
+
+    assert_equal ["fantasy"], user.reload.favorite_genre_tags.pluck(:name)
+  end
+
   test "favorite_genre_list is untouched when omitted from an update" do
     user = users(:member)
     user.update!(favorite_genre_list: "fantasy")

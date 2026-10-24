@@ -67,7 +67,9 @@ class User < ApplicationRecord
   attr_writer :favorite_genre_list
 
   def favorite_genre_list
-    @favorite_genre_list || favorite_genre_tags.order(:name).pluck(:name).join(", ")
+    # .genre hides favorites misfiled as mood/pace before #184, so the form
+    # can't resubmit them; sync's unfiltered current_ids then drops their rows.
+    @favorite_genre_list || favorite_genre_tags.genre.order(:name).pluck(:name).join(", ")
   end
 
   def admin?
