@@ -15,10 +15,12 @@
       <%= hidden_field_tag :tag, @tag.name %>
     <% end %>
     <div class="col-sm-6 col-md-5">
-      <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by title or author...">
+      <label for="books-q" class="visually-hidden">Search</label>
+      <input type="search" id="books-q" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by title or author...">
     </div>
     <div class="col-sm-4 col-md-3">
-      <select name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+      <label for="books-sort" class="visually-hidden">Sort by</label>
+      <select id="books-sort" name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
         <% BooksController::SORT_OPTIONS.each do |key, opts| %>
           <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
         <% end %>

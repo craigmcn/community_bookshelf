@@ -36,10 +36,12 @@
       <%= hidden_field_tag :tag, @tag.name %>
     <% end %>
     <div class="col-sm-6 col-md-4">
-      <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by book title or author...">
+      <label for="readings-q" class="visually-hidden">Search</label>
+      <input type="search" id="readings-q" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by book title or author...">
     </div>
     <div class="col-sm-4 col-md-2">
-      <select name="status" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+      <label for="readings-status" class="visually-hidden">Status</label>
+      <select id="readings-status" name="status" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
         <option value="">Any status</option>
         <% Reading.status_options.each do |label, value| %>
           <option value="<%= value %>" <%= "selected" if params[:status] == value %>><%= label %></option>
@@ -47,7 +49,8 @@
       </select>
     </div>
     <div class="col-sm-4 col-md-2">
-      <select name="rating" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+      <label for="readings-rating" class="visually-hidden">Rating</label>
+      <select id="readings-rating" name="rating" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
         <option value="">Any rating</option>
         <% Reading.ratings.each_key do |value| %>
           <option value="<%= value %>" <%= "selected" if params[:rating] == value %>><%= Reading.ratings[value] %> star<%= "s" unless Reading.ratings[value] == 1 %></option>
@@ -55,7 +58,8 @@
       </select>
     </div>
     <div class="col-sm-4 col-md-2">
-      <select name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
+      <label for="readings-sort" class="visually-hidden">Sort by</label>
+      <select id="readings-sort" name="sort" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
         <% ReadingsController::SORT_OPTIONS.each do |key, opts| %>
           <option value="<%= key %>" <%= "selected" if @sort == key %>><%= opts[:label] %></option>
         <% end %>

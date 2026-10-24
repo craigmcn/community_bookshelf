@@ -6,12 +6,12 @@
     </div>
     <div class="d-flex gap-2">
       <%= link_to edit_shelf_path(shelf), class: "btn btn-sm btn-outline-secondary" do %>
-        <i class="fasl fa-pen-to-square"></i>
+        <i class="fasl fa-pen-to-square" aria-hidden="true"></i><span class="visually-hidden">Edit list</span>
       <% end %>
       <%= button_to shelf, method: :delete,
             class: "btn btn-sm btn-outline-danger",
             form: { data: { turbo_confirm: "Delete \"#{shelf.name}\"?" } } do %>
-        <i class="fasl fa-trash-can"></i>
+        <i class="fasl fa-trash-can" aria-hidden="true"></i><span class="visually-hidden">Delete list</span>
       <% end %>
     </div>
   </div>
