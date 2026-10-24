@@ -93,6 +93,7 @@
             <h5 class="card-title mb-1"><%= link_to reading.book.title, reading.book, class: "text-decoration-none" %></h5>
             <p class="text-muted small mb-2">
               <% if reading.rating %>
+                <span class="visually-hidden"><%= reading.rating.humanize %></span>
                 <% Reading.ratings[reading.rating].times do %>
                   <i class="fasl fa-star text-warning" aria-hidden="true"></i>
                 <% end %>
