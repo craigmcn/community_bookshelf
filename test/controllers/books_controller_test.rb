@@ -279,6 +279,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "book[open_library_key]", "/works/OL468431W"
   end
 
+  test "creating a book with a genre name in the moods field re-renders the form with an error" do
+    sign_in_as users(:member)
+    assert_no_difference "Book.count" do
+      post books_url, params: {book: {title: "Dune", author: "Frank Herbert", mood_list: tags(:one).name}}
+    end
+    assert_response :unprocessable_content
+    assert_includes @response.body, "Moods: &#39;#{tags(:one).name}&#39; is already a genre tag"
+  end
+
   test "member can set tags when creating a book" do
     sign_in_as users(:member)
     assert_difference "Book.count" do
