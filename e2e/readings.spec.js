@@ -10,30 +10,131 @@ test.describe("Readings", () => {
     await expect(row.locator("i.fa-star")).toHaveCount(4);
   });
 
-  test("member can log a reading with a status, rating, and review", async ({ page }) => {
+  test("member can search and filter their shelf", async ({ page }) => {
+    await signIn(page, users.member);
+    await page.goto("/readings");
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+
+    // each submit reloads the results frame (and the search box with it), so wait
+    // for the URL to reflect it before typing the next query
+    await page.getByLabel("Search").fill("gatsby");
+    await page.getByLabel("Search").press("Enter");
+    await expect(page).toHaveURL(/q=gatsby/);
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+
+    await page.getByLabel("Search").fill("nonexistent title");
+    await page.getByLabel("Search").press("Enter");
+    await expect(page).toHaveURL(/q=nonexistent/);
+    await expect(page.getByText("No readings match those filters.")).toBeVisible();
+
+    // Clear reloads the results frame, so wait for it before changing the next filter
+    await page.getByRole("link", { name: "Clear" }).click();
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+    await page.getByLabel("Status").selectOption("finished");
+    await expect(page.getByText("No readings match those filters.")).toBeVisible();
+
+    await page.getByLabel("Status").selectOption("");
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+  });
+
+  test("member can browse their shelf by genre tag", async ({ page }) => {
+    await signIn(page, users.member);
+    await page.goto("/readings");
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+
+    // The Great Gatsby is tagged "fantasy" via the taggings fixture.
+    await page.getByRole("link", { name: "fantasy", exact: true }).click();
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+
+    await page.getByRole("link", { name: "Clear" }).click();
+    await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
+  });
+
+  test("member sees a Recommended for You section based on a highly-rated book's genre", async ({ page, browser }) => {
+    await signIn(page, users.moderator);
+    await page.goto("/books/new");
+    await page.getByLabel("Search for a Book").fill("chamber of secrets");
+    await page.getByRole("button", { name: /Chamber of Secrets/ }).click();
+    await page.getByLabel("Genres").fill("fantasy"); // matches the tag on the member's 4-star Gatsby reading
+    await page.getByRole("button", { name: "Create Book" }).click();
+
+    // fresh context instead of reusing the moderator's page, since navigating a signed-in
+    // page to /sign_in just redirects it away rather than showing the form
+    const memberPage = await (await browser.newContext()).newPage();
+    await signIn(memberPage, users.member);
+    await memberPage.goto("/readings");
+    await expect(memberPage.getByRole("heading", { name: "Recommended for You" })).toBeVisible();
+    await expect(memberPage.getByRole("link", { name: /Chamber of Secrets/ })).toBeVisible();
+  });
+
+  test("member can log a reading with a status, rating, review, format, dates, and progress", async ({ page }) => {
     await signIn(page, users.member);
     await page.goto("/readings/new");
 
     await page.getByLabel("Book").selectOption({ label: "1984" });
     await page.getByLabel("Status").selectOption("finished");
+    await page.getByLabel("Format").selectOption("ebook");
+    await page.getByLabel("Started").fill("2026-01-05");
+    await page.getByLabel("Finished").fill("2026-01-20");
+    await page.getByLabel("Progress (%)").fill("100");
     await page.getByLabel("Rating").selectOption("five");
-    await page.getByLabel("Review").fill("Chillingly good.");
+    await page.getByLabel("Review", { exact: true }).fill("Chillingly good.");
+    await page.getByLabel("Visible to other members").uncheck();
     await page.getByRole("button", { name: "Create Reading" }).click();
 
     await expect(page.getByText("Chillingly good.")).toBeVisible();
     await expect(page.locator("dd i.fa-star")).toHaveCount(5);
+    await expect(page.getByText("Ebook")).toBeVisible();
+    await expect(page.getByText("100%")).toBeVisible();
+    await expect(page.getByText("Private", { exact: true })).toBeVisible();
+  });
+
+  test("member can mark their Gatsby reading as DNF", async ({ page }) => {
+    await signIn(page, users.member);
+    await page.goto("/readings");
+    const row = page.locator("tr", { has: page.getByRole("link", { name: "The Great Gatsby" }) });
+    await row.getByRole("link", { name: "Edit reading" }).click();
+    // Turbo's link prefetch can race a same-URL navigation and morph the just-rendered
+    // form back to its original state if we interact before it settles — wait it out.
+    await page.waitForLoadState("networkidle");
+
+    await page.getByLabel("Status").selectOption("dnf");
+    await page.getByRole("button", { name: "Update Reading" }).click();
+
+    await expect(page.locator(".badge-status-dnf")).toBeVisible();
   });
 
   test("editing a reading updates the displayed rating", async ({ page }) => {
     await signIn(page, users.member);
     await page.goto("/readings");
-    const row = page.locator("tr", { has: page.getByRole("link", { name: "1984" }) });
-    await row.getByRole("link").last().click();
+    const row = page.locator("tr", { has: page.getByRole("link", { name: "1984" }) }).first();
+    await row.getByRole("link", { name: "Edit reading" }).click();
+    await page.waitForLoadState("networkidle"); // see the DNF test above
 
     await page.getByLabel("Rating").selectOption("one");
     await page.getByRole("button", { name: "Update Reading" }).click();
 
     await expect(page.locator("dd i.fa-star")).toHaveCount(1);
+  });
+
+  test("member can start a re-read from a finished book", async ({ page }) => {
+    await signIn(page, users.member);
+    await page.goto("/readings");
+    const rows = page.locator("tr", { has: page.getByRole("link", { name: "1984" }) });
+    await expect(rows.first()).toBeVisible();
+    const before = await rows.count();
+
+    await page.goto("/books");
+    await page.getByRole("link", { name: "1984" }).click();
+    await page.getByRole("link", { name: "Log a Re-read" }).click();
+    await page.waitForLoadState("networkidle"); // see the DNF test above
+    await page.getByLabel("Status").selectOption("want_to_read");
+    await page.getByRole("button", { name: "Create Reading" }).click();
+    await expect(page).toHaveURL(/\/readings\/\d+$/);
+
+    await page.goto("/readings");
+    await expect(rows).toHaveCount(before + 1);
+    await expect(rows.filter({ hasText: "Want to read" })).toHaveCount(1);
   });
 
   test("moderator soft-deleting a reading removes it from the owner's shelf", async ({ page, browser }) => {
