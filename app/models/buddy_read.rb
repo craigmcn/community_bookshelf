@@ -3,10 +3,13 @@ class BuddyRead < ApplicationRecord
   belongs_to :initiator, class_name: "User"
   belongs_to :partner, class_name: "User"
   has_many :messages, class_name: "BuddyReadMessage", dependent: :destroy
+  has_one :notification, as: :notifiable, dependent: :destroy
 
   enum :status, {pending: "pending", accepted: "accepted", declined: "declined", cancelled: "cancelled", completed: "completed"}, default: "pending"
 
   validate :initiator_and_partner_are_distinct
+
+  after_create :notify_partner
 
   def participant?(user)
     user && (initiator_id == user.id || partner_id == user.id)
@@ -26,5 +29,9 @@ class BuddyRead < ApplicationRecord
 
   def initiator_and_partner_are_distinct
     errors.add(:partner_id, "can't be yourself") if initiator_id.present? && initiator_id == partner_id
+  end
+
+  def notify_partner
+    Notification.create!(recipient: partner, actor: initiator, notifiable: self, notification_type: :buddy_read_invite)
   end
 end
