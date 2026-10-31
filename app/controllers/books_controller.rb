@@ -6,7 +6,10 @@ class BooksController < ApplicationController
     "title" => {label: "Title", order: {title: :asc}},
     "author" => {label: "Author", order: {author: :asc, title: :asc}},
     "newest" => {label: "Recently Added", order: {created_at: :desc}},
-    "published" => {label: "Publication Date", order: {published_on: :desc}}
+    # published_on is a brand-new optional field most books won't have yet; NULLS LAST keeps
+    # undated books from crowding out the ones that actually have a date (Postgres' default
+    # DESC puts NULLs first), matching SeriesController#show's NULLS LAST ordering.
+    "published" => {label: "Publication Date", order: Arel.sql("published_on DESC NULLS LAST")}
   }.freeze
 
   def index
