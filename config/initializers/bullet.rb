@@ -28,7 +28,7 @@ if Rails.env.local?
 
     # Notification.with_message_associations eager-loads :notifiable to render each
     # notification's message, but that method only dereferences notifiable
-    # for review_comment/club_post types, not new_follower — a page of
+    # for the comment/post/buddy-read types, not new_follower — a page of
     # notifications that happens to be all new-follower rows trips Bullet's
     # unused-eager-load heuristic even though the include is needed whenever
     # the other types are present.
