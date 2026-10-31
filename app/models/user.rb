@@ -55,6 +55,7 @@ class User < ApplicationRecord
   validates :name, length: {maximum: 100}
   validates :bio, length: {maximum: 500}
   validate :avatar_is_a_supported_image_under_the_size_limit
+  validate :favorite_genres_are_genre_tags
 
   after_create :assign_default_role
   after_create :send_email_confirmation, unless: :skip_confirmation_email
@@ -66,7 +67,9 @@ class User < ApplicationRecord
   attr_writer :favorite_genre_list
 
   def favorite_genre_list
-    @favorite_genre_list || favorite_genre_tags.order(:name).pluck(:name).join(", ")
+    # .genre hides favorites misfiled as mood/pace before #184, so the form
+    # can't resubmit them; sync's unfiltered current_ids then drops their rows.
+    @favorite_genre_list || favorite_genre_tags.genre.order(:name).pluck(:name).join(", ")
   end
 
   def admin?
@@ -260,13 +263,22 @@ class User < ApplicationRecord
   end
 
   def sync_favorite_genre_list
-    names = @favorite_genre_list.to_s.split(",").filter_map { |name| name.strip.downcase.presence }.uniq
-    desired_ids = names.map { |name| find_or_create_genre_tag(name).id }
+    desired_ids = Tag.parse_list(@favorite_genre_list).map { |name| find_or_create_genre_tag(name).id }
     current_ids = favorite_genre_tags.pluck(:id)
 
     favorite_genres.where(tag_id: current_ids - desired_ids).destroy_all
     (desired_ids - current_ids).each { |tag_id| favorite_genres.create!(tag_id: tag_id) }
     @favorite_genre_list = nil
+  end
+
+  # Same cross-category reuse Book#tag_names_fit_their_category guards against:
+  # find_or_create_genre_tag would otherwise favorite an existing mood/pace tag.
+  def favorite_genres_are_genre_tags
+    return if @favorite_genre_list.nil?
+
+    Tag.where(name: Tag.parse_list(@favorite_genre_list)).where.not(category: "genre").order(:name).each do |tag|
+      errors.add(:base, "Favorite genres: '#{tag.name}' is a #{tag.category} tag, not a genre")
+    end
   end
 
   def find_or_create_genre_tag(name)
