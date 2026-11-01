@@ -23,6 +23,13 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "A private take.", response.body
   end
 
+  test "profile review ratings have screen-reader text" do
+    sign_in_as users(:moderator)
+    get user_url(users(:member))
+
+    assert_select ".visually-hidden", text: readings(:one).rating.humanize
+  end
+
   test "profile shows a member's favorite genres" do
     users(:member).update!(favorite_genre_list: "fantasy")
 

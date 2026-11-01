@@ -141,6 +141,22 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_operator body.index(books(:one).title), :<, body.index(books(:two).title)
   end
 
+  test "books index publication-date sort puts undated books last" do
+    books(:one).update!(published_on: nil)
+    books(:two).update!(published_on: Date.new(1949, 6, 8))
+
+    get books_url(sort: "published")
+
+    body = @response.body
+    assert_operator body.index(books(:two).title), :<, body.index(books(:one).title)
+  end
+
+  test "book form labels the ISBN field as ISBN" do
+    sign_in_as users(:member)
+    get new_book_url
+    assert_select "label[for=book_isbn]", text: "ISBN"
+  end
+
   test "books index results are wrapped in a promoted turbo frame" do
     get books_url
     assert_response :success
@@ -277,6 +293,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_content
     assert_select "input[name=?][value=?]", "book[open_library_key]", "/works/OL468431W"
+  end
+
+  test "creating a book with a genre name in the moods field re-renders the form with an error" do
+    sign_in_as users(:member)
+    assert_no_difference "Book.count" do
+      post books_url, params: {book: {title: "Dune", author: "Frank Herbert", mood_list: tags(:one).name}}
+    end
+    assert_response :unprocessable_content
+    assert_includes @response.body, "Moods: &#39;#{tags(:one).name}&#39; is already a genre tag"
   end
 
   test "member can set tags when creating a book" do

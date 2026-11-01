@@ -6,7 +6,9 @@ class Notification < ApplicationRecord
   enum :notification_type, {
     new_follower: "new_follower",
     review_comment: "review_comment",
-    club_post: "club_post"
+    club_post: "club_post",
+    buddy_read_invite: "buddy_read_invite",
+    buddy_read_message: "buddy_read_message"
   }
 
   validates :notification_type, presence: true
@@ -20,9 +22,9 @@ class Notification < ApplicationRecord
   scope :not_yet_digested, -> { where(digested_at: nil) }
 
   # Everything #message/#target_id dereference, for any list of notifications.
-  # Rails' preloader groups notifiable by class, so :club only applies to
-  # ClubPost and reading: :book only to ReviewComment (Follow gets neither).
-  scope :with_message_associations, -> { includes(:actor, notifiable: [:club, {reading: :book}]) }
+  # Rails' preloader groups notifiable by class and applies each nested
+  # association only to the types that have it (Follow gets none of them).
+  scope :with_message_associations, -> { includes(:actor, notifiable: [:club, :book, {reading: :book}, {buddy_read: :book}]) }
 
   def read?
     read_at.present?
@@ -37,6 +39,8 @@ class Notification < ApplicationRecord
     when "new_follower" then "#{actor.display_name} started following you"
     when "review_comment" then "#{actor.display_name} commented on your review of #{notifiable.reading.book.title}"
     when "club_post" then "#{actor.display_name} posted in #{notifiable.club.name}"
+    when "buddy_read_invite" then "#{actor.display_name} invited you to a buddy read of #{notifiable.book.title}"
+    when "buddy_read_message" then "#{actor.display_name} sent a message in your buddy read of #{notifiable.buddy_read.book.title}"
     end
   end
 
@@ -48,6 +52,7 @@ class Notification < ApplicationRecord
     when "new_follower" then "user"
     when "review_comment" then "reading"
     when "club_post" then "club"
+    when "buddy_read_invite", "buddy_read_message" then "buddy_read"
     else raise ArgumentError, "Unhandled notification_type: #{notification_type.inspect}"
     end
   end
@@ -57,6 +62,8 @@ class Notification < ApplicationRecord
     when "new_follower" then actor_id
     when "review_comment" then notifiable.reading_id
     when "club_post" then notifiable.club_id
+    when "buddy_read_invite" then notifiable.id
+    when "buddy_read_message" then notifiable.buddy_read_id
     else raise ArgumentError, "Unhandled notification_type: #{notification_type.inspect}"
     end
   end

@@ -34,7 +34,7 @@ gem "pundit"
 gem "faraday"
 
 # Pagination
-gem "pagy", "~> 43.7"
+gem "pagy", "~> 43.8"
 
 # Rate limiting for the JSON API
 gem "rack-attack"

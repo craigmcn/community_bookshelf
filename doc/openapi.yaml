@@ -1322,7 +1322,7 @@ components:
         the website's notification links do.
       properties:
         id: {type: integer}
-        notification_type: {type: string, enum: [new_follower, review_comment, club_post]}
+        notification_type: {type: string, enum: [new_follower, review_comment, club_post, buddy_read_invite, buddy_read_message]}
         message: {type: string}
         read_at: {type: string, format: date-time, nullable: true}
         actor:
@@ -1330,7 +1330,7 @@ components:
           properties:
             id: {type: integer}
             display_name: {type: string}
-        target_type: {type: string, enum: [user, reading, club]}
+        target_type: {type: string, enum: [user, reading, club, buddy_read]}
         target_id: {type: integer}
         created_at: {type: string, format: date-time}
     Tag:
