@@ -13,7 +13,7 @@ class NotificationsMailerTest < ActionMailer::TestCase
     assert_match users(:member).display_name, email.text_part.body.to_s
   end
 
-  test "digest renders review_comment and club_post messages without extra queries" do
+  test "digest renders every nested notifiable type's message without extra queries" do
     # Bullet only watches web requests, not mailers run from a job, so the
     # nested-preload guarantee is asserted directly here. Each round uses a
     # fresh book/reading/club so the test's query cache can't mask an N+1.
@@ -25,6 +25,8 @@ class NotificationsMailerTest < ActionMailer::TestCase
       club = Club.create!(name: "Club #{n}", book: book, created_by: users(:admin))
       club.club_memberships.create!(user: recipient)
       ClubPost.create!(club: club, user: users(:admin), body: "Excited to start!")
+      buddy_read = BuddyRead.create!(book: book, initiator: users(:admin), partner: recipient)
+      BuddyReadMessage.create!(buddy_read: buddy_read, user: users(:admin), body: "Ready to start?")
     }
 
     add_comment_and_post.call(1)
@@ -45,7 +47,9 @@ class NotificationsMailerTest < ActionMailer::TestCase
   def digest_query_count(user)
     ids = user.notifications.ids
     count = 0
-    counter = ->(*, payload) { count += 1 unless payload[:name] == "SCHEMA" || payload[:cached] }
+    # Cached queries still count: a duplicate preload (e.g. BuddyRead loaded as
+    # an invite's notifiable and again via a message) is only cached sometimes.
+    counter = ->(*, payload) { count += 1 unless payload[:name] == "SCHEMA" }
     ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
       NotificationsMailer.digest(user, ids).message
     end
