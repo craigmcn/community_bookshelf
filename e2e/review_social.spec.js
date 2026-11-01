@@ -23,7 +23,7 @@ test.describe("Review likes and comments", () => {
     await likeButton.click();
     await expect(page.getByRole("button", { name: "Liked (1)" })).toBeVisible();
 
-    await page.getByPlaceholder("Add a comment...").fill("Great take on this one!");
+    await page.getByPlaceholder("Add a comment…").fill("Great take on this one!");
     await page.getByRole("button", { name: "Post Comment" }).click();
     await expect(page.getByText("Great take on this one!")).toBeVisible();
     await expect(page.locator("#main-content").getByRole("link", { name: users.member.email })).toBeVisible();

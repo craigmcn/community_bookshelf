@@ -67,6 +67,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_select "a", text: "Add to Shelf"
   end
 
+  test "Save to a List removes from a list that already holds the book" do
+    sign_in_as users(:member)
+    get book_url(books(:one)) # on the member's Favorites via the shelf_books fixture
+    assert_select "form[action=?] button[aria-pressed=true]", shelf_shelf_book_path(shelves(:one), shelf_books(:one)), text: "Favorites"
+
+    get book_url(books(:two))
+    assert_select "form[action=?] button[aria-pressed=false]", shelf_shelf_books_path(shelves(:one), book_id: books(:two).id), text: "Favorites"
+  end
+
   test "book show offers a re-read link even when the member already has a reading" do
     Reading.create!(user: users(:member), book: @book, status: :reading)
 

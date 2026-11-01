@@ -55,13 +55,14 @@
             <% if @user_shelves.present? %>
               <% @user_shelves.each do |shelf| %>
                 <li>
-                  <% if @shelf_ids_with_book.include?(shelf.id) %>
-                    <span class="dropdown-item-text text-muted">
-                      <i class="fasl fa-check me-1"></i><%= shelf.name %>
-                    </span>
+                  <% if (shelf_book_id = @shelf_book_ids[shelf.id]) %>
+                    <%= button_to shelf_shelf_book_path(shelf, shelf_book_id),
+                          method: :delete, class: "dropdown-item", aria: {pressed: true} do %>
+                      <i class="fasl fa-check me-1" aria-hidden="true"></i><%= shelf.name %>
+                    <% end %>
                   <% else %>
                     <%= button_to shelf_shelf_books_path(shelf, book_id: @book.id),
-                          method: :post, class: "dropdown-item" do %>
+                          method: :post, class: "dropdown-item", aria: {pressed: false} do %>
                       <%= shelf.name %>
                     <% end %>
                   <% end %>

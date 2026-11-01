@@ -58,9 +58,10 @@ You can see and act on every member's reading, not just your own:
 
 `/admin/readings` lists every reading that has review text, most recently
 updated first — across all members, including soft-deleted ones (marked with
-a red "deleted" badge). This is the moderation queue: use it to find and
+a red "Deleted" badge). This is the moderation queue: use it to find and
 review member feedback without having to browse every book individually.
-From here you can jump to a reading's page, edit it, or delete it.
+From here you can jump to a reading's page, edit it, or delete it. Deleting
+keeps you on the queue: the row fades and gains the "Deleted" badge in place.
 
 ## Using the API
 

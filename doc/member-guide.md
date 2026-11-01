@@ -85,7 +85,9 @@ create a new reading record. Each reading tracks:
 - **Format** — physical, ebook, or audiobook
 
 You can log the same book more than once (for re-reads) — each reading is
-its own record with its own status/rating/review.
+its own record with its own status/rating/review. A finished book's row on
+your shelf also has a **Start a re-read** button, which adds a new
+Want-to-read reading of it in one click.
 
 **Editing and deleting**: you can edit or delete any reading you own at any
 time. Deleting is a soft delete — the record is hidden from your shelf and
@@ -169,8 +171,11 @@ organize books however you like — e.g. "Beach Reads" or "To Buy".
 - **My Lists** (`/shelves`) shows all your lists.
 - Create a new list from the "Save to a List" dropdown on any book's page,
   or from `/shelves/new`.
-- Add a book to a list from the same dropdown on the book's page.
-- Remove a book from a list, or delete the whole list, from the list's page.
+- Add a book to a list from the same dropdown on the book's page. Lists
+  that already hold the book show a check mark; choose one again to remove
+  the book from it.
+- You can also remove a book from a list, or delete the whole list, from
+  the list's page.
 
 Lists are private to you — no one else, including moderators and admins, can
 see another member's lists.

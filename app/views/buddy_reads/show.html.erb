@@ -52,7 +52,7 @@
       <%= form.label :body, "Add a message", class: "visually-hidden" %>
       <%= form.text_area :body, class: "form-control", rows: 2, placeholder: "Say something to your buddy..." %>
     </div>
-    <%= form.submit "Send", class: "btn btn-outline-primary btn-sm" %>
+    <%= form.submit "Post Message", class: "btn btn-outline-primary btn-sm" %>
   <% end %>
 <% else %>
   <p class="text-muted">This buddy read is <%= @buddy_read.status %> — no new messages can be posted.</p>

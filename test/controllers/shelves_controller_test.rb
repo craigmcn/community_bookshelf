@@ -16,6 +16,14 @@ class ShelvesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "list forms say List, not Shelf" do
+    sign_in_as users(:member)
+    get new_shelf_url
+    assert_select "input[type=submit][value=?]", "Create List"
+    get edit_shelf_url(shelves(:one))
+    assert_select "input[type=submit][value=?]", "Update List"
+  end
+
   test "member can create a list" do
     sign_in_as users(:member)
     assert_difference "Shelf.count" do

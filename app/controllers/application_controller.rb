@@ -23,4 +23,15 @@ class ApplicationController < ActionController::Base
   def log_audit_action!(action:, subject:, details: {})
     AuditLog.create!(actor: current_user, action: action, subject: subject, details: details)
   end
+
+  def soft_delete_reading!(reading)
+    ActiveRecord::Base.transaction do
+      reading.soft_delete
+      log_audit_action!(
+        action: "destroy_reading",
+        subject: reading,
+        details: {owner_email: reading.user.email, book_title: reading.book.title}
+      )
+    end
+  end
 end
