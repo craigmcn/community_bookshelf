@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/fixtures";
 import { signIn, users } from "./support/auth";
 import { lookUpUserId } from "./support/admin";
 
@@ -13,13 +13,12 @@ async function unreadCount(page) {
 }
 
 test.describe("Notifications", () => {
-  test("bell badge, dropdown preview, and inbox mark-as-read reflect a new follower", async ({ page, browser }) => {
+  test("bell badge, dropdown preview, and inbox mark-as-read reflect a new follower", async ({ page, browser, pageAs }) => {
     const memberId = await lookUpUserId(browser, users.member.email);
 
     // fresh context instead of reusing the member's page, since navigating a signed-in
     // page to /sign_in just redirects it away rather than showing the form
-    const moderatorPage = await (await browser.newContext()).newPage();
-    await signIn(moderatorPage, users.moderator);
+    const moderatorPage = await pageAs(users.moderator);
     await moderatorPage.goto("/");
     const before = await unreadCount(moderatorPage);
 

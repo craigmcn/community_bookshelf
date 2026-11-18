@@ -1,12 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/fixtures";
 import { signIn, users } from "./support/auth";
 
 test.describe("Activity feed", () => {
-  test("member sees a followed moderator's reading activity in their feed", async ({ page, browser }) => {
+  test("member sees a followed moderator's reading activity in their feed", async ({ page, pageAs }) => {
     // fresh context instead of reusing the member's page, since navigating a signed-in
     // page to /sign_in just redirects it away rather than showing the form
-    const moderatorPage = await (await browser.newContext()).newPage();
-    await signIn(moderatorPage, users.moderator);
+    const moderatorPage = await pageAs(users.moderator);
     await moderatorPage.goto("/readings/new");
     await moderatorPage.getByLabel("Book").selectOption({ label: "1984" });
     await moderatorPage.getByLabel("Status").selectOption({ label: "Want to read" });

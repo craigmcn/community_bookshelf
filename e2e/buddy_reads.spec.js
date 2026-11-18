@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/fixtures";
 import { signIn, users } from "./support/auth";
 
 test.describe("Buddy reads", () => {
-  test("member invites a buddy, buddy accepts, and they exchange messages", async ({ page, browser }) => {
+  test("member invites a buddy, buddy accepts, and they exchange messages", async ({ page, pageAs }) => {
     await signIn(page, users.member);
     await page.goto("/buddy_reads/new");
     await page.getByLabel("Book").selectOption({ label: "1984" });
@@ -15,8 +15,7 @@ test.describe("Buddy reads", () => {
 
     // fresh context instead of reusing the member's page, since navigating a signed-in
     // page to /sign_in just redirects it away rather than showing the form
-    const moderatorPage = await (await browser.newContext()).newPage();
-    await signIn(moderatorPage, users.moderator);
+    const moderatorPage = await pageAs(users.moderator);
     await moderatorPage.goto(buddyReadUrl);
     await moderatorPage.getByRole("button", { name: "Accept" }).click();
     await expect(moderatorPage.getByText("Accepted")).toBeVisible();
