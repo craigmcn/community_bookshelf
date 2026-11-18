@@ -87,3 +87,4 @@ an issue in each).
 - member sees their seeded list
 - member can create a list and save a book to it from the book page
 - member can remove a book from a list
+- member can remove a book from the list's page
