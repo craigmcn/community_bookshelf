@@ -1,12 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/fixtures";
 import { signIn, users } from "./support/auth";
 
 test.describe("Review likes and comments", () => {
-  test("member can like and comment on another member's public review", async ({ page, browser }) => {
+  test("member can like and comment on another member's public review", async ({ page, pageAs }) => {
     // fresh context instead of reusing the moderator's page, since navigating a signed-in
     // page to /sign_in just redirects it away rather than showing the form
-    const moderatorPage = await (await browser.newContext()).newPage();
-    await signIn(moderatorPage, users.moderator);
+    const moderatorPage = await pageAs(users.moderator);
     await moderatorPage.goto("/readings/new");
     await moderatorPage.getByLabel("Book").selectOption({ label: "1984" });
     await moderatorPage.getByLabel("Status").selectOption({ label: "Finished" });

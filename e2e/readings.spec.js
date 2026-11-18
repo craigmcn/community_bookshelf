@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/fixtures";
 import { signIn, users } from "./support/auth";
 
 test.describe("Readings", () => {
@@ -50,7 +50,7 @@ test.describe("Readings", () => {
     await expect(page.getByRole("link", { name: "The Great Gatsby" })).toBeVisible();
   });
 
-  test("member sees a Recommended for You section based on a highly-rated book's genre", async ({ page, browser }) => {
+  test("member sees a Recommended for You section based on a highly-rated book's genre", async ({ page, pageAs }) => {
     await signIn(page, users.moderator);
     await page.goto("/books/new");
     await page.getByLabel("Search for a Book").fill("chamber of secrets");
@@ -60,8 +60,7 @@ test.describe("Readings", () => {
 
     // fresh context instead of reusing the moderator's page, since navigating a signed-in
     // page to /sign_in just redirects it away rather than showing the form
-    const memberPage = await (await browser.newContext()).newPage();
-    await signIn(memberPage, users.member);
+    const memberPage = await pageAs(users.member);
     await memberPage.goto("/readings");
     await expect(memberPage.getByRole("heading", { name: "Recommended for You" })).toBeVisible();
     await expect(memberPage.getByRole("link", { name: /Chamber of Secrets/ })).toBeVisible();
@@ -147,7 +146,7 @@ test.describe("Readings", () => {
     await expect(wantToRead).toHaveCount(0);
   });
 
-  test("moderator soft-deleting a reading removes it from the owner's shelf", async ({ page, browser }) => {
+  test("moderator soft-deleting a reading removes it from the owner's shelf", async ({ page, pageAs }) => {
     await signIn(page, users.moderator);
     await page.goto("/admin/readings");
 
@@ -161,8 +160,7 @@ test.describe("Readings", () => {
     await expect(page).toHaveURL(/\/admin\/readings$/);
 
     // fresh context instead of UI sign-out, to avoid racing the moderator's sign-out redirect
-    const memberPage = await (await browser.newContext()).newPage();
-    await signIn(memberPage, users.member);
+    const memberPage = await pageAs(users.member);
     await memberPage.goto("/readings");
     await expect(memberPage.getByRole("link", { name: "The Great Gatsby" })).toHaveCount(0);
   });

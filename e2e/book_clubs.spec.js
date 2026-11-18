@@ -1,8 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./support/fixtures";
 import { signIn, users } from "./support/auth";
 
 test.describe("Book clubs", () => {
-  test("member starts a club, moderator joins and posts, spoiler posts are flagged", async ({ page, browser }) => {
+  test("member starts a club, moderator joins and posts, spoiler posts are flagged", async ({ page, pageAs }) => {
     await signIn(page, users.member);
     await page.goto("/clubs/new");
     await page.getByLabel("Name").fill("1984 Discussion Club");
@@ -16,8 +16,7 @@ test.describe("Book clubs", () => {
 
     // fresh context instead of reusing the member's page, since navigating a signed-in
     // page to /sign_in just redirects it away rather than showing the form
-    const moderatorPage = await (await browser.newContext()).newPage();
-    await signIn(moderatorPage, users.moderator);
+    const moderatorPage = await pageAs(users.moderator);
     await moderatorPage.goto(clubUrl);
     await moderatorPage.getByRole("button", { name: "Join Club" }).click();
     await expect(moderatorPage.getByText("2 members")).toBeVisible();
