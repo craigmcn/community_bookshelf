@@ -75,6 +75,7 @@ an issue in each).
 - member can mark their Gatsby reading as DNF
 - editing a reading updates the displayed rating
 - member can start a re-read from a finished book
+- member can remove a reading from their shelf
 - moderator soft-deleting a reading removes it from the owner's shelf
 
 ## review_social

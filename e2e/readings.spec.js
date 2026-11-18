@@ -130,6 +130,23 @@ test.describe("Readings", () => {
     await expect(rows.filter({ hasText: "Want to read" })).toHaveCount(1);
   });
 
+  test("member can remove a reading from their shelf", async ({ page }) => {
+    // removes the Want-to-read re-read the previous test added, leaving the finished 1984 reading
+    await signIn(page, users.member);
+    await page.goto("/readings");
+    const rows = page.locator("tr", { has: page.getByRole("link", { name: "1984" }) });
+    const wantToRead = rows.filter({ hasText: "Want to read" });
+    await expect(wantToRead).toHaveCount(1);
+    const before = await rows.count();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await wantToRead.getByRole("button", { name: "Remove reading" }).click();
+
+    await expect(page.getByRole("alert")).toContainText("Reading was removed.");
+    await expect(rows).toHaveCount(before - 1);
+    await expect(wantToRead).toHaveCount(0);
+  });
+
   test("moderator soft-deleting a reading removes it from the owner's shelf", async ({ page, browser }) => {
     await signIn(page, users.moderator);
     await page.goto("/admin/readings");

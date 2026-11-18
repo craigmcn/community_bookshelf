@@ -159,7 +159,7 @@ curl -X POST https://<host>/api/v1/books \
 | GET | `/api/v1/readings/:id` | The owner, a moderator/admin, or anyone if the review is public |
 | POST | `/api/v1/readings` | Anyone with a token |
 | PATCH | `/api/v1/readings/:id` | The owner, or a moderator/admin |
-| DELETE | `/api/v1/readings/:id` | Moderator or admin only — this is a soft delete, same as the website |
+| DELETE | `/api/v1/readings/:id` | Owner, or moderator/admin — this is a soft delete, same as the website |
 
 `GET /api/v1/readings` accepts an optional `status` param
 (`want_to_read`/`reading`/`finished`/`dnf`) and paginates 20 at a time. A

@@ -306,12 +306,26 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @reading.reload.progress_percent
   end
 
-  test "member cannot destroy a reading" do
+  test "member can soft-delete their own reading without an audit entry" do
     sign_in_as users(:member)
-    assert_no_difference "Reading.count" do
+    assert_no_difference "AuditLog.count" do
       delete reading_url(@reading)
     end
-    assert_nil @reading.reload.deleted_at
+    assert_redirected_to readings_url
+    assert_not_nil @reading.reload.deleted_at
+  end
+
+  test "member cannot destroy another member's reading" do
+    other = Reading.create!(user: users(:moderator), book: books(:two), status: :reading)
+    sign_in_as users(:member)
+    delete reading_url(other)
+    assert_nil other.reload.deleted_at
+  end
+
+  test "shelf row offers its owner a remove button" do
+    sign_in_as users(:member)
+    get readings_url
+    assert_select "form[action=?] .visually-hidden", reading_path(@reading), text: "Remove reading"
   end
 
   test "moderator can soft-delete a reading" do
