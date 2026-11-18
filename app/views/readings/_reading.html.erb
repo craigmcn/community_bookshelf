@@ -39,14 +39,14 @@
   <td class="d-flex">
     <% if policy(reading).edit? %>
       <%= link_to edit_reading_path(reading), class: "btn btn-sm btn-outline-secondary", data: {turbo_frame: "_top"} do %>
-        <i class="fasl fa-pen-to-square"></i>
+        <i class="fasl fa-pen-to-square" aria-hidden="true"></i><span class="visually-hidden">Edit reading</span>
       <% end %>
     <% end %>
     <% if policy(reading).destroy? %>
       <%= button_to reading, method: :delete,
             class: "btn btn-sm btn-outline-danger ms-1",
             form: { data: { turbo_confirm: "Remove this reading?", turbo_frame: "_top" } } do %>
-        <i class="fasl fa-trash-can"></i>
+        <i class="fasl fa-trash-can" aria-hidden="true"></i><span class="visually-hidden">Remove reading</span>
       <% end %>
     <% end %>
   </td>

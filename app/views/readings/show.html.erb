@@ -68,6 +68,9 @@
         <dt class="col-sm-2">Review</dt>
         <dd class="col-sm-10">
           <%= @reading.review %>
+          <span class="badge <%= @reading.is_review_public? ? "text-bg-secondary" : "text-bg-warning" %> ms-2">
+            <%= @reading.is_review_public? ? "Public" : "Private" %>
+          </span>
 
           <% if @reading.is_review_public? %>
             <div class="mt-2">

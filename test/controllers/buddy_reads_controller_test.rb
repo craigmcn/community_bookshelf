@@ -36,6 +36,26 @@ class BuddyReadsControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, mine.book.title
   end
 
+  test "the initiator can view their buddy read" do
+    buddy_read = BuddyRead.create!(book: books(:one), initiator: users(:member), partner: users(:moderator))
+    sign_in_as users(:member)
+
+    get buddy_read_url(buddy_read)
+
+    assert_response :success
+    assert_includes @response.body, users(:moderator).display_name
+  end
+
+  test "the partner can view their buddy read" do
+    buddy_read = BuddyRead.create!(book: books(:one), initiator: users(:member), partner: users(:moderator))
+    sign_in_as users(:moderator)
+
+    get buddy_read_url(buddy_read)
+
+    assert_response :success
+    assert_includes @response.body, users(:member).display_name
+  end
+
   test "a third party cannot view someone else's buddy read" do
     buddy_read = BuddyRead.create!(book: books(:one), initiator: users(:member), partner: users(:moderator))
     sign_in_as users(:admin)

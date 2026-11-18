@@ -49,6 +49,7 @@
 <% if @buddy_read.messageable? %>
   <%= form_with model: @message, url: buddy_read_messages_path(@buddy_read) do |form| %>
     <div class="mb-2">
+      <%= form.label :body, "Add a message", class: "visually-hidden" %>
       <%= form.text_area :body, class: "form-control", rows: 2, placeholder: "Say something to your buddy..." %>
     </div>
     <%= form.submit "Send", class: "btn btn-outline-primary btn-sm" %>

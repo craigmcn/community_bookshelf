@@ -2,6 +2,16 @@
 
 A Rails 8 community reading-list app where members track books, log readings, and write reviews. Moderators/admins manage content via a scoped admin dashboard.
 
+## Bookshelf family
+
+This repo is one of three apps that should be **indistinguishable to a user** and keep **feature parity**:
+
+- **community_bookshelf** (this repo): out-of-the-box Rails, enhanced with Turbo and Stimulus as far as is reasonable. The reference implementation, and essentially feature complete. It changes only when work on a sibling turns up something it should have.
+- **bookshelf-islands**: the same app, with Turbo/Stimulus replaced by React "islands" as far as is reasonable.
+- **bookshelf-api + bookshelf-spa**: together the same app. An out-of-the-box Rails API serving community_bookshelf's `/api/v1` contract (`doc/openapi.yaml`, cookie or token auth), plus a React SPA. The contract is backend-neutral, so a non-Rails backend (e.g. PHP) could replace bookshelf-api.
+
+If work in any repo adds or changes a feature, process (CI, security config, observability) or architecture, the others get the equivalent, each in its own idiom (a Turbo Frame here is a React island in bookshelf-islands). File the port issues in each sibling's GitHub Project. The shared e2e scenarios (below) are the indistinguishability check.
+
 ## Tech Stack
 
 - **Ruby** 4.0.5 / **Rails** 8.1.3
@@ -222,7 +232,7 @@ Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` 
 - `BuddyReadPolicy` gates everything on `record.participant?(user)` (true if `user` is either `initiator` or `partner`) — there's no moderator override, since this is a private two-person space, unlike reviews/clubs which are public-by-default. `BuddyReadsController#update` doesn't blindly apply `params[:status]`: only the *partner* can move `pending` → `accepted`/`declined` (the initiator can't accept their own invite), either participant can `cancel` from `pending` or `accepted`, and only `accepted` → `completed` is allowed — invalid combinations are silently no-ops (redirects without changing state) rather than raising, since this is a small fixed state machine, not a full workflow gem.
 - `BuddyReadMessage` is a flat per-pair discussion thread (`buddy_read_messages`, ordered by `created_at`) — no threading/replies, matching the "MVP: paired reading + shared thread" scope decision over full synced-progress milestones. `BuddyRead#messageable?` (`!declined? && !cancelled?`) gates both `BuddyReadMessagePolicy#create?` and the message form — a declined or cancelled pairing stops accepting new messages, but `pending`/`accepted`/`completed` can still be messaged (invites and post-completion remarks are both legitimate).
 - The buddy-reads index view always renders both `initiator.display_name` and `partner.display_name` (not a conditional "other participant" helper) — Bullet's N+1 detector flags an eager-loaded association that a request path never touches, and a per-row conditional (`other_participant(current_user)`) only ever touches one side of the `includes(:initiator, :partner)`, tripping it. `BuddyRead#other_participant` is still used on the show page, where only one side is displayed per request.
-- `BuddyReadsController#show` re-queries with `.includes(:book, :initiator, :partner)` *after* `authorize` succeeds, rather than eager-loading in `set_buddy_read` up front — `set_buddy_read` is shared with `#update`, which never renders those associations, and an unauthorized `#show` request redirects before rendering too; eager-loading in either of those paths would be genuinely unused and Bullet correctly flags it. The extra query on a successful show is the tradeoff for keeping `set_buddy_read` shared and simple.
+- `BuddyReadsController#show` doesn't eager-load `book`/`initiator`/`partner`. They're single `belongs_to` records, so `includes` saves no queries, and the page only ever shows one participant (`other_participant`), so Bullet flags whichever side goes unused as an unused eager load. An earlier re-query with `.includes(:book, :initiator, :partner)` raised for every initiator viewing their own buddy read. The new e2e buddy-read spec caught it, since the controller tests never rendered `show`. Matches bookshelf-islands.
 - `Book has_many :buddy_reads, dependent: :destroy` (added alongside `readings`/`taggings`/`shelf_books`, which all follow the same pattern) — without it, deleting a book that's ever had a buddy read created for it (in any status; buddy reads are never cleaned up on decline/cancel/complete) would raise an unhandled `ActiveRecord::InvalidForeignKey`, since `BooksController#destroy` calls `@book.destroy!` unrescued.
 
 ### Social — book clubs
@@ -289,9 +299,11 @@ a real browser sign-in can never authenticate), and starts Rails on port 3000 in
 `config/initializers/open_library_stub.rb` register a WebMock stub for
 `openlibrary.org/search.json` so book search doesn't depend on the live API.
 
-These specs are one half of a shared parity contract also implemented in
+These specs define the shared parity contract, which is also implemented in
 `bookshelf-islands` (same scenarios, React-island UI instead of Turbo Frames/native
-selects) and, against a real backend, in `bookshelf-spa`/`bookshelf-api`. Same fixture
+selects) and, against a real backend, in `bookshelf-spa`/`bookshelf-api`. The scenario
+list, by exact `test()` name, is in `doc/e2e_parity_scenarios.md`. Regenerate it when a
+spec is added or renamed, and port the scenario to the siblings. Same fixture
 data across all four repos (`member@example.com` / `moderator@example.com` /
 `admin@example.com`, password `correct-horse-shelf`, books "The Great Gatsby"/"1984") —
 keep spec *outcomes* aligned across repos when adding new scenarios here.
@@ -300,3 +312,9 @@ Runs single-worker/serial (`e2e` tests mutate a shared Postgres DB, unlike Minit
 per-test fixtures — there's no transaction rollback between Playwright tests). Tests
 that change fixture-owned state revert it before finishing (see the role-edit test in
 `e2e/admin.spec.js`) so re-running the suite against the same DB stays idempotent.
+
+Two gotchas when writing specs here:
+- **Turbo Frame reloads.** Search/filter submits and "Clear" links on the books and My Shelf indexes reload the whole results frame, including the form. Wait for the URL or results to change before typing into the next control, or the reload wipes it.
+- **Prefetch race on edit forms.** Opening an edit form from a link can race Turbo's link prefetch, which morphs the form back to its original values. `waitForLoadState("networkidle")` before interacting.
+
+Running `bin/rails test` after an e2e run can fail with fixture foreign-key errors, because e2e leaves non-fixture rows (e.g. activities) behind in the shared test DB. Run `RAILS_ENV=test bin/rails db:test:prepare` first.
