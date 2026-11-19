@@ -133,6 +133,7 @@ PATCH /books/:id         BooksController#update      (moderator+)
 DELETE /books/:id        BooksController#destroy     (moderator+)
 
 resources :readings      ReadingsController           (owner or moderator+)
+POST /readings/:id/reread ReadingsController#reread   (owner only, finished readings; shelf row's one-click re-read)
 
 GET  /book_search        BookSearchController#index   (Turbo Frame search)
 
@@ -157,7 +158,7 @@ resource :goodreads_import, only: [:new, :create]  GoodreadsImportsController  (
 
 namespace :admin
   /admin/dashboard       AdminDashboardController     (moderator+)
-  /admin/readings        AdminReadingsController      (moderator+)
+  /admin/readings        AdminReadingsController      (moderator+; DELETE soft-deletes in place via Turbo Stream)
   /admin/users           AdminUsersController         (admin only)
 
 namespace :api do namespace :v1

@@ -5,7 +5,7 @@
     <div class="d-flex align-items-center gap-2 mb-1">
       <h2 class="card-title mb-0"><%= @reading.book.title %></h2>
       <% if @reading.deleted? %>
-        <span class="badge bg-danger">deleted</span>
+        <span class="badge bg-danger">Deleted</span>
       <% end %>
     </div>
     <p class="text-muted"><%= @reading.book.author %></p>
@@ -121,7 +121,7 @@
       <% if policy(ReviewComment.new(reading: @reading)).create? %>
         <%= form_with model: ReviewComment.new, url: reading_review_comments_path(@reading) do |form| %>
           <div class="mb-2">
-            <%= form.text_area :body, class: "form-control", rows: 2, placeholder: "Add a comment..." %>
+            <%= form.text_area :body, class: "form-control", rows: 2, placeholder: "Add a comment…" %>
           </div>
           <%= form.submit "Post Comment", class: "btn btn-outline-primary btn-sm" %>
         <% end %>

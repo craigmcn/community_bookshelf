@@ -123,15 +123,8 @@ test.describe("Readings", () => {
     await expect(rows.first()).toBeVisible();
     const before = await rows.count();
 
-    await page.goto("/books");
-    await page.getByRole("link", { name: "1984" }).click();
-    await page.getByRole("link", { name: "Log a Re-read" }).click();
-    await page.waitForLoadState("networkidle"); // see the DNF test above
-    await page.getByLabel("Status").selectOption("want_to_read");
-    await page.getByRole("button", { name: "Create Reading" }).click();
-    await expect(page).toHaveURL(/\/readings\/\d+$/);
+    await rows.getByRole("button", { name: "Start a re-read" }).first().click();
 
-    await page.goto("/readings");
     await expect(rows).toHaveCount(before + 1);
     await expect(rows.filter({ hasText: "Want to read" })).toHaveCount(1);
   });
@@ -142,22 +135,12 @@ test.describe("Readings", () => {
 
     const row = page.locator("tr", { has: page.getByRole("link", { name: "The Great Gatsby" }) });
     page.once("dialog", (dialog) => dialog.accept());
-    // .click() resolves as soon as the click event fires, not once Turbo's
-    // fetch/redirect cycle completes — waiting for the response avoids a
-    // flake where the immediate page.goto below races the mutation (see
-    // issue #146). button_to renders a real HTML form (POST + a Rails
-    // _method=delete override field), not an actual HTTP DELETE, so match
-    // on the URL instead of the method.
-    await Promise.all([
-      page.waitForResponse((response) => response.url().includes("/readings/")),
-      row.getByRole("button", { name: "Delete" }).click()
-    ]);
+    await row.getByRole("button", { name: "Delete" }).click();
 
-    // destroy redirects to the moderator's own shelf; go back to confirm the "deleted" badge
-    await page.goto("/admin/readings");
-    await expect(
-      page.locator("tr", { has: page.getByRole("link", { name: "The Great Gatsby" }) }).getByText("deleted")
-    ).toBeVisible();
+    // a Turbo Stream swaps the row in place, so the moderator stays on /admin/readings
+    await expect(row).toHaveClass(/opacity-50/);
+    await expect(row.getByText("Deleted")).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/readings$/);
 
     // fresh context instead of UI sign-out, to avoid racing the moderator's sign-out redirect
     const memberPage = await pageAs(users.member);

@@ -1,7 +1,7 @@
 require "csv"
 
 class ReadingsController < ApplicationController
-  before_action :set_reading, only: %i[show edit update destroy]
+  before_action :set_reading, only: %i[show edit update destroy reread]
 
   SORT_OPTIONS = {
     "recent" => {label: "Recently Updated", order: {updated_at: :desc}},
@@ -98,18 +98,16 @@ class ReadingsController < ApplicationController
     end
   end
 
+  # The shelf row's one-click re-read; the book page's "Log a Re-read" link goes through #new instead.
+  def reread
+    authorize @reading
+    current_user.readings.create!(book: @reading.book, status: :want_to_read)
+    redirect_to readings_path, notice: "Started a re-read of \"#{@reading.book.title}\".", status: :see_other
+  end
+
   def destroy
     authorize @reading
-
-    ActiveRecord::Base.transaction do
-      @reading.soft_delete
-      log_audit_action!(
-        action: "destroy_reading",
-        subject: @reading,
-        details: {owner_email: @reading.user.email, book_title: @reading.book.title}
-      )
-    end
-
+    soft_delete_reading!(@reading)
     redirect_to readings_path, notice: "Reading was removed.", status: :see_other
   end
 

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     collection do
       get :export
     end
+    post :reread, on: :member
   end
   resource :goodreads_import, only: [:new, :create]
   resources :books
@@ -53,7 +54,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root "dashboard#index"
     resources :users, only: [:index, :edit, :update]
-    resources :readings, only: [:index]
+    resources :readings, only: [:index, :destroy]
     resources :audit_logs, only: [:index]
   end
 

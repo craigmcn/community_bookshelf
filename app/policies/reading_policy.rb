@@ -3,6 +3,8 @@ class ReadingPolicy < ApplicationPolicy
   def edit? = !record.deleted? && (record.user == user || user&.moderator_or_above?)
   def create? = user.present?
   def update? = !record.deleted? && (record.user == user || user&.moderator_or_above?)
+  # Owner-only, unlike edit?: a moderator shouldn't add books to someone else's shelf.
+  def reread? = !record.deleted? && record.user == user && record.finished?
   def destroy? = !record.deleted? && user&.moderator_or_above?
 
   class Scope < ApplicationPolicy::Scope

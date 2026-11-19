@@ -21,13 +21,13 @@ test.describe("Buddy reads", () => {
     await expect(moderatorPage.getByText("Accepted")).toBeVisible();
 
     await moderatorPage.getByLabel("Add a message").fill("Just started chapter 1!");
-    await moderatorPage.getByRole("button", { name: "Send", exact: true }).click();
+    await moderatorPage.getByRole("button", { name: "Post Message" }).click();
     await expect(moderatorPage.getByText("Just started chapter 1!")).toBeVisible();
 
     await page.goto(buddyReadUrl);
     await expect(page.getByText("Just started chapter 1!")).toBeVisible();
     await page.getByLabel("Add a message").fill("Me too, loving it so far.");
-    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.getByRole("button", { name: "Post Message" }).click();
     await expect(page.getByText("Me too, loving it so far.")).toBeVisible();
 
     await page.getByRole("button", { name: "Mark Completed" }).click();

@@ -38,8 +38,8 @@ class BooksController < ApplicationController
     authorize @book
     @user_readings = current_user ? current_user.readings.where(book: @book).order(created_at: :desc).to_a : Reading.none
     @user_shelves = current_user&.shelves&.order(:name)
-    @shelf_ids_with_book = current_user&.shelves&.joins(:shelf_books)
-      &.where(shelf_books: {book_id: @book.id})&.pluck(:id) || []
+    # shelf id => shelf_book id, so the dropdown can link a saved list's entry to its remove route
+    @shelf_book_ids = current_user ? ShelfBook.where(shelf: @user_shelves, book: @book).pluck(:shelf_id, :id).to_h : {}
     @similar_books = @book.similar_books
   end
 

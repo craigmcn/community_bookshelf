@@ -227,6 +227,46 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal @reading.id, new_reading.id
   end
 
+  test "member can start a one-click re-read from a finished reading" do
+    @reading.update!(status: :finished)
+    sign_in_as users(:member)
+    assert_difference "Reading.count" do
+      post reread_reading_url(@reading)
+    end
+    assert_redirected_to readings_url
+    assert_equal ["want_to_read", @reading.book_id], [Reading.last.status, Reading.last.book_id]
+  end
+
+  test "shelf row offers a re-read only on finished readings" do
+    sign_in_as users(:member)
+    get readings_url
+    assert_select "form[action=?]", reread_reading_path(@reading), count: 0
+
+    @reading.update!(status: :finished)
+    get readings_url
+    assert_select "form[action=?] button", reread_reading_path(@reading), text: "Start a re-read"
+  end
+
+  test "member cannot re-read an unfinished reading" do
+    sign_in_as users(:member)
+    assert_no_difference "Reading.count" do
+      post reread_reading_url(@reading)
+    end
+  end
+
+  test "moderator cannot start a re-read on someone else's reading" do
+    @reading.update!(status: :finished)
+    sign_in_as users(:moderator)
+    assert_no_difference "Reading.count" do
+      post reread_reading_url(@reading)
+    end
+  end
+
+  test "guest cannot start a re-read" do
+    post reread_reading_url(@reading)
+    assert_redirected_to sign_in_path
+  end
+
   test "member can update their own reading" do
     sign_in_as users(:member)
     patch reading_url(@reading), params: {reading: {status: :finished, book_id: @reading.book_id}}
