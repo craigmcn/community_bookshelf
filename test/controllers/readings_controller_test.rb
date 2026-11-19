@@ -319,6 +319,8 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     other = Reading.create!(user: users(:moderator), book: books(:two), status: :reading)
     sign_in_as users(:member)
     delete reading_url(other)
+    assert_redirected_to root_url
+    assert_equal "You are not authorized to perform this action.", flash[:alert]
     assert_nil other.reload.deleted_at
   end
 

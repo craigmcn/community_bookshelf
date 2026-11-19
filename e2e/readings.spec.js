@@ -121,29 +121,37 @@ test.describe("Readings", () => {
     await page.goto("/readings");
     const rows = page.locator("tr", { has: page.getByRole("link", { name: "1984" }) });
     await expect(rows.first()).toBeVisible();
+    const wantToRead = rows.filter({ hasText: "Want to read" });
     const before = await rows.count();
+    const wantToReadBefore = await wantToRead.count();
 
     await rows.getByRole("button", { name: "Start a re-read" }).first().click();
 
     await expect(rows).toHaveCount(before + 1);
-    await expect(rows.filter({ hasText: "Want to read" })).toHaveCount(1);
+    await expect(wantToRead).toHaveCount(wantToReadBefore + 1);
   });
 
   test("member can remove a reading from their shelf", async ({ page }) => {
-    // removes the Want-to-read re-read the previous test added, leaving the finished 1984 reading
+    // logs its own Want-to-read reading to remove, so it runs alone and leaves no extra row
     await signIn(page, users.member);
     await page.goto("/readings");
+    await expect(page.getByRole("heading", { name: "My Shelf" })).toBeVisible();
     const rows = page.locator("tr", { has: page.getByRole("link", { name: "1984" }) });
-    const wantToRead = rows.filter({ hasText: "Want to read" });
-    await expect(wantToRead).toHaveCount(1);
     const before = await rows.count();
 
+    await page.goto("/readings/new");
+    await page.getByLabel("Book").selectOption({ label: "1984" });
+    await page.getByLabel("Status").selectOption("want_to_read");
+    await page.getByRole("button", { name: "Create Reading" }).click();
+    await expect(page).toHaveURL(/\/readings\/\d+$/);
+
+    await page.goto("/readings");
+    await expect(rows).toHaveCount(before + 1);
     page.once("dialog", (dialog) => dialog.accept());
-    await wantToRead.getByRole("button", { name: "Remove reading" }).click();
+    await rows.filter({ hasText: "Want to read" }).first().getByRole("button", { name: "Remove reading" }).click();
 
     await expect(page.getByRole("alert")).toContainText("Reading was removed.");
-    await expect(rows).toHaveCount(before - 1);
-    await expect(wantToRead).toHaveCount(0);
+    await expect(rows).toHaveCount(before);
   });
 
   test("moderator soft-deleting a reading removes it from the owner's shelf", async ({ page, pageAs }) => {

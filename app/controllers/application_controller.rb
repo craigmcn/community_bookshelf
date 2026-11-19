@@ -28,13 +28,13 @@ class ApplicationController < ActionController::Base
   def soft_delete_reading!(reading)
     ActiveRecord::Base.transaction do
       reading.soft_delete
-      next if reading.user == current_user
-
-      log_audit_action!(
-        action: "destroy_reading",
-        subject: reading,
-        details: {owner_email: reading.user.email, book_title: reading.book.title}
-      )
+      unless reading.user == current_user
+        log_audit_action!(
+          action: "destroy_reading",
+          subject: reading,
+          details: {owner_email: reading.user.email, book_title: reading.book.title}
+        )
+      end
     end
   end
 end
