@@ -72,12 +72,19 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "finished", @reading.reload.status
   end
 
-  test "member cannot destroy a reading" do
+  test "member can soft-delete their own reading" do
     assert_no_difference "Reading.unscoped.count" do
       delete api_v1_reading_url(@reading), headers: auth_headers(users(:member))
     end
+    assert_response :no_content
+    assert_not_nil @reading.reload.deleted_at
+  end
+
+  test "member cannot destroy another member's reading" do
+    other = Reading.create!(user: users(:moderator), book: books(:two), status: :reading)
+    delete api_v1_reading_url(other), headers: auth_headers(users(:member))
     assert_response :forbidden
-    assert_nil @reading.reload.deleted_at
+    assert_nil other.reload.deleted_at
   end
 
   test "moderator destroy soft-deletes a reading" do

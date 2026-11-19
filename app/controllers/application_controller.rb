@@ -24,14 +24,17 @@ class ApplicationController < ActionController::Base
     AuditLog.create!(actor: current_user, action: action, subject: subject, details: details)
   end
 
+  # Audited only when someone deletes another member's reading; removing your own is routine.
   def soft_delete_reading!(reading)
     ActiveRecord::Base.transaction do
       reading.soft_delete
-      log_audit_action!(
-        action: "destroy_reading",
-        subject: reading,
-        details: {owner_email: reading.user.email, book_title: reading.book.title}
-      )
+      unless reading.user == current_user
+        log_audit_action!(
+          action: "destroy_reading",
+          subject: reading,
+          details: {owner_email: reading.user.email, book_title: reading.book.title}
+        )
+      end
     end
   end
 end

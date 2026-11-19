@@ -240,7 +240,7 @@ paths:
         "422": {$ref: "#/components/responses/ValidationFailed"}
     delete:
       tags: [Readings]
-      summary: Soft-delete a reading (moderator or admin only)
+      summary: Soft-delete a reading (owner, or moderator/admin)
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
