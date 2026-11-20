@@ -152,10 +152,14 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, "Your shelf is empty."
   end
 
-  test "readings index treats an array search param as no search" do
+  test "readings index treats an array or hash search param as no search" do
     sign_in_as users(:member)
     get readings_url(q: ["nothing-matches-this"])
 
+    assert_response :success
+    assert_equal [dom_id(readings(:one))], shelf_row_ids
+
+    get readings_url(q: {k: "nothing-matches-this"})
     assert_response :success
     assert_equal [dom_id(readings(:one))], shelf_row_ids
   end

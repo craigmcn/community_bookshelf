@@ -141,6 +141,13 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, books(:one).title
   end
 
+  test "books index trims a padded search and echoes the trimmed value" do
+    get books_url(q: "  gatsby  ")
+
+    assert_equal [dom_id(books(:one))], book_card_ids
+    assert_select "input#books-q[value=?]", "gatsby"
+  end
+
   test "books index treats an array or hash search param as no search" do
     get books_url(q: ["gatsby"])
     assert_response :success
