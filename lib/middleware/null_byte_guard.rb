@@ -44,6 +44,10 @@ class NullByteGuard
   end
 
   def bad_request(env)
+    # Rack::TempfileReaper sits downstream and never sees this response, so close any
+    # multipart upload tempfiles the parse created rather than leaving them open until GC.
+    env[Rack::RACK_TEMPFILES]&.each(&:close!)
+
     if API_PATH.match?(env["PATH_INFO"])
       [400, {"content-type" => "application/json"}, [{error: "Request contains a null byte"}.to_json]]
     else

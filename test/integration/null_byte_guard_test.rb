@@ -70,3 +70,18 @@ class NullByteGuardTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 end
+
+# Called directly: the guard sits upstream of Rack::TempfileReaper, so a rejected multipart
+# request must close its own upload tempfiles or they stay open until GC.
+class NullByteGuardTempfileTest < ActiveSupport::TestCase
+  test "a rejected multipart request closes its upload tempfiles" do
+    upload = Rack::Multipart::UploadedFile.new(file_fixture("avatar.png").to_s, "image/png")
+    env = Rack::MockRequest.env_for("/account", method: "PATCH", params: {"user" => {"name" => "a\0b", "avatar" => upload}})
+
+    status, = NullByteGuard.new(->(_env) { [200, {}, []] }).call(env)
+
+    assert_equal 400, status
+    assert_not_empty env[Rack::RACK_TEMPFILES]
+    assert env[Rack::RACK_TEMPFILES].all?(&:closed?)
+  end
+end
