@@ -5,6 +5,7 @@ class Api::V1::BaseController < ActionController::Base
   include Pundit::Authorization
   include Pagy::Method
   include AuditsModeratorActions
+  include SearchQuery
 
   skip_forgery_protection
   # Needed so far only by the club_posts spoiler-visibility check in jbuilder

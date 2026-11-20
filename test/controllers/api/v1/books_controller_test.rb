@@ -22,6 +22,13 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal Book.count, JSON.parse(response.body)["books"].size
   end
 
+  test "index treats an array search param as no search" do
+    get api_v1_books_url, params: {q: ["nothing-matches-this"]}, headers: auth_headers(users(:member))
+
+    assert_response :success
+    assert_equal Book.count, JSON.parse(response.body)["books"].size
+  end
+
   test "valid token can show a book" do
     get api_v1_book_url(@book), headers: auth_headers(users(:member))
     assert_response :success

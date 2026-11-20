@@ -20,8 +20,9 @@ class BooksController < ApplicationController
     @mood_tags = Tag.mood.order(:name)
     @pace_tags = Tag.pace.order(:name)
 
-    if params[:q].present?
-      query = "%#{params[:q].strip}%"
+    @query = search_query
+    if @query
+      query = "%#{@query}%"
       @books = @books.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
     end
 

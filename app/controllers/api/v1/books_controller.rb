@@ -6,8 +6,9 @@ class Api::V1::BooksController < Api::V1::BaseController
   def index
     @books = policy_scope(Book)
 
-    if params[:q].present?
-      query = "%#{params[:q].strip}%"
+    @query = search_query
+    if @query
+      query = "%#{@query}%"
       @books = @books.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
     end
 
