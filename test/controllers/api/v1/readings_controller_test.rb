@@ -26,6 +26,18 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes book_ids, books(:two).id
   end
 
+  test "index breaks updated_at ties by newest id, so paging is stable" do
+    older = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    newer = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    tied_at = 1.day.from_now
+    [older, newer].each { |reading| reading.update_column(:updated_at, tied_at) }
+
+    get api_v1_readings_url, headers: auth_headers(users(:member))
+
+    ids = JSON.parse(response.body)["readings"].pluck("id")
+    assert_equal [newer.id, older.id], ids.first(2)
+  end
+
   test "moderator's index shows every user's readings" do
     other_reading = Reading.create!(user: users(:admin), book: books(:two), status: :reading)
 

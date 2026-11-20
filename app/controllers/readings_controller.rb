@@ -3,31 +3,40 @@ require "csv"
 class ReadingsController < ApplicationController
   before_action :set_reading, only: %i[show edit update destroy reread]
 
+  # Each order ends with an id tiebreaker in its own direction, so tied rows (e.g. every
+  # unrated reading) can't shift between Pagy's pages.
   SORT_OPTIONS = {
-    "recent" => {label: "Recently Updated", order: {updated_at: :desc}},
-    "title" => {label: "Book Title", order: {"books.title": :asc}},
-    "rating" => {label: "Rating (high to low)", order: {rating: :desc}}
+    "recent" => {label: "Recently Updated", order: {updated_at: :desc, id: :desc}},
+    "title" => {label: "Book Title", order: {"books.title": :asc, id: :asc}},
+    # rating is nullable ("No rating"); Postgres' DESC puts NULLs first, burying the rated readings.
+    "rating" => {label: "Rating (high to low)", order: Arel.sql("readings.rating DESC NULLS LAST, readings.id DESC")}
   }.freeze
 
   def index
     @readings = current_user.readings.includes(:book).joins(:book)
+    # Only filters that actually narrowed the query; unknown status/rating values are ignored below.
+    @filters_applied = false
 
     if params[:q].present?
       query = "%#{params[:q].strip}%"
       @readings = @readings.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
+      @filters_applied = true
     end
 
     if params[:status].present? && Reading.statuses.key?(params[:status])
       @readings = @readings.where(status: params[:status])
+      @filters_applied = true
     end
 
     if params[:rating].present? && Reading.ratings.key?(params[:rating])
       @readings = @readings.where(rating: params[:rating])
+      @filters_applied = true
     end
 
     if params[:tag].present?
       @tag = Tag.find_by(name: params[:tag].to_s.strip.downcase)
       @readings = @tag ? @readings.merge(Book.joins(:tags).where(tags: {id: @tag.id})) : @readings.none
+      @filters_applied = true
     end
 
     @sort = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : "recent"

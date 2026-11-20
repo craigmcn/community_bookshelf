@@ -14,7 +14,7 @@ class Api::V1::ReadingsController < Api::V1::BaseController
       @readings = @readings.where(status: params[:status])
     end
 
-    @readings = @readings.order(updated_at: :desc)
+    @readings = @readings.order(updated_at: :desc, id: :desc)
     @pagy, @readings = pagy(@readings)
     fresh_when @readings
   end
