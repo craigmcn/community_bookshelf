@@ -11,7 +11,7 @@ class Api::V1::BooksController < Api::V1::BaseController
       @books = @books.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
     end
 
-    @books = @books.order(:title)
+    @books = @books.order(:title, :id)
     @pagy, @books = pagy(@books)
     fresh_when @books
   end

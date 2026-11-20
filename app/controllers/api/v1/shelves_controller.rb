@@ -4,7 +4,7 @@ class Api::V1::ShelvesController < Api::V1::BaseController
   before_action :set_shelf, only: %i[show update destroy]
 
   def index
-    @shelves = policy_scope(Shelf).includes(:shelf_books).order(:name)
+    @shelves = policy_scope(Shelf).includes(:shelf_books).order(:name, :id)
     @pagy, @shelves = pagy(@shelves)
   end
 

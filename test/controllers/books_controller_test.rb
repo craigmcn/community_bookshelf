@@ -146,8 +146,7 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     # books(:one)'s author "F. Scott Fitzgerald" sorts before books(:two)'s "George Orwell"
-    body = @response.body
-    assert_operator body.index(books(:one).title), :<, body.index(books(:two).title)
+    assert_equal [dom_id(books(:one)), dom_id(books(:two))], book_card_ids
   end
 
   test "books index publication-date sort puts undated books last" do
@@ -156,8 +155,18 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
 
     get books_url(sort: "published")
 
-    body = @response.body
-    assert_operator body.index(books(:two).title), :<, body.index(books(:one).title)
+    assert_equal [dom_id(books(:two)), dom_id(books(:one))], book_card_ids
+  end
+
+  test "books index recently-added sort breaks timestamp ties newest-first" do
+    tied_at = 1.day.from_now
+    older = Book.create!(title: "Older", author: "A. Uthor", added_by: users(:member))
+    newer = Book.create!(title: "Newer", author: "A. Uthor", added_by: users(:member))
+    [older, newer].each { |book| book.update_column(:created_at, tied_at) }
+
+    get books_url(sort: "newest")
+
+    assert_equal [dom_id(newer), dom_id(older)], book_card_ids.first(2)
   end
 
   test "book form labels the ISBN field as ISBN" do
@@ -389,6 +398,10 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def book_card_ids
+    css_select("div.card[id^='book_']").pluck("id")
+  end
 
   def create_private_reading!
     Reading.create!(user: users(:admin), book: @book, status: :finished, rating: :five,

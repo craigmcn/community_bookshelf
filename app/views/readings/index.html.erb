@@ -104,7 +104,7 @@
       </table>
     </div>
     <div class="mt-4"><%= render "shared/pagy_nav", pagy: @pagy %></div>
-  <% elsif params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
+  <% elsif @filters_applied %>
     <p class="text-muted">No readings match those filters.</p>
   <% else %>
     <div class="text-center text-muted py-5">
