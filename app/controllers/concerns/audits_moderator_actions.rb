@@ -6,9 +6,9 @@ module AuditsModeratorActions
 
   private
 
-  # Only called at moderator/admin-gated mutation points (role changes,
-  # book/reading destroys) — not every write in the app, just the ones an
-  # admin performs on someone else's behalf.
+  # Only called at moderator/admin-gated mutation points (role changes, book/reading
+  # destroys, on the website or /api/v1) — not every write in the app, just the ones
+  # an admin performs on someone else's behalf.
   def log_audit_action!(action:, subject:, details: {})
     AuditLog.create!(actor: current_user, action: action, subject: subject, details: details)
   end
