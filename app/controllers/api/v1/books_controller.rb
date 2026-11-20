@@ -47,7 +47,7 @@ class Api::V1::BooksController < Api::V1::BaseController
 
   def destroy
     authorize @book
-    @book.destroy!
+    destroy_book_with_audit!(@book)
     head :no_content
   end
 

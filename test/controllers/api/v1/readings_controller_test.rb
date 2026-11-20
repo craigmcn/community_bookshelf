@@ -95,6 +95,22 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @reading.reload.deleted_at
   end
 
+  test "moderator deleting another member's reading writes an audit entry" do
+    assert_difference "AuditLog.count", 1 do
+      delete api_v1_reading_url(@reading), headers: auth_headers(users(:moderator))
+    end
+    log = AuditLog.last
+    assert_equal "destroy_reading", log.action
+    assert_equal users(:moderator), log.actor
+    assert_equal ["Reading", @reading.id], [log.subject_type, log.subject_id]
+  end
+
+  test "member deleting their own reading writes no audit entry" do
+    assert_no_difference "AuditLog.count" do
+      delete api_v1_reading_url(@reading), headers: auth_headers(users(:member))
+    end
+  end
+
   test "a read:readings-only token cannot create a reading" do
     assert_no_difference "Reading.unscoped.count" do
       post api_v1_readings_url, params: {reading: {book_id: books(:two).id, status: "want_to_read"}}, headers: auth_headers(users(:member), scopes: ["read:readings"])
