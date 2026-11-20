@@ -2,14 +2,16 @@ class BooksController < ApplicationController
   skip_before_action :require_login, only: [:index, :show]
   before_action :set_book, only: %i[show edit update destroy]
 
+  # Each order ends with an id tiebreaker in its own direction, so tied rows (e.g. undated
+  # books) can't shift between Pagy's pages and "newest" stays newest-first even on a tie.
   SORT_OPTIONS = {
-    "title" => {label: "Title", order: {title: :asc}},
-    "author" => {label: "Author", order: {author: :asc, title: :asc}},
-    "newest" => {label: "Recently Added", order: {created_at: :desc}},
+    "title" => {label: "Title", order: {title: :asc, id: :asc}},
+    "author" => {label: "Author", order: {author: :asc, title: :asc, id: :asc}},
+    "newest" => {label: "Recently Added", order: {created_at: :desc, id: :desc}},
     # published_on is a brand-new optional field most books won't have yet; NULLS LAST keeps
     # undated books from crowding out the ones that actually have a date (Postgres' default
     # DESC puts NULLs first), matching SeriesController#show's NULLS LAST ordering.
-    "published" => {label: "Publication Date", order: Arel.sql("published_on DESC NULLS LAST")}
+    "published" => {label: "Publication Date", order: Arel.sql("books.published_on DESC NULLS LAST, books.id DESC")}
   }.freeze
 
   def index
@@ -29,8 +31,7 @@ class BooksController < ApplicationController
     end
 
     @sort = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : "title"
-    # Unique tiebreaker: tied rows (e.g. undated books) can otherwise shift between Pagy's pages.
-    @books = @books.order(SORT_OPTIONS[@sort][:order]).order(:id)
+    @books = @books.order(SORT_OPTIONS[@sort][:order])
 
     @pagy, @books = pagy(@books)
   end
