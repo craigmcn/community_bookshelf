@@ -18,6 +18,8 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+require_relative "../lib/middleware/null_byte_guard"
+
 module CommunityBookshelf
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -26,7 +28,11 @@ module CommunityBookshelf
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks])
+    config.autoload_lib(ignore: %w[assets middleware tasks])
+
+    # Ahead of Clearance's session lookup and Rack::Attack's token check, both of which hit
+    # the database with request values a NUL byte would crash (#246).
+    config.middleware.insert_before ActionDispatch::Cookies, NullByteGuard
 
     # Configuration for the application, engines, and railties goes here.
     #

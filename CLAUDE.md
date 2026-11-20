@@ -195,6 +195,9 @@ Inherit from `Admin::BaseController` — it enforces `moderator_or_above?` and p
 ### Open Library integration
 `OpenLibraryService.search(query)` returns an array of hashes with `:title`, `:author`, `:cover_url`. The `BookSearchController` serves results into a Turbo Frame (`#book-search-results`). The Stimulus controller (`book_search_controller.js`) debounces input at 300ms.
 
+### NUL bytes in requests
+`NullByteGuard` (`lib/middleware/null_byte_guard.rb`, inserted before `ActionDispatch::Cookies` in `config/application.rb`) returns a 400 for any request with a NUL byte in its decoded path, query or body params (keys and values), cookies, or `Authorization` header: `{"error": ...}` under `/api/`, `public/400.html` otherwise. Postgres can't store NUL, so a NUL bound into any query (search, sign-in, Rack::Attack's token lookup, the remember-token cookie) used to raise `ArgumentError` and 500 (#246). Uploaded files are skipped, since binary content legitimately contains NUL. It parses params with Rails' own parser (cached in the env, so controllers don't parse twice), and a malformed body falls through to Rails' usual handling. `lib/middleware` is excluded from autoloading because middleware is wired up at boot.
+
 ### Asset builds
 Changes to JS or CSS require `yarn build` / `yarn build:css` (or keep `bin/dev` running). Compiled output lands in `app/assets/builds/`.
 
