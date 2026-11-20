@@ -86,6 +86,17 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :no_content
   end
 
+  test "destroying a book writes an audit entry" do
+    title = @book.title
+    assert_difference "AuditLog.count", 1 do
+      delete api_v1_book_url(@book), headers: auth_headers(users(:moderator))
+    end
+    log = AuditLog.last
+    assert_equal "destroy_book", log.action
+    assert_equal users(:moderator), log.actor
+    assert_equal title, log.details["title"]
+  end
+
   test "a read:books-only token can list books" do
     get api_v1_books_url, headers: auth_headers(users(:member), scopes: ["read:books"])
     assert_response :success

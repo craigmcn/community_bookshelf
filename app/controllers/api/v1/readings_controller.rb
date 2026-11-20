@@ -49,7 +49,7 @@ class Api::V1::ReadingsController < Api::V1::BaseController
 
   def destroy
     authorize @reading
-    @reading.soft_delete
+    soft_delete_reading!(@reading)
     head :no_content
   end
 
