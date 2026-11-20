@@ -152,6 +152,29 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, "Your shelf is empty."
   end
 
+  test "readings index shows the empty-shelf state when only invalid filters are given" do
+    Reading.unscoped.where(user: users(:member)).destroy_all
+    sign_in_as users(:member)
+
+    get readings_url(status: "bogus", rating: "bogus")
+
+    assert_response :success
+    assert_includes @response.body, "Your shelf is empty."
+    assert_not_includes @response.body, "No readings match those filters."
+  end
+
+  test "readings index rating sort puts rated readings before unrated ones" do
+    unrated = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    rated = readings(:one) # rated four
+
+    sign_in_as users(:member)
+    get readings_url(sort: "rating")
+
+    assert_response :success
+    body = @response.body
+    assert_operator body.index(rated.book.title), :<, body.index(unrated.book.title)
+  end
+
   test "readings index browse-by-genre row excludes mood and pace tags" do
     books(:one).update!(tag_list: "fantasy", mood_list: "moody", pace_list: "fast-paced")
 

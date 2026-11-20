@@ -6,32 +6,40 @@ class ReadingsController < ApplicationController
   SORT_OPTIONS = {
     "recent" => {label: "Recently Updated", order: {updated_at: :desc}},
     "title" => {label: "Book Title", order: {"books.title": :asc}},
-    "rating" => {label: "Rating (high to low)", order: {rating: :desc}}
+    # rating is nullable ("No rating"); Postgres' DESC puts NULLs first, burying the rated readings.
+    "rating" => {label: "Rating (high to low)", order: Arel.sql("readings.rating DESC NULLS LAST")}
   }.freeze
 
   def index
     @readings = current_user.readings.includes(:book).joins(:book)
+    # Only filters that actually narrowed the query; unknown status/rating values are ignored below.
+    @filters_applied = false
 
     if params[:q].present?
       query = "%#{params[:q].strip}%"
       @readings = @readings.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
+      @filters_applied = true
     end
 
     if params[:status].present? && Reading.statuses.key?(params[:status])
       @readings = @readings.where(status: params[:status])
+      @filters_applied = true
     end
 
     if params[:rating].present? && Reading.ratings.key?(params[:rating])
       @readings = @readings.where(rating: params[:rating])
+      @filters_applied = true
     end
 
     if params[:tag].present?
       @tag = Tag.find_by(name: params[:tag].to_s.strip.downcase)
       @readings = @tag ? @readings.merge(Book.joins(:tags).where(tags: {id: @tag.id})) : @readings.none
+      @filters_applied = true
     end
 
     @sort = SORT_OPTIONS.key?(params[:sort]) ? params[:sort] : "recent"
-    @readings = @readings.order(SORT_OPTIONS[@sort][:order])
+    # Unique tiebreaker: tied rows (e.g. every unrated reading) can otherwise shift between Pagy's pages.
+    @readings = @readings.order(SORT_OPTIONS[@sort][:order]).order(id: :desc)
 
     @shelf_tags = Tag.genre.joins(books: :readings).where(readings: {user: current_user}).distinct.order(:name)
 
