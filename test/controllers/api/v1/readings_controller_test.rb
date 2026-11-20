@@ -107,6 +107,34 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @reading.reload.deleted_at
   end
 
+  test "moderator deleting another member's reading writes an audit entry" do
+    assert_difference "AuditLog.count", 1 do
+      delete api_v1_reading_url(@reading), headers: auth_headers(users(:moderator))
+    end
+    log = AuditLog.last
+    assert_equal "destroy_reading", log.action
+    assert_equal users(:moderator), log.actor
+    assert_equal ["Reading", @reading.id], [log.subject_type, log.subject_id]
+    assert_equal({"owner_email" => @reading.user.email, "book_title" => @reading.book.title}, log.details)
+  end
+
+  # Ownership, not role, decides: a moderator removing their own reading is routine.
+  test "moderator deleting their own reading writes no audit entry" do
+    own = Reading.create!(user: users(:moderator), book: books(:two), status: :reading)
+
+    assert_no_difference "AuditLog.count" do
+      delete api_v1_reading_url(own), headers: auth_headers(users(:moderator))
+    end
+    assert_response :no_content
+    assert_not_nil own.reload.deleted_at
+  end
+
+  test "member deleting their own reading writes no audit entry" do
+    assert_no_difference "AuditLog.count" do
+      delete api_v1_reading_url(@reading), headers: auth_headers(users(:member))
+    end
+  end
+
   test "a read:readings-only token cannot create a reading" do
     assert_no_difference "Reading.unscoped.count" do
       post api_v1_readings_url, params: {reading: {book_id: books(:two).id, status: "want_to_read"}}, headers: auth_headers(users(:member), scopes: ["read:readings"])

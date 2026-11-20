@@ -22,6 +22,16 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal Book.count, JSON.parse(response.body)["books"].size
   end
 
+  test "index treats an array or hash search param as no search" do
+    get api_v1_books_url, params: {q: ["nothing-matches-this"]}, headers: auth_headers(users(:member))
+    assert_response :success
+    assert_equal Book.count, JSON.parse(response.body)["books"].size
+
+    get api_v1_books_url, params: {q: {k: "nothing-matches-this"}}, headers: auth_headers(users(:member))
+    assert_response :success
+    assert_equal Book.count, JSON.parse(response.body)["books"].size
+  end
+
   test "valid token can show a book" do
     get api_v1_book_url(@book), headers: auth_headers(users(:member))
     assert_response :success
@@ -84,6 +94,17 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
       delete api_v1_book_url(@book), headers: auth_headers(users(:admin))
     end
     assert_response :no_content
+  end
+
+  test "destroying a book writes an audit entry" do
+    title = @book.title
+    assert_difference "AuditLog.count", 1 do
+      delete api_v1_book_url(@book), headers: auth_headers(users(:moderator))
+    end
+    log = AuditLog.last
+    assert_equal "destroy_book", log.action
+    assert_equal users(:moderator), log.actor
+    assert_equal title, log.details["title"]
   end
 
   test "a read:books-only token can list books" do

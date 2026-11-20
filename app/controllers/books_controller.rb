@@ -20,8 +20,9 @@ class BooksController < ApplicationController
     @mood_tags = Tag.mood.order(:name)
     @pace_tags = Tag.pace.order(:name)
 
-    if params[:q].present?
-      query = "%#{params[:q].strip}%"
+    @query = search_query
+    if @query
+      query = "%#{@query}%"
       @books = @books.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
     end
 
@@ -79,12 +80,7 @@ class BooksController < ApplicationController
 
   def destroy
     authorize @book
-    title = @book.title
-
-    ActiveRecord::Base.transaction do
-      @book.destroy!
-      log_audit_action!(action: "destroy_book", subject: @book, details: {title: title})
-    end
+    destroy_book_with_audit!(@book)
 
     redirect_to books_path, notice: "Book was successfully destroyed.", status: :see_other
   end

@@ -14,11 +14,12 @@ class ReadingsController < ApplicationController
 
   def index
     @readings = current_user.readings.includes(:book).joins(:book)
-    # Only filters that actually narrowed the query; unknown status/rating values are ignored below.
+    # Only filters that actually narrowed the query; a non-string q and unknown status/rating are ignored.
     @filters_applied = false
 
-    if params[:q].present?
-      query = "%#{params[:q].strip}%"
+    @query = search_query
+    if @query
+      query = "%#{@query}%"
       @readings = @readings.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
       @filters_applied = true
     end
