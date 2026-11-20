@@ -171,8 +171,18 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     get readings_url(sort: "rating")
 
     assert_response :success
-    body = @response.body
-    assert_operator body.index(rated.book.title), :<, body.index(unrated.book.title)
+    assert_equal [dom_id(rated), dom_id(unrated)], shelf_row_ids
+  end
+
+  test "readings index breaks sort ties by newest id, so paging is stable" do
+    # Both unrated, so the rating sort ties; without a tiebreaker Postgres returns them in insertion order.
+    older = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    newer = Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+
+    sign_in_as users(:member)
+    get readings_url(sort: "rating")
+
+    assert_equal [dom_id(readings(:one)), dom_id(newer), dom_id(older)], shelf_row_ids
   end
 
   test "readings index browse-by-genre row excludes mood and pace tags" do
@@ -389,5 +399,11 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/csv", @response.media_type
     assert_match "Title,Author,ISBN", @response.body
     assert_match @reading.book.title, @response.body
+  end
+
+  private
+
+  def shelf_row_ids
+    css_select("tbody tr[id^='reading_']").pluck("id")
   end
 end

@@ -14,7 +14,7 @@ class Notification < ApplicationRecord
   validates :notification_type, presence: true
 
   scope :unread, -> { where(read_at: nil) }
-  scope :recent, -> { order(created_at: :desc) }
+  scope :recent, -> { order(created_at: :desc, id: :desc) }
   # Notifications not yet included in a digest email, regardless of whether
   # they've since been read in-app — a digest and an in-app read are tracked
   # independently so viewing the bell dropdown doesn't silently skip a
