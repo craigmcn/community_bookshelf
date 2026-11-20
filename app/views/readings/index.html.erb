@@ -37,7 +37,7 @@
     <% end %>
     <div class="col-sm-6 col-md-4">
       <label for="readings-q" class="visually-hidden">Search</label>
-      <input type="search" id="readings-q" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by book title or author...">
+      <input type="search" id="readings-q" name="q" value="<%= @query %>" class="form-control" placeholder="Search by book title or author...">
     </div>
     <div class="col-sm-4 col-md-2">
       <label for="readings-status" class="visually-hidden">Status</label>
@@ -77,7 +77,7 @@
     <div class="d-flex flex-wrap align-items-center gap-1 mb-4">
       <span class="text-muted small me-1">Browse by genre:</span>
       <% @shelf_tags.each do |tag| %>
-        <%= link_to tag.name, readings_path(tag: tag.name, q: params[:q], status: params[:status], rating: params[:rating], sort: params[:sort]),
+        <%= link_to tag.name, readings_path(tag: tag.name, q: @query, status: params[:status], rating: params[:rating], sort: params[:sort]),
               class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
       <% end %>
     </div>

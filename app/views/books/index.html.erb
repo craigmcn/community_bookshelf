@@ -16,7 +16,7 @@
     <% end %>
     <div class="col-sm-6 col-md-5">
       <label for="books-q" class="visually-hidden">Search</label>
-      <input type="search" id="books-q" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Search by title or author...">
+      <input type="search" id="books-q" name="q" value="<%= @query %>" class="form-control" placeholder="Search by title or author...">
     </div>
     <div class="col-sm-4 col-md-3">
       <label for="books-sort" class="visually-hidden">Sort by</label>
@@ -39,14 +39,14 @@
       <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
         <span class="text-muted small me-1">Browse by <%= label.downcase %>:</span>
         <% tags.each do |tag| %>
-          <%= link_to tag.name, books_path(tag: tag.name, q: params[:q], sort: params[:sort]),
+          <%= link_to tag.name, books_path(tag: tag.name, q: @query, sort: params[:sort]),
                 class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
         <% end %>
       </div>
     <% end %>
   <% end %>
   <% if @tag %>
-    <%= link_to "Clear tag filter", books_path(q: params[:q], sort: params[:sort]), class: "small d-inline-block mb-4" %>
+    <%= link_to "Clear tag filter", books_path(q: @query, sort: params[:sort]), class: "small d-inline-block mb-4" %>
   <% else %>
     <div class="mb-2"></div>
   <% end %>
@@ -64,8 +64,8 @@
       <% end %>
     </div>
     <div class="mt-4"><%= render "shared/pagy_nav", pagy: @pagy %></div>
-  <% elsif params[:q].present? %>
-    <p class="text-muted">No books match "<%= params[:q] %>".</p>
+  <% elsif @query %>
+    <p class="text-muted">No books match "<%= @query %>".</p>
   <% else %>
     <div class="text-center text-muted py-5">
       <i class="fasl fa-shelves-empty fa-3x mb-3 d-block opacity-50"></i>
