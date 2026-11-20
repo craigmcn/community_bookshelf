@@ -23,10 +23,12 @@ class NullByteGuard
   private
 
   # Parsing here is cached in the env, so controllers reuse it rather than parsing twice.
+  # Only Clearance's cookie is checked: it's an unverified DB lookup key, while a stray NUL in
+  # any other cookie (e.g. one set on a parent domain) shouldn't lock a browser out.
   def null_byte_in_request?(request)
     null_byte_in?(Rack::Utils.unescape_path(request.path_info)) ||
-      null_byte_in?(request.get_header("HTTP_AUTHORIZATION")) ||
-      null_byte_in?(request.cookies) ||
+      null_byte_in?(request.authorization) ||
+      null_byte_in?(request.cookies[Clearance.configuration.cookie_name]) ||
       null_byte_in?(request.query_parameters) ||
       null_byte_in?(request.request_parameters)
   rescue *PARSE_ERRORS
@@ -47,6 +49,8 @@ class NullByteGuard
     # Rack::TempfileReaper sits downstream and never sees this response, so close any
     # multipart upload tempfiles the parse created rather than leaving them open until GC.
     env[Rack::RACK_TEMPFILES]&.each(&:close!)
+    # No controller runs, so nothing else logs the outcome. Param, cookie and header values stay out of the log.
+    Rails.logger.info("NullByteGuard: 400 for #{env["REQUEST_METHOD"]} #{env["PATH_INFO"].inspect} (null byte in request)")
 
     if API_PATH.match?(env["PATH_INFO"])
       [400, {"content-type" => "application/json"}, [{error: "Request contains a null byte"}.to_json]]
