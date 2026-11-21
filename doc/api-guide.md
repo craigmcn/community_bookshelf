@@ -108,6 +108,12 @@ cookie the website uses, instead of holding a token:
   `api.example.org`, or one origin). The cookie is `SameSite=Lax`, so
   browsers won't send it cross-site. Add the app's origin to
   `API_CORS_ORIGINS`, and send requests with `credentials: "include"`.
+  Every origin on that list can make signed-in requests, so list only
+  origins trusted with users' sessions. Entries must be `https://` origins,
+  apart from `http://localhost` for development.
+- **Cookies:** the CSRF token is tied to a session cookie that's separate
+  from `remember_token`, so keep every cookie the API sets. Signing in
+  anywhere, including on the website, issues a new token.
 - **Rate limits:** cookie requests share the same 120/min per-client limit as
   tokens, counted per user. Sign-in is also limited per IP and per email.
 

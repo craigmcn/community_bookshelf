@@ -32,6 +32,25 @@ class Api::CookieAuthTest < ActionDispatch::IntegrationTest
     assert_response :created
   end
 
+  test "a cookie PATCH needs the CSRF token too" do
+    csrf_token = sign_in_via_api
+
+    patch mark_all_read_api_v1_notifications_url, headers: json_headers
+    assert_response :forbidden
+
+    patch mark_all_read_api_v1_notifications_url, headers: json_headers.merge("X-CSRF-Token" => csrf_token)
+    assert_response :success
+  end
+
+  test "signing in again makes the earlier CSRF token stale" do
+    old_token = sign_in_via_api
+    sign_in_via_api
+
+    post api_v1_readings_url, params: reading_params.to_json, headers: json_headers.merge("X-CSRF-Token" => old_token)
+
+    assert_response :forbidden
+  end
+
   test "the CSRF token from GET /session also works" do
     sign_in_as users(:member)
     get api_v1_session_url

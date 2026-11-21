@@ -26,6 +26,7 @@ class Rack::Attack
     req.env["bookshelf.api_client"] =
       if authorization(req).present?
         verified_api_token(req)
+      # Raw read assumes Clearance's signed_cookie is off; signing it would need the cookie jar here.
       elsif (remember_token = req.cookies[Clearance.configuration.cookie_name]).present?
         user_id = User.where(remember_token: remember_token).pick(:id)
         "user:#{user_id}" if user_id
@@ -58,10 +59,10 @@ class Rack::Attack
     req.post? && route_path(req) == PASSWORD_RESET_PATH
   end
 
-  # Rails' parser handles JSON bodies too, and NullByteGuard has already cached the parse.
-  # Clearance's own normalizer keeps "m ember@x" from getting its own bucket.
+  # The same merged params the controllers read (a query-string email overrides the body), so a
+  # decoy can't be counted in place of the real address. Clearance's normalizer joins "m ember@x".
   def self.submitted_email(req, scope)
-    params = ActionDispatch::Request.new(req.env).request_parameters
+    params = ActionDispatch::Request.new(req.env).parameters
     params = params[scope] if scope
     email = params["email"] if params.is_a?(Hash)
     User.normalize_email(email).presence if email.is_a?(String)

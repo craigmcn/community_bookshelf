@@ -1135,11 +1135,15 @@ components:
       in: cookie
       name: remember_token
       description: |
-        The session cookie set by POST /session, for browser apps on the same
-        site as the API. It holds every scope, but can't be used for
-        cookie-only endpoints with a token, or vice versa. Writes (POST, PATCH,
-        PUT, DELETE) must send the X-CSRF-Token header from GET or POST
-        /session; a missing or stale one is a 403 {"error": "Invalid CSRF token"}.
+        The session cookies set by POST /session, for browser apps on the same
+        site as the API. remember_token identifies the user; the CSRF token is
+        tied to a second session cookie, so a client must keep every cookie the
+        API sets. A cookie session holds every scope. Session endpoints accept
+        only the cookie, never a bearer token.
+        Writes (POST, PATCH, PUT, DELETE) must send the X-CSRF-Token header
+        from GET or POST /session. Any sign-in, including on the website,
+        issues a new token; a missing or stale one is a 403
+        {"error": "Invalid CSRF token"}.
 
   parameters:
     CsrfToken:
