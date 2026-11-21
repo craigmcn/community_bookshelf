@@ -7,11 +7,19 @@ info:
     in the repository for the full prose guide (getting a token, rate
     limits, error shapes) — this spec covers the same endpoints in a
     machine-readable form for client codegen and interactive exploration.
+
+    Authenticate with either a bearer token (scripts) or the session cookie
+    from POST /session (browser apps). A browser app must be served from the
+    same site as the API (same registrable domain, e.g. app.example.org and
+    api.example.org), since the cookie is SameSite=Lax and cross-site cookies
+    aren't sent. Cookie-authenticated writes must send the X-CSRF-Token header.
 servers:
   - url: /api/v1
 security:
   - bearerAuth: []
+  - cookieAuth: []
 tags:
+  - name: Session
   - name: Books
   - name: Readings
   - name: Shelves
@@ -24,6 +32,57 @@ tags:
   - name: Tags
 
 paths:
+  /session:
+    get:
+      tags: [Session]
+      summary: The signed-in user, plus a CSRF token for writes (cookie only)
+      security: [{cookieAuth: []}]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Session"}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {$ref: "#/components/responses/CookieOnly"}
+    post:
+      tags: [Session]
+      summary: Sign in, setting the session cookie
+      description: |
+        Takes a JSON body only (415 otherwise), so a cross-site HTML form
+        can't sign a browser in. Throttled per IP and per email (429).
+        The response's csrf_token replaces any earlier one.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SessionInput"}
+      responses:
+        "201":
+          description: Signed in
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Session"}
+        "401":
+          description: Wrong email or password
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ErrorMessage"}
+        "403": {$ref: "#/components/responses/CookieOnly"}
+        "415": {description: Content-Type isn't application/json}
+        "429": {description: Too many sign-in attempts}
+    delete:
+      tags: [Session]
+      summary: Sign out, clearing the session cookie
+      security: [{cookieAuth: []}]
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "204": {description: Signed out}
+        "401": {$ref: "#/components/responses/Unauthorized"}
+        "403": {description: "Invalid CSRF token, or an API token was sent"}
+
   /books:
     get:
       tags: [Books]
@@ -52,6 +111,8 @@ paths:
     post:
       tags: [Books]
       summary: Create a book
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -91,6 +152,8 @@ paths:
     patch:
       tags: [Books]
       summary: Update a book (moderator or admin only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         content:
           application/json:
@@ -112,6 +175,8 @@ paths:
     delete:
       tags: [Books]
       summary: Delete a book (moderator or admin only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -145,6 +210,8 @@ paths:
     post:
       tags: [Readings]
       summary: Create a reading
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -167,6 +234,8 @@ paths:
     post:
       tags: [Readings]
       summary: Create up to 100 readings in one request
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -220,6 +289,8 @@ paths:
     patch:
       tags: [Readings]
       summary: Update a reading (owner, or moderator/admin)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         content:
           application/json:
@@ -241,6 +312,8 @@ paths:
     delete:
       tags: [Readings]
       summary: Soft-delete a reading (owner, or moderator/admin)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -256,6 +329,8 @@ paths:
     post:
       tags: [Readings]
       summary: Like a reading's review (requires a public, non-blank review)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "201":
           description: Created
@@ -269,6 +344,8 @@ paths:
     delete:
       tags: [Readings]
       summary: Unlike a reading's review (idempotent — 204 even if not liked)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -284,6 +361,8 @@ paths:
     post:
       tags: [Readings]
       summary: Comment on a reading's review (requires a public, non-blank review)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -321,6 +400,8 @@ paths:
     delete:
       tags: [Readings]
       summary: Delete a review comment (author, or moderator/admin)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -351,6 +432,8 @@ paths:
     post:
       tags: [Shelves]
       summary: Create a shelf
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -389,6 +472,8 @@ paths:
     patch:
       tags: [Shelves]
       summary: Rename a shelf (owner only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         content:
           application/json:
@@ -409,6 +494,8 @@ paths:
     delete:
       tags: [Shelves]
       summary: Delete a shelf (owner only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -423,6 +510,8 @@ paths:
     post:
       tags: [Shelves]
       summary: Add a book to a shelf (owner only, idempotent)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -455,6 +544,8 @@ paths:
     delete:
       tags: [Shelves]
       summary: Remove a book from a shelf (owner only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -469,6 +560,8 @@ paths:
     post:
       tags: [Follows]
       summary: Follow a user (can't follow yourself)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "201":
           description: Created
@@ -482,6 +575,8 @@ paths:
     delete:
       tags: [Follows]
       summary: Unfollow a user (idempotent — 204 even if not currently following)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -508,6 +603,8 @@ paths:
     post:
       tags: [ReadingChallenges]
       summary: Create a reading challenge (one per calendar year)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -536,6 +633,8 @@ paths:
     patch:
       tags: [ReadingChallenges]
       summary: Update a reading challenge's goal (owner only — year is immutable)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         content:
           application/json:
@@ -591,6 +690,8 @@ paths:
     post:
       tags: [Clubs]
       summary: Create a club (auto-joins you as a member)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -631,6 +732,8 @@ paths:
     patch:
       tags: [Clubs]
       summary: Update a club (creator, or moderator/admin)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         content:
           application/json:
@@ -652,6 +755,8 @@ paths:
     delete:
       tags: [Clubs]
       summary: Delete a club (creator, or moderator/admin)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -667,6 +772,8 @@ paths:
     post:
       tags: [Clubs]
       summary: Join a club
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "201":
           description: Created
@@ -679,6 +786,8 @@ paths:
     delete:
       tags: [Clubs]
       summary: Leave a club (idempotent — 204 even if not a member)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -694,6 +803,8 @@ paths:
     post:
       tags: [Clubs]
       summary: Post to a club (members only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -727,6 +838,8 @@ paths:
     delete:
       tags: [Clubs]
       summary: Delete a club post (author, or moderator/admin)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -753,6 +866,8 @@ paths:
     post:
       tags: [BuddyReads]
       summary: Invite another member to a buddy read (can't invite yourself)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -793,6 +908,8 @@ paths:
     patch:
       tags: [BuddyReads]
       summary: Drive the status state machine (accept/decline/cancel/complete)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -826,6 +943,8 @@ paths:
     post:
       tags: [BuddyReads]
       summary: Post a message (either participant, while the pairing is still active)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -878,6 +997,8 @@ paths:
     patch:
       tags: [Notifications]
       summary: Mark a notification read (recipient only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "200":
           description: OK
@@ -892,6 +1013,8 @@ paths:
     patch:
       tags: [Notifications]
       summary: Mark every unread notification read
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "200":
           description: OK
@@ -947,6 +1070,8 @@ paths:
     post:
       tags: [Tags]
       summary: Favorite a genre (idempotent — pass an existing genre tag's id)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       requestBody:
         required: true
         content:
@@ -980,6 +1105,8 @@ paths:
     delete:
       tags: [Tags]
       summary: Unfavorite a genre (owner only)
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
       responses:
         "204": {description: No Content}
         "401": {$ref: "#/components/responses/Unauthorized"}
@@ -1001,16 +1128,40 @@ components:
         write:notifications, read:tags, read:favorite_genres,
         write:favorite_genres, write:review_likes, write:review_comments)
         — there is no anonymous access, even for catalog browsing that's
-        public on the website.
+        public on the website. When an Authorization header is sent, only the
+        token is used: an invalid one is a 401, with no fallback to the cookie.
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: remember_token
+      description: |
+        The session cookie set by POST /session, for browser apps on the same
+        site as the API. It holds every scope, but can't be used for
+        cookie-only endpoints with a token, or vice versa. Writes (POST, PATCH,
+        PUT, DELETE) must send the X-CSRF-Token header from GET or POST
+        /session; a missing or stale one is a 403 {"error": "Invalid CSRF token"}.
+
+  parameters:
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: Required when authenticating with cookieAuth; ignored with bearerAuth.
+      schema: {type: string}
 
   responses:
     Unauthorized:
-      description: Missing or invalid token
+      description: Missing or invalid token, or not signed in
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ErrorMessage"}
+    CookieOnly:
+      description: This endpoint takes the session cookie, not an API token
       content:
         application/json:
           schema: {$ref: "#/components/schemas/ErrorMessage"}
     Forbidden:
-      description: Token is valid, but you're not allowed to do this
+      description: Authenticated, but not allowed to do this (or, with cookieAuth, an invalid CSRF token)
       content:
         application/json:
           schema: {$ref: "#/components/schemas/ErrorMessage"}
@@ -1026,6 +1177,24 @@ components:
           schema: {$ref: "#/components/schemas/ErrorMessages"}
 
   schemas:
+    Session:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id: {type: integer}
+            email: {type: string}
+            name: {type: string, nullable: true}
+            display_name: {type: string}
+            roles: {type: array, items: {type: string, enum: [member, moderator, admin]}}
+        csrf_token: {type: string, description: Send as X-CSRF-Token on cookie-authenticated writes}
+    SessionInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: {type: string}
+        password: {type: string}
     ErrorMessage:
       type: object
       properties:

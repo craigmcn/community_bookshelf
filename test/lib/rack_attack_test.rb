@@ -54,4 +54,29 @@ class RackAttackTest < ActiveSupport::TestCase
       assert_equal "/session", Rack::Attack.route_path(Rack::Attack::Request.new(Rack::MockRequest.env_for(path))), path
     end
   end
+
+  test "a valid remember_token cookie buckets per user" do
+    users(:member).reset_remember_token!
+    req = api_request("HTTP_COOKIE" => "remember_token=#{users(:member).remember_token}")
+
+    assert_equal "user:#{users(:member).id}", Rack::Attack.verified_api_client(req)
+  end
+
+  test "an unknown remember_token cookie is unauthenticated" do
+    assert_nil Rack::Attack.verified_api_client(api_request("HTTP_COOKIE" => "remember_token=nope"))
+  end
+
+  # Matches the API's precedence: a header means token auth only, so the cookie isn't consulted.
+  test "a garbage token beside a valid cookie is unauthenticated" do
+    users(:member).reset_remember_token!
+    req = api_request("HTTP_COOKIE" => "remember_token=#{users(:member).remember_token}", "HTTP_AUTHORIZATION" => "Bearer garbage")
+
+    assert_nil Rack::Attack.verified_api_client(req)
+  end
+
+  private
+
+  def api_request(env)
+    Rack::Attack::Request.new(Rack::MockRequest.env_for("/api/v1/books", env))
+  end
 end

@@ -78,8 +78,38 @@ curl -H "Authorization: Bearer <your-token>" https://<host>/api/v1/books
 ```
 
 There's no anonymous access — even endpoints that are public on the website
-(browsing the book catalog) require a valid token when called through the
-API. A missing or invalid token gets a `401`.
+(browsing the book catalog) require a valid token or session cookie when
+called through the API. A missing or invalid token gets a `401`.
+
+## Signing in with a cookie (browser apps)
+
+A browser app (such as the bookshelf SPA) can sign in with the same session
+cookie the website uses, instead of holding a token:
+
+| Method | Path | What it does |
+|---|---|---|
+| POST | `/api/v1/session` | Sign in with `{"email": ..., "password": ...}` (JSON only). Sets the cookie and returns `{user, csrf_token}` |
+| GET | `/api/v1/session` | The signed-in user and a CSRF token, or `401` when signed out |
+| DELETE | `/api/v1/session` | Sign out |
+
+- **CSRF:** every cookie-authenticated `POST`, `PATCH`, `PUT` or `DELETE`
+  must send the `csrf_token` in an `X-CSRF-Token` header. A missing or stale
+  one gets `403 {"error": "Invalid CSRF token"}`. Signing in issues a new
+  token, so use the one from the latest response.
+- **Scopes:** a cookie session can do everything the website can, so it
+  holds every scope.
+- **Cookie-only:** the session endpoints refuse an `Authorization` header
+  with a `403`, so a leaked token can't open a browser session.
+- **Precedence:** if a request sends an `Authorization` header, only the
+  token is used. An invalid token is a `401`, with no fallback to the cookie,
+  and token requests need no CSRF header.
+- **Same site only:** the app must be served from the same site as the API
+  (the same registrable domain, e.g. `app.example.org` and
+  `api.example.org`, or one origin). The cookie is `SameSite=Lax`, so
+  browsers won't send it cross-site. Add the app's origin to
+  `API_CORS_ORIGINS`, and send requests with `credentials: "include"`.
+- **Rate limits:** cookie requests share the same 120/min per-client limit as
+  tokens, counted per user. Sign-in is also limited per IP and per email.
 
 ## Base URL and versioning
 
@@ -113,8 +143,9 @@ A list response wraps the array and adds pagination metadata:
 
 | Status | Shape | When |
 |---|---|---|
-| 401 | `{"error": "..."}` | Missing or invalid token |
-| 403 | `{"error": "..."}` | Token is valid, but you're not allowed to do this |
+| 401 | `{"error": "..."}` | Missing or invalid token, or not signed in |
+| 403 | `{"error": "..."}` | Authenticated, but not allowed to do this, or (cookie auth) an invalid CSRF token |
+| 415 | `{"error": "..."}` | `POST /api/v1/session` without a JSON body |
 | 404 | `{"error": "..."}` | Resource doesn't exist |
 | 422 | `{"errors": ["...", "..."]}` | Validation failed on create/update — one message per problem |
 

@@ -16,6 +16,8 @@ class Api::DocsControllerTest < ActionDispatch::IntegrationTest
     spec = YAML.safe_load(@response.body)
     assert_equal "3.0.3", spec["openapi"]
     assert_includes spec["paths"].keys, "/readings/bulk"
+    assert_includes spec["paths"].keys, "/session"
+    assert_equal %w[bearerAuth cookieAuth], spec["components"]["securitySchemes"].keys
   end
 
   test "the main site layout does not pull in the docs stylesheet" do

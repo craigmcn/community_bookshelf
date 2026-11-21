@@ -1,10 +1,9 @@
 # Be sure to restart your server when you modify this file.
 
 # Only /api/v1/* is opened up — the rest of the app is server-rendered HTML
-# with session-cookie auth and has no business responding to cross-origin
-# fetches. API requests carry a bearer token in the Authorization header
-# (not cookies), so credentials aren't needed and an explicit env-driven
-# origin allowlist is used rather than "*" — API_CORS_ORIGINS is a
+# and has no business responding to cross-origin fetches. API requests carry
+# either a bearer token or, for the SPA, the session cookie (#219), so only an
+# explicit env-driven origin allowlist is used, never "*" — API_CORS_ORIGINS is a
 # comma-separated list, e.g. "https://example.com,https://app.example.com".
 # Empty/unset means no cross-origin browser access until it's configured.
 module ApiCorsConfig
@@ -20,6 +19,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     resource "/api/v1/*",
       headers: :any,
       methods: [:get, :post, :patch, :put, :delete, :options],
-      credentials: false
+      # The SPA's cookie sign-in needs credentialed requests (#219). Only the explicit
+      # allow-list above qualifies; rack-cors refuses credentials with a wildcard origin.
+      credentials: true
   end
 end
