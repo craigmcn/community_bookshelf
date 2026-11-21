@@ -82,6 +82,23 @@ class SignInThrottleTest < ActionDispatch::IntegrationTest
     assert_response :too_many_requests
   end
 
+  # Rails lets a query-string param override the body, so the throttle must count that one.
+  test "a query-string email is what the sign-in throttle counts" do
+    5.times do |i|
+      post "/api/v1/session?email=member@example.com&password=guess",
+        params: {email: "decoy#{i}@example.com"}.to_json, headers: json_headers.merge("REMOTE_ADDR" => "10.0.6.#{i}")
+    end
+    post api_v1_session_url, params: {email: "member@example.com", password: "x"}.to_json, headers: json_headers.merge("REMOTE_ADDR" => "10.0.6.99")
+    assert_response :too_many_requests
+
+    5.times do |i|
+      post "/session?session[email]=moderator@example.com&session[password]=guess",
+        params: {session: {email: "decoy#{i}@example.com"}}, env: {"REMOTE_ADDR" => "10.0.7.#{i}"}
+    end
+    sign_in_attempt("moderator@example.com", ip: "10.0.7.99")
+    assert_response :too_many_requests
+  end
+
   test "an IP is limited to 5 password reset requests a minute" do
     5.times { |i| post passwords_url, params: {password: {email: "user#{i}@example.com"}} }
 

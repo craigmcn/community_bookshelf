@@ -3,22 +3,42 @@ class Rack::Attack
   # both throttles below by sending a fresh garbage token on every request
   # (each string gets its own "api/token" bucket, and it's never blank, so
   # "api/ip-unauthenticated" never engages either). Resolving against a real
-  # user closes that gap: a valid token throttles by token, anything else —
-  # missing or garbage — throttles by IP instead.
+  # user closes that gap: a valid token or cookie throttles by client, anything
+  # else — missing or garbage — throttles by IP instead.
   def self.verified_api_token(req)
-    token = req.get_header("HTTP_AUTHORIZATION")&.split(" ")&.last
+    token = authorization(req)&.split(" ")&.last
     return nil if token.blank?
 
     prefix = token[0, ApiToken::DISPLAY_PREFIX_LENGTH]
     prefix if ApiToken.active.exists?(token_prefix: prefix)
   end
 
+  # Same source as Api::V1::BaseController#token_auth?, so both agree on which auth applies.
+  def self.authorization(req)
+    ActionDispatch::Request.new(req.env).authorization
+  end
+
+  # Mirrors the API's precedence (#219): a header means token auth only, so a valid cookie
+  # beside a garbage token still counts as unauthenticated. Cookie sessions bucket per user.
+  def self.verified_api_client(req)
+    return req.env["bookshelf.api_client"] if req.env.key?("bookshelf.api_client")
+
+    req.env["bookshelf.api_client"] =
+      if authorization(req).present?
+        verified_api_token(req)
+      # Raw read assumes Clearance's signed_cookie is off; signing it would need the cookie jar here.
+      elsif (remember_token = req.cookies[Clearance.configuration.cookie_name]).present?
+        user_id = User.where(remember_token: remember_token).pick(:id)
+        "user:#{user_id}" if user_id
+      end
+  end
+
   throttle("api/token", limit: 120, period: 1.minute) do |req|
-    verified_api_token(req) if req.path.start_with?("/api/")
+    verified_api_client(req) if req.path.start_with?("/api/")
   end
 
   throttle("api/ip-unauthenticated", limit: 30, period: 1.minute) do |req|
-    req.ip if req.path.start_with?("/api/") && verified_api_token(req).nil?
+    req.ip if req.path.start_with?("/api/") && verified_api_client(req).nil?
   end
 
   # Each path maps to the field its controller reads the email from (nil = top level), so
@@ -39,10 +59,10 @@ class Rack::Attack
     req.post? && route_path(req) == PASSWORD_RESET_PATH
   end
 
-  # Rails' parser handles JSON bodies too, and NullByteGuard has already cached the parse.
-  # Clearance's own normalizer keeps "m ember@x" from getting its own bucket.
+  # The same merged params the controllers read (a query-string email overrides the body), so a
+  # decoy can't be counted in place of the real address. Clearance's normalizer joins "m ember@x".
   def self.submitted_email(req, scope)
-    params = ActionDispatch::Request.new(req.env).request_parameters
+    params = ActionDispatch::Request.new(req.env).parameters
     params = params[scope] if scope
     email = params["email"] if params.is_a?(Hash)
     User.normalize_email(email).presence if email.is_a?(String)

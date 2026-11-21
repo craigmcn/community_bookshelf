@@ -65,6 +65,8 @@ Clearance handles sign-up, sign-in, sign-out, and password reset. `ApplicationCo
 
 `SessionsController < Clearance::SessionsController` overrides `url_after_create` to redirect admins to `/admin` and everyone else to `/`.
 
+The JSON API (`/api/v1`, see [doc/api-guide.md](doc/api-guide.md)) takes a bearer token or the same session cookie, via `/api/v1/session`. A browser app using the cookie must be deployed on the same site as the API (same registrable domain), because the cookie is `SameSite=Lax`; cookie-authenticated writes send an `X-CSRF-Token` header.
+
 ## Authorization
 
 Pundit policies live in `app/policies/`. Role checks use `admin?`, `moderator?`, and `moderator_or_above?` on `User`, which query the roles association:

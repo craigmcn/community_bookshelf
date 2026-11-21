@@ -60,6 +60,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      resource :session, only: [:show, :create, :destroy]
       resources :books, only: [:index, :show, :create, :update, :destroy]
       resources :readings, only: [:index, :show, :create, :update, :destroy] do
         post :bulk, on: :collection
