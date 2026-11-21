@@ -108,6 +108,7 @@ Readings use `deleted_at` for soft deletes. Default scopes exclude deleted recor
 - `current_user` is always available (nil if signed out)
 - Test helper: `sign_in_as(user)` (defined in test_helper.rb)
 - Test fixture password: `"correct-horse-shelf"` (all fixture users)
+- `remember_token` cookie: `secure_cookie = force_ssl` and `same_site = :lax` in `config/initializers/clearance.rb`, matching the Rails session cookie (#249). Still unsigned with Clearance's 1-year expiry. Fixture users have no `remember_token` (fixtures skip callbacks), so a test that needs the cookie calls `reset_remember_token!` first
 
 ### Pundit
 - `ApplicationController` includes `Pundit::Authorization`; `authorize` is called explicitly per action (not enforced via a `verify_authorized` after_action) — every controller that acts on a model, including ones that only ever touch `current_user` directly rather than a `params[:id]` (`AccountsController`, `EmailConfirmationsController#create`), calls `authorize` via a matching policy, so a missing check anywhere raises `Pundit::NotAuthorizedError` instead of failing silently
