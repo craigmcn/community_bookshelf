@@ -21,11 +21,64 @@ class Rack::Attack
     req.ip if req.path.start_with?("/api/") && verified_api_token(req).nil?
   end
 
+  # Each path maps to the field its controller reads the email from (nil = top level), so
+  # the per-email throttle counts exactly the address being signed in or reset.
+  SIGN_IN_EMAIL_SCOPES = {"/session" => "session", "/api/v1/session" => nil}.freeze
+  PASSWORD_RESET_PATH = "/passwords"
+
+  # The routes accept a format suffix, so "/session.html" must count as "/session".
+  def self.route_path(req)
+    req.path.sub(%r{\.[^/.]+\z}, "").chomp("/")
+  end
+
+  def self.sign_in_attempt?(req)
+    req.post? && SIGN_IN_EMAIL_SCOPES.key?(route_path(req))
+  end
+
+  def self.password_reset_request?(req)
+    req.post? && route_path(req) == PASSWORD_RESET_PATH
+  end
+
+  # Rails' parser handles JSON bodies too, and NullByteGuard has already cached the parse.
+  # Clearance's own normalizer keeps "m ember@x" from getting its own bucket.
+  def self.submitted_email(req, scope)
+    params = ActionDispatch::Request.new(req.env).request_parameters
+    params = params[scope] if scope
+    email = params["email"] if params.is_a?(Hash)
+    User.normalize_email(email).presence if email.is_a?(String)
+  rescue ActionController::BadRequest, ActionDispatch::Http::Parameters::ParseError
+    nil
+  end
+
+  # Per IP stops one client guessing across many accounts; per email stops a botnet
+  # spreading guesses at one account across many IPs.
+  throttle("sign-in/ip", limit: 10, period: 1.minute) do |req|
+    req.ip if sign_in_attempt?(req)
+  end
+
+  throttle("sign-in/email", limit: 5, period: 1.minute) do |req|
+    submitted_email(req, SIGN_IN_EMAIL_SCOPES[route_path(req)]) if sign_in_attempt?(req)
+  end
+
+  # Each reset request sends mail, so these also stop one inbox being flooded.
+  throttle("password-reset/ip", limit: 5, period: 1.minute) do |req|
+    req.ip if password_reset_request?(req)
+  end
+
+  throttle("password-reset/email", limit: 3, period: 15.minutes) do |req|
+    submitted_email(req, "password") if password_reset_request?(req)
+  end
+
   self.throttled_responder = lambda do |request|
     match_data = request.env["rack.attack.match_data"]
-    headers = {"Content-Type" => "application/json"}
-    headers.merge!(rate_limit_headers(match_data)) if match_data
-    [429, headers, [{error: "Rate limit exceeded"}.to_json]]
+    # Rack 3 requires lowercase response header names.
+    headers = (match_data ? rate_limit_headers(match_data) : {}).transform_keys(&:downcase)
+
+    if request.path.start_with?("/api/")
+      [429, headers.merge("content-type" => "application/json"), [{error: "Rate limit exceeded"}.to_json]]
+    else
+      [429, headers.merge("content-type" => "text/html; charset=utf-8"), [Rails.public_path.join("429.html").read]]
+    end
   end
 
   # X-RateLimit-* headers on a throttled (429) response — the non-throttled
