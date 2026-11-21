@@ -148,6 +148,15 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#books-q[value=?]", "gatsby"
   end
 
+  # A hash param is an unpermitted ActionController::Parameters, which *_path can't serialize (#253).
+  test "books index ignores a hash sort param" do
+    get books_url(sort: {k: "x"})
+    assert_response :success
+
+    get books_url(sort: {k: "x"}, tag: tags(:one).name)
+    assert_response :success
+  end
+
   test "books index treats an array or hash search param as no search" do
     get books_url(q: ["gatsby"])
     assert_response :success

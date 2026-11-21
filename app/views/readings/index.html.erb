@@ -44,7 +44,7 @@
       <select id="readings-status" name="status" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
         <option value="">Any status</option>
         <% Reading.status_options.each do |label, value| %>
-          <option value="<%= value %>" <%= "selected" if params[:status] == value %>><%= label %></option>
+          <option value="<%= value %>" <%= "selected" if @status == value %>><%= label %></option>
         <% end %>
       </select>
     </div>
@@ -53,7 +53,7 @@
       <select id="readings-rating" name="rating" class="form-select" data-controller="auto-submit" data-action="change->auto-submit#submit">
         <option value="">Any rating</option>
         <% Reading.ratings.each_key do |value| %>
-          <option value="<%= value %>" <%= "selected" if params[:rating] == value %>><%= Reading.ratings[value] %> star<%= "s" unless Reading.ratings[value] == 1 %></option>
+          <option value="<%= value %>" <%= "selected" if @rating == value %>><%= Reading.ratings[value] %> star<%= "s" unless Reading.ratings[value] == 1 %></option>
         <% end %>
       </select>
     </div>
@@ -77,7 +77,7 @@
     <div class="d-flex flex-wrap align-items-center gap-1 mb-4">
       <span class="text-muted small me-1">Browse by genre:</span>
       <% @shelf_tags.each do |tag| %>
-        <%= link_to tag.name, readings_path(tag: tag.name, q: @query, status: params[:status], rating: params[:rating], sort: params[:sort]),
+        <%= link_to tag.name, readings_path(tag: tag.name, q: @query, status: @status, rating: @rating, sort: @sort),
               class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
       <% end %>
     </div>

@@ -29,7 +29,7 @@
     <div class="col-sm-auto">
       <button type="submit" class="btn btn-outline-primary">Search</button>
       <% if params[:q].present? %>
-        <%= link_to "Clear", books_path(tag: @tag&.name, sort: params[:sort]), class: "btn btn-outline-secondary" %>
+        <%= link_to "Clear", books_path(tag: @tag&.name, sort: @sort), class: "btn btn-outline-secondary" %>
       <% end %>
     </div>
   <% end %>
@@ -39,14 +39,14 @@
       <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
         <span class="text-muted small me-1">Browse by <%= label.downcase %>:</span>
         <% tags.each do |tag| %>
-          <%= link_to tag.name, books_path(tag: tag.name, q: @query, sort: params[:sort]),
+          <%= link_to tag.name, books_path(tag: tag.name, q: @query, sort: @sort),
                 class: ["badge text-decoration-none", @tag == tag ? "text-bg-primary" : "text-bg-secondary"] %>
         <% end %>
       </div>
     <% end %>
   <% end %>
   <% if @tag %>
-    <%= link_to "Clear tag filter", books_path(q: @query, sort: params[:sort]), class: "small d-inline-block mb-4" %>
+    <%= link_to "Clear tag filter", books_path(q: @query, sort: @sort), class: "small d-inline-block mb-4" %>
   <% else %>
     <div class="mb-2"></div>
   <% end %>
