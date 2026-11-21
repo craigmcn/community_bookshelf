@@ -36,4 +36,22 @@ class RackAttackTest < ActiveSupport::TestCase
       assert_nil Rack::Attack.verified_api_token(req)
     end
   end
+
+  test "a non-hash scope param yields no email instead of raising" do
+    ["session=foo", "session[]=a", "session[email][]=a"].each do |body|
+      env = Rack::MockRequest.env_for("/session", :method => "POST", :input => body, "CONTENT_TYPE" => "application/x-www-form-urlencoded")
+      assert_nil Rack::Attack.submitted_email(Rack::Attack::Request.new(env), "session"), body
+    end
+  end
+
+  test "a malformed JSON body yields no email" do
+    env = Rack::MockRequest.env_for("/api/v1/session", :method => "POST", :input => "{not json", "CONTENT_TYPE" => "application/json")
+    assert_nil Rack::Attack.submitted_email(Rack::Attack::Request.new(env), nil)
+  end
+
+  test "route_path drops a format suffix and trailing slash" do
+    ["/session", "/session.json", "/session.html", "/session/"].each do |path|
+      assert_equal "/session", Rack::Attack.route_path(Rack::Attack::Request.new(Rack::MockRequest.env_for(path))), path
+    end
+  end
 end

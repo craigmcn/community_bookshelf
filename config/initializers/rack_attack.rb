@@ -21,22 +21,31 @@ class Rack::Attack
     req.ip if req.path.start_with?("/api/") && verified_api_token(req).nil?
   end
 
-  SIGN_IN_PATHS = ["/session", "/api/v1/session"].freeze
+  # Each path maps to the field its controller reads the email from (nil = top level), so
+  # the per-email throttle counts exactly the address being signed in or reset.
+  SIGN_IN_EMAIL_SCOPES = {"/session" => "session", "/api/v1/session" => nil}.freeze
+  PASSWORD_RESET_PATH = "/passwords"
+
+  # The routes accept a format suffix, so "/session.html" must count as "/session".
+  def self.route_path(req)
+    req.path.sub(%r{\.[^/.]+\z}, "").chomp("/")
+  end
 
   def self.sign_in_attempt?(req)
-    req.post? && SIGN_IN_PATHS.include?(req.path)
+    req.post? && SIGN_IN_EMAIL_SCOPES.key?(route_path(req))
   end
 
   def self.password_reset_request?(req)
-    req.post? && req.path == "/passwords"
+    req.post? && route_path(req) == PASSWORD_RESET_PATH
   end
 
-  # Rails' parser handles JSON bodies too (/api/v1/session), and NullByteGuard has already
-  # cached the parse in the env. A malformed body has no email, and Rails rejects it downstream.
+  # Rails' parser handles JSON bodies too, and NullByteGuard has already cached the parse.
+  # Clearance's own normalizer keeps "m ember@x" from getting its own bucket.
   def self.submitted_email(req, scope)
     params = ActionDispatch::Request.new(req.env).request_parameters
-    email = params.dig(scope, "email") || params["email"]
-    email.downcase.strip.presence if email.is_a?(String)
+    params = params[scope] if scope
+    email = params["email"] if params.is_a?(Hash)
+    User.normalize_email(email).presence if email.is_a?(String)
   rescue ActionController::BadRequest, ActionDispatch::Http::Parameters::ParseError
     nil
   end
@@ -48,7 +57,7 @@ class Rack::Attack
   end
 
   throttle("sign-in/email", limit: 5, period: 1.minute) do |req|
-    submitted_email(req, "session") if sign_in_attempt?(req)
+    submitted_email(req, SIGN_IN_EMAIL_SCOPES[route_path(req)]) if sign_in_attempt?(req)
   end
 
   # Each reset request sends mail, so these also stop one inbox being flooded.
@@ -62,12 +71,13 @@ class Rack::Attack
 
   self.throttled_responder = lambda do |request|
     match_data = request.env["rack.attack.match_data"]
-    headers = match_data ? rate_limit_headers(match_data) : {}
+    # Rack 3 requires lowercase response header names.
+    headers = (match_data ? rate_limit_headers(match_data) : {}).transform_keys(&:downcase)
 
     if request.path.start_with?("/api/")
-      [429, headers.merge("Content-Type" => "application/json"), [{error: "Rate limit exceeded"}.to_json]]
+      [429, headers.merge("content-type" => "application/json"), [{error: "Rate limit exceeded"}.to_json]]
     else
-      [429, headers.merge("Content-Type" => "text/html; charset=utf-8"), [Rails.public_path.join("429.html").read]]
+      [429, headers.merge("content-type" => "text/html; charset=utf-8"), [Rails.public_path.join("429.html").read]]
     end
   end
 
