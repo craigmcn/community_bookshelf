@@ -21,11 +21,54 @@ class Rack::Attack
     req.ip if req.path.start_with?("/api/") && verified_api_token(req).nil?
   end
 
+  SIGN_IN_PATHS = ["/session", "/api/v1/session"].freeze
+
+  def self.sign_in_attempt?(req)
+    req.post? && SIGN_IN_PATHS.include?(req.path)
+  end
+
+  def self.password_reset_request?(req)
+    req.post? && req.path == "/passwords"
+  end
+
+  # Rails' parser handles JSON bodies too (/api/v1/session), and NullByteGuard has already
+  # cached the parse in the env. A malformed body has no email, and Rails rejects it downstream.
+  def self.submitted_email(req, scope)
+    params = ActionDispatch::Request.new(req.env).request_parameters
+    email = params.dig(scope, "email") || params["email"]
+    email.downcase.strip.presence if email.is_a?(String)
+  rescue ActionController::BadRequest, ActionDispatch::Http::Parameters::ParseError
+    nil
+  end
+
+  # Per IP stops one client guessing across many accounts; per email stops a botnet
+  # spreading guesses at one account across many IPs.
+  throttle("sign-in/ip", limit: 10, period: 1.minute) do |req|
+    req.ip if sign_in_attempt?(req)
+  end
+
+  throttle("sign-in/email", limit: 5, period: 1.minute) do |req|
+    submitted_email(req, "session") if sign_in_attempt?(req)
+  end
+
+  # Each reset request sends mail, so these also stop one inbox being flooded.
+  throttle("password-reset/ip", limit: 5, period: 1.minute) do |req|
+    req.ip if password_reset_request?(req)
+  end
+
+  throttle("password-reset/email", limit: 3, period: 15.minutes) do |req|
+    submitted_email(req, "password") if password_reset_request?(req)
+  end
+
   self.throttled_responder = lambda do |request|
     match_data = request.env["rack.attack.match_data"]
-    headers = {"Content-Type" => "application/json"}
-    headers.merge!(rate_limit_headers(match_data)) if match_data
-    [429, headers, [{error: "Rate limit exceeded"}.to_json]]
+    headers = match_data ? rate_limit_headers(match_data) : {}
+
+    if request.path.start_with?("/api/")
+      [429, headers.merge("Content-Type" => "application/json"), [{error: "Rate limit exceeded"}.to_json]]
+    else
+      [429, headers.merge("Content-Type" => "text/html; charset=utf-8"), [Rails.public_path.join("429.html").read]]
+    end
   end
 
   # X-RateLimit-* headers on a throttled (429) response — the non-throttled
