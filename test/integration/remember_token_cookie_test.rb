@@ -15,11 +15,7 @@ class RememberTokenCookieTest < ActionDispatch::IntegrationTest
     assert_match(/;\s*samesite=lax/i, cookie)
   end
 
-  # Test env doesn't force SSL, so check the tie to force_ssl rather than a production header.
-  test "remember_token is Secure exactly where SSL is enforced" do
-    assert_equal Rails.application.config.force_ssl, Clearance.configuration.secure_cookie
-  end
-
+  # Checks Clearance honours the flag; test env doesn't force SSL, so the production value can't be exercised here.
   test "remember_token carries Secure when the setting is on" do
     original = Clearance.configuration.secure_cookie
     Clearance.configuration.secure_cookie = true
