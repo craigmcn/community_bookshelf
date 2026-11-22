@@ -67,7 +67,7 @@
     </div>
     <div class="col-sm-auto">
       <button type="submit" class="btn btn-outline-primary">Filter</button>
-      <% if params[:q].present? || params[:status].present? || params[:rating].present? || params[:tag].present? %>
+      <% if @filters_applied %>
         <%= link_to "Clear", readings_path, class: "btn btn-outline-secondary" %>
       <% end %>
     </div>

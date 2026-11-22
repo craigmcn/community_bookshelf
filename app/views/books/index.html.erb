@@ -51,8 +51,8 @@
     <div class="mb-2"></div>
   <% end %>
 
-  <% if params[:tag].present? && @tag.nil? %>
-    <p class="text-muted">No books tagged "<%= params[:tag] %>".</p>
+  <% if @tag_query.present? && @tag.nil? %>
+    <p class="text-muted">No books tagged "<%= @tag_query %>".</p>
   <% elsif @books.any? %>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
       <% @books.each do |book| %>

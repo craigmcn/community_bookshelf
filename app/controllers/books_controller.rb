@@ -26,8 +26,10 @@ class BooksController < ApplicationController
       @books = @books.where("books.title ILIKE :q OR books.author ILIKE :q", q: query)
     end
 
-    if params[:tag].present?
-      @tag = Tag.find_by(name: params[:tag].to_s.strip.downcase)
+    # Only a string tag is a filter (and echoed back); a hash one is ignored, like a hash q.
+    @tag_query = params[:tag].strip if params[:tag].is_a?(String)
+    if @tag_query.present?
+      @tag = Tag.find_by(name: @tag_query.downcase)
       @books = @tag ? @books.joins(:tags).where(tags: {id: @tag.id}) : @books.none
     end
 

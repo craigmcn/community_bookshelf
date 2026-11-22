@@ -157,6 +157,14 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "books index ignores a hash tag param instead of echoing it" do
+    get books_url(tag: {k: "x"})
+
+    assert_response :success
+    assert_equal Book.count, book_card_ids.size
+    assert_not_includes @response.body, "No books tagged"
+  end
+
   test "books index treats an array or hash search param as no search" do
     get books_url(q: ["gatsby"])
     assert_response :success

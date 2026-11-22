@@ -183,7 +183,12 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "select[name=status] option[selected][value=?]", reading.status
-    assert_select "select[name=rating] option[selected][value=?]", reading.rating if reading.rating
+    assert_select "select[name=rating] option[selected][value=?]", reading.rating
+    tag_link = css_select("a[href*='tag=']").first
+    assert tag_link, "expected the shelf's tag links to render"
+    assert_includes tag_link["href"], "status=#{reading.status}"
+    assert_includes tag_link["href"], "rating=#{reading.rating}"
+    assert_includes tag_link["href"], "sort=title"
   end
 
   test "readings index shows the empty-shelf state when only invalid filters are given" do
@@ -195,6 +200,7 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes @response.body, "Your shelf is empty."
     assert_not_includes @response.body, "No readings match those filters."
+    assert_select "a", text: "Clear", count: 0
   end
 
   test "readings index rating sort puts rated readings before unrated ones" do
