@@ -1,11 +1,3 @@
-require "faker"
-require "zlib"
-
-# Fixed seed so every run generates the same names/emails/titles in the same
-# order — otherwise `find_or_create_by!` below would treat each rerun's fresh
-# random data as new rows instead of matching what's already there.
-Faker::Config.random = Random.new(20_260_906)
-
 TARGET_USER_COUNT = 110
 TARGET_BOOK_COUNT = 320
 CURRENT_YEAR = Date.current.year
@@ -27,6 +19,21 @@ puts "Seeding roles..."
 admin_role = Role.find_or_create_by!(name: "admin")
 moderator_role = Role.find_or_create_by!(name: "moderator")
 member_role = Role.find_or_create_by!(name: "member")
+
+# Production needs only the roles (sign-up assigns "member"). Everything below is demo data,
+# including admin/moderator accounts whose password is in source, so it must never run there (#250).
+if Rails.env.production?
+  puts "Production: skipping demo data."
+  return
+end
+
+require "faker"
+require "zlib"
+
+# Fixed seed so every run generates the same names/emails/titles in the same
+# order — otherwise `find_or_create_by!` below would treat each rerun's fresh
+# random data as new rows instead of matching what's already there.
+Faker::Config.random = Random.new(20_260_906)
 
 def seed_user(email, name: nil)
   User.find_or_create_by!(email: email) do |u|
