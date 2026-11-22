@@ -164,6 +164,33 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [dom_id(readings(:one))], shelf_row_ids
   end
 
+  # A hash param is an unpermitted ActionController::Parameters, which *_path can't serialize (#253).
+  test "readings index ignores hash status, rating and sort params" do
+    sign_in_as users(:member)
+
+    [{status: {k: "x"}}, {rating: {k: "x"}}, {sort: {k: "x"}}].each do |query|
+      get readings_url(query)
+      assert_response :success, query.inspect
+      assert_equal [dom_id(readings(:one))], shelf_row_ids
+    end
+  end
+
+  test "readings index keeps a valid status and rating selected and in the tag links" do
+    sign_in_as users(:member)
+    reading = readings(:one)
+
+    get readings_url(status: reading.status, rating: reading.rating, sort: "title")
+
+    assert_response :success
+    assert_select "select[name=status] option[selected][value=?]", reading.status
+    assert_select "select[name=rating] option[selected][value=?]", reading.rating
+    tag_link = css_select("a[href*='tag=']").first
+    assert tag_link, "expected the shelf's tag links to render"
+    assert_includes tag_link["href"], "status=#{reading.status}"
+    assert_includes tag_link["href"], "rating=#{reading.rating}"
+    assert_includes tag_link["href"], "sort=title"
+  end
+
   test "readings index shows the empty-shelf state when only invalid filters are given" do
     Reading.unscoped.where(user: users(:member)).destroy_all
     sign_in_as users(:member)
@@ -173,6 +200,7 @@ class ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes @response.body, "Your shelf is empty."
     assert_not_includes @response.body, "No readings match those filters."
+    assert_select "a", text: "Clear", count: 0
   end
 
   test "readings index rating sort puts rated readings before unrated ones" do

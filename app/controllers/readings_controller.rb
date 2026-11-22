@@ -24,13 +24,17 @@ class ReadingsController < ApplicationController
       @filters_applied = true
     end
 
-    if params[:status].present? && Reading.statuses.key?(params[:status])
-      @readings = @readings.where(status: params[:status])
+    # Views echo only these validated values: a raw hash param (status[k]=x) can't go through
+    # *_path's to_query, since it's unpermitted (#253).
+    @status = params[:status] if Reading.statuses.key?(params[:status])
+    if @status
+      @readings = @readings.where(status: @status)
       @filters_applied = true
     end
 
-    if params[:rating].present? && Reading.ratings.key?(params[:rating])
-      @readings = @readings.where(rating: params[:rating])
+    @rating = params[:rating] if Reading.ratings.key?(params[:rating])
+    if @rating
+      @readings = @readings.where(rating: @rating)
       @filters_applied = true
     end
 
