@@ -38,10 +38,10 @@ In development and test, `db:seed` creates a demo dataset: 110 users, 320 books 
 | `moderator@communitybookshelf.org` | Moderator |
 | 108 Faker-generated members | Member (4 also Moderator) |
 
-In production, `db:seed` (which `db:prepare` runs on a newly created database) creates only the roles. Sign up as normal, then give your account the admin role from a console:
+In production (any environment but development and test), `db:seed`, which `db:prepare` runs on a newly created database, creates only the roles. Sign up as normal, then give your account the admin role inside the app container:
 
 ```bash
-bin/rails runner 'User.find_by!(email: "you@example.com").roles << Role.find_by!(name: "admin")'
+bin/kamal app exec 'bin/rails runner "User.find_by!(email: %q(you@example.com)).roles << Role.find_by!(name: %q(admin))"'
 ```
 
 ## Roles

@@ -48,7 +48,7 @@ bin/rails test:system                   # Capybara system tests
 bin/rails routes                        # list all routes
 bin/rails db:migrate                    # run pending migrations
 bin/rails db:rollback                   # undo last migration
-bin/rails db:seed                       # roles, plus demo data outside production (#250)
+bin/rails db:seed                       # roles; demo data only in development/test (#250)
 
 bin/rubocop                             # lint (StandardRB via standard + standard-rails)
 bin/rubocop -a                          # auto-correct safe offenses
