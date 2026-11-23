@@ -270,7 +270,8 @@ all_users.each do |user|
   sample_books = books.sample(reading_rng.rand(10..45), random: reading_rng)
 
   sample_books.each do |book|
-    # Unscoped, so a re-run finds the readings the last run soft-deleted instead of making new ones (#251).
+    # Unscoped, so a re-run finds the readings the last run soft-deleted
+    # instead of making new ones (#251).
     reading = Reading.unscoped.find_or_create_by!(user: user, book: book) do |r|
       r.status = "want_to_read"
     end
