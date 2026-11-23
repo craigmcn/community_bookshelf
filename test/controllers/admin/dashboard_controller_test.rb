@@ -25,6 +25,19 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     assert_select "h3", text: "Trends"
   end
 
+  # The fixtures give only one book readings, and Bullet needs two to flag a per-book count (#256).
+  test "popular books show reading counts without a query per book" do
+    Reading.create!(user: users(:member), book: books(:two), status: :want_to_read)
+    Reading.create!(user: users(:moderator), book: books(:two), status: :reading)
+
+    sign_in_as users(:admin)
+    get admin_root_url
+
+    assert_response :success
+    assert_select "td span.badge", text: "2"
+    assert_select "td span.badge", text: "1"
+  end
+
   test "total user count excludes the deleted-user placeholder" do
     starting_count = User.excluding_deleted_placeholder.count
     User.deleted_placeholder

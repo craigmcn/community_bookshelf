@@ -22,8 +22,10 @@ require "zlib"
 
 # Fixed seed so every run generates the same names/emails/titles in the same
 # order — otherwise `find_or_create_by!` below would treat each rerun's fresh
-# random data as new rows instead of matching what's already there.
+# random data as new rows instead of matching what's already there. Faker's `unique`
+# remembers values across loads in one process, so clear it too.
 Faker::Config.random = Random.new(20_260_906)
+Faker::UniqueGenerator.clear
 
 # "Which N objects" choices below are keyed to a stable identifier (a user's
 # id, a reading's id, a loop index) instead of drawing from Kernel's global
@@ -268,7 +270,8 @@ all_users.each do |user|
   sample_books = books.sample(reading_rng.rand(10..45), random: reading_rng)
 
   sample_books.each do |book|
-    reading = Reading.find_or_create_by!(user: user, book: book) do |r|
+    # Unscoped, so a re-run finds the readings the last run soft-deleted instead of making new ones (#251).
+    reading = Reading.unscoped.find_or_create_by!(user: user, book: book) do |r|
       r.status = "want_to_read"
     end
     next unless reading.previously_new_record?

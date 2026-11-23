@@ -49,6 +49,7 @@ bin/rails routes                        # list all routes
 bin/rails db:migrate                    # run pending migrations
 bin/rails db:rollback                   # undo last migration
 bin/rails db:seed                       # roles; demo data only in development/test (#250)
+bin/rails db:seed:verify_rerun          # re-seed; fails if any table's row count changes (#251)
 
 bin/rubocop                             # lint (StandardRB via standard + standard-rails)
 bin/rubocop -a                          # auto-correct safe offenses

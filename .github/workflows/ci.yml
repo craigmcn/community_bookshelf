@@ -99,6 +99,15 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
 
+      # Two processes, like a real re-run: the second db:seed must not change any row counts (#251).
+      - name: Seed, then re-seed without changes
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+        run: |
+          bin/rails db:seed:replant
+          bin/rails db:seed:verify_rerun
+
   e2e:
     runs-on: ubuntu-latest
 

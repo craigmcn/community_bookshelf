@@ -48,7 +48,7 @@
           <tr>
             <td><%= link_to book.title, book, class: "text-decoration-none fw-semibold" %></td>
             <td class="text-muted"><%= book.author %></td>
-            <td class="text-end"><span class="badge bg-secondary"><%= book.readings.size %></span></td>
+            <td class="text-end"><span class="badge bg-secondary"><%= book.readings_count %></span></td>
           </tr>
         <% end %>
       </tbody>
