@@ -30,15 +30,19 @@ Visit `http://localhost:3000`. (Or PORT defined in `.env`)
 
 ### Seed accounts
 
-All seed accounts use the password `correct-horse-shelf`.
+In development and test, `db:seed` creates a demo dataset: 110 users, 320 books and their readings, reviews, clubs and so on. All seed accounts use the password `correct-horse-shelf`.
 
 | Email | Roles |
 |-------|-------|
 | `admin@communitybookshelf.org` | Admin, Moderator |
 | `moderator@communitybookshelf.org` | Moderator |
-| `alice@example.com` | Member |
-| `bob@example.com` | Member |
-| `carol@example.com` | Member |
+| 108 Faker-generated members | Member (4 also Moderator) |
+
+In production (any environment but development and test), `db:seed`, which `db:prepare` runs on a newly created database, creates only the roles. Sign up as normal, then give your account the admin role inside the app container:
+
+```bash
+bin/kamal app exec 'bin/rails runner "User.find_by!(email: %q(you@example.com)).roles << Role.find_by!(name: %q(admin))"'
+```
 
 ## Roles
 

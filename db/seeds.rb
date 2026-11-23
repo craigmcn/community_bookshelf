@@ -1,3 +1,22 @@
+TARGET_USER_COUNT = 110
+TARGET_BOOK_COUNT = 320
+CURRENT_YEAR = Date.current.year
+
+# ---------------------------------------------------------------------------
+# Roles + Users
+# ---------------------------------------------------------------------------
+puts "Seeding roles..."
+admin_role = Role.find_or_create_by!(name: "admin")
+moderator_role = Role.find_or_create_by!(name: "moderator")
+member_role = Role.find_or_create_by!(name: "member")
+
+# Deployed envs need only the roles (sign-up assigns "member"). Everything below is demo data,
+# including admin accounts whose password is in source, so only development and test get it (#250).
+unless Rails.env.local?
+  puts "#{Rails.env}: skipping demo data."
+  return
+end
+
 require "faker"
 require "zlib"
 
@@ -5,10 +24,6 @@ require "zlib"
 # order — otherwise `find_or_create_by!` below would treat each rerun's fresh
 # random data as new rows instead of matching what's already there.
 Faker::Config.random = Random.new(20_260_906)
-
-TARGET_USER_COUNT = 110
-TARGET_BOOK_COUNT = 320
-CURRENT_YEAR = Date.current.year
 
 # "Which N objects" choices below are keyed to a stable identifier (a user's
 # id, a reading's id, a loop index) instead of drawing from Kernel's global
@@ -19,14 +34,6 @@ CURRENT_YEAR = Date.current.year
 def seeded_rng(*key_parts)
   Random.new(Zlib.crc32(key_parts.join("|")))
 end
-
-# ---------------------------------------------------------------------------
-# Roles + Users
-# ---------------------------------------------------------------------------
-puts "Seeding roles..."
-admin_role = Role.find_or_create_by!(name: "admin")
-moderator_role = Role.find_or_create_by!(name: "moderator")
-member_role = Role.find_or_create_by!(name: "member")
 
 def seed_user(email, name: nil)
   User.find_or_create_by!(email: email) do |u|
