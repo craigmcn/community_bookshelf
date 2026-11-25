@@ -49,6 +49,62 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes ids, other_reading.id
   end
 
+  test "index nests each reading's book, without its tag lists" do
+    get api_v1_readings_url, headers: auth_headers(users(:member))
+
+    book = JSON.parse(response.body)["readings"].first["book"]
+    assert_equal books(:one).title, book["title"]
+    assert_equal books(:one).author, book["author"]
+    assert_includes book.keys, "cover_url"
+    assert_not_includes book.keys, "tag_list"
+  end
+
+  # Bullet raises on an N+1, but needs two books to see one.
+  test "index loads several readings' books without a query per book" do
+    Reading.create!(user: users(:member), book: books(:two), status: :reading)
+
+    get api_v1_readings_url, headers: auth_headers(users(:member))
+
+    assert_response :success
+    assert_equal [books(:one).title, books(:two).title].sort, JSON.parse(response.body)["readings"].map { |r| r["book"]["title"] }.sort
+  end
+
+  test "mine=true limits a moderator's index to their own readings" do
+    own = Reading.create!(user: users(:moderator), book: books(:two), status: :reading)
+
+    get api_v1_readings_url, params: {mine: "true"}, headers: auth_headers(users(:moderator))
+
+    assert_equal [own.id], JSON.parse(response.body)["readings"].pluck("id")
+  end
+
+  test "book_id limits the index to readings of that book" do
+    other = Reading.create!(user: users(:member), book: books(:two), status: :reading)
+
+    get api_v1_readings_url, params: {book_id: books(:two).id}, headers: auth_headers(users(:member))
+
+    assert_equal [other.id], JSON.parse(response.body)["readings"].pluck("id")
+  end
+
+  test "a book_id that isn't a book matches nothing, and a blank one is ignored" do
+    get api_v1_readings_url, params: {book_id: "not-a-book"}, headers: auth_headers(users(:member))
+    assert_empty JSON.parse(response.body)["readings"]
+
+    get api_v1_readings_url, params: {book_id: "9" * 30}, headers: auth_headers(users(:member))
+    assert_response :success
+    assert_empty JSON.parse(response.body)["readings"]
+
+    get api_v1_readings_url, params: {book_id: ""}, headers: auth_headers(users(:member))
+    assert_equal [@reading.id], JSON.parse(response.body)["readings"].pluck("id")
+  end
+
+  test "an array or hash book_id is ignored" do
+    get api_v1_readings_url, params: {book_id: {k: "1"}}, headers: auth_headers(users(:member))
+    assert_equal [@reading.id], JSON.parse(response.body)["readings"].pluck("id")
+
+    get api_v1_readings_url, params: {book_id: ["1"]}, headers: auth_headers(users(:member))
+    assert_equal [@reading.id], JSON.parse(response.body)["readings"].pluck("id")
+  end
+
   test "member can show their own reading" do
     get api_v1_reading_url(@reading), headers: auth_headers(users(:member))
     assert_response :success

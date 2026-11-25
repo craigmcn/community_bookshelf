@@ -8,7 +8,15 @@ class Api::V1::ReadingsController < Api::V1::BaseController
   MAX_BULK_SIZE = 100
 
   def index
-    @readings = policy_scope(Reading)
+    @readings = policy_scope(Reading).includes(:book)
+
+    # Moderators' index holds everyone's readings; a "my shelf" page needs only its owner's.
+    @readings = @readings.where(user: current_user) if params[:mine] == "true"
+
+    # A string only: a hash would be read as a nested condition.
+    if params[:book_id].is_a?(String) && params[:book_id].present?
+      @readings = @readings.where(book_id: params[:book_id])
+    end
 
     if params[:status].present? && Reading.statuses.key?(params[:status])
       @readings = @readings.where(status: params[:status])
@@ -16,7 +24,9 @@ class Api::V1::ReadingsController < Api::V1::BaseController
 
     @readings = @readings.order(updated_at: :desc, id: :desc)
     @pagy, @readings = pagy(@readings)
-    fresh_when @readings
+    # Each row nests its book, so a book-only change has to bust a cached copy, as in show.
+    books = @readings.map(&:book)
+    fresh_when(etag: [@readings, books], last_modified: [*@readings, *books].map(&:updated_at).max)
   end
 
   def show

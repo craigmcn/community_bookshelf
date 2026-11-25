@@ -61,6 +61,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resource :session, only: [:show, :create, :destroy]
+      resource :book_search, only: [:show]
       resources :books, only: [:index, :show, :create, :update, :destroy]
       resources :readings, only: [:index, :show, :create, :update, :destroy] do
         post :bulk, on: :collection
@@ -89,6 +90,12 @@ Rails.application.routes.draw do
       end
       resources :tags, only: [:index]
       resources :favorite_genres, only: [:index, :create, :destroy]
+
+      namespace :admin do
+        resource :dashboard, only: [:show]
+        resources :users, only: [:index, :update]
+        resources :readings, only: [:index]
+      end
     end
 
     get "docs", to: "docs#index"

@@ -72,4 +72,17 @@ class Api::ConditionalGetTest < ActionDispatch::IntegrationTest
     get api_v1_readings_url, headers: sign_in_headers.merge("If-None-Match" => etag)
     assert_response :not_modified
   end
+
+  # The index nests each book, so a book edit alone must not 304 a stale cached copy.
+  test "readings index 304 flips back to 200 when only a nested book changes" do
+    reading = readings(:one)
+    sign_in_headers = auth_headers(reading.user)
+    get api_v1_readings_url, headers: sign_in_headers
+    etag = response.headers["ETag"]
+
+    reading.book.update!(title: "A Completely Different Title")
+
+    get api_v1_readings_url, headers: sign_in_headers.merge("If-None-Match" => etag)
+    assert_response :success
+  end
 end

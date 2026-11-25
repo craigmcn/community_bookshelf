@@ -6,8 +6,33 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     @book = books(:one)
   end
 
-  test "no token is rejected" do
+  # Browsing the catalog is public on the website, so it is here too (#219).
+  test "signed-out visitors can list and show books" do
     get api_v1_books_url
+    assert_response :success
+    assert_equal Book.count, JSON.parse(response.body)["books"].size
+
+    get api_v1_book_url(@book)
+    assert_response :success
+    assert_equal @book.title, JSON.parse(response.body)["title"]
+  end
+
+  test "signed-out visitors cannot write books" do
+    assert_no_difference "Book.count" do
+      post api_v1_books_url, params: {book: {title: "New Book", author: "Some Author"}}
+      assert_response :unauthorized
+
+      delete api_v1_book_url(@book)
+      assert_response :unauthorized
+    end
+
+    patch api_v1_book_url(@book), params: {book: {title: "Changed"}}
+    assert_response :unauthorized
+    assert_not_equal "Changed", @book.reload.title
+  end
+
+  test "garbage token is rejected on show, not treated as signed out" do
+    get api_v1_book_url(@book), headers: {"Authorization" => "Bearer not-a-real-token"}
     assert_response :unauthorized
   end
 

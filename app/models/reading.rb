@@ -8,6 +8,8 @@ class Reading < ApplicationRecord
 
   default_scope { where(deleted_at: nil) }
   scope :with_deleted, -> { unscoped }
+  # The moderation list, shared by the admin page and /api/v1/admin/readings.
+  scope :reviewed_including_deleted, -> { with_deleted.where.not(review: [nil, ""]).order(updated_at: :desc, id: :desc) }
 
   enum :status, {want_to_read: 0, reading: 1, finished: 2, dnf: 3}
   enum :rating, {one: 1, two: 2, three: 3, four: 4, five: 5}

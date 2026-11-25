@@ -87,7 +87,7 @@ class Api::CookieAuthTest < ActionDispatch::IntegrationTest
   end
 
   test "no token and no cookie is a 401" do
-    get api_v1_books_url
+    get api_v1_readings_url
 
     assert_response :unauthorized
   end

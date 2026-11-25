@@ -59,6 +59,15 @@ class Book < ApplicationRecord
       .limit(limit)
   end
 
+  # For the admin dashboard, on the website and /api/v1/admin/dashboard.
+  def self.most_read(limit: 5)
+    joins(:readings)
+      .group(:id)
+      .select("books.*, COUNT(readings.id) AS readings_count")
+      .order(readings_count: :desc, id: :desc) # id keeps tied books in a stable top list
+      .limit(limit)
+  end
+
   # Books tagged like the ones a user rated highly or finished, excluding books
   # already on their shelf. Purely tag-overlap based — no ML/vector infra.
   def self.recommended_for(user, limit: 6)
