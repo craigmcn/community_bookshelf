@@ -17,7 +17,12 @@ class Api::V1::BooksController < Api::V1::BaseController
 
     @books = @books.order(:title, :id)
     @pagy, @books = pagy(@books)
-    fresh_when @books
+    # Per row plus the total, as in ReadingsController#index, so a delete can't 304 a stale page.
+    books = @books.to_a
+    return unless stale?(etag: [books, @pagy.count], last_modified: books.map(&:updated_at).max)
+
+    # Only when rendering: a 304 never reads the tags, and Bullet flags an unused preload.
+    ActiveRecord::Associations::Preloader.new(records: books, associations: :tags).call
   end
 
   def show

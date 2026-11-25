@@ -71,7 +71,7 @@ role/ownership to succeed.
 
 ## Making a request
 
-Every request needs the token in an `Authorization` header:
+A script sends its token in an `Authorization` header:
 
 ```sh
 curl -H "Authorization: Bearer <your-token>" https://<host>/api/v1/books
@@ -186,7 +186,7 @@ same as the website.
 
 `GET /api/v1/book_search?q=` searches Open Library and returns `{"results":
 [{title, author, cover_url, open_library_key}]}`. It needs the `read:books`
-scope.
+scope. If Open Library is down or rate-limiting, `results` is empty.
 
 ```sh
 curl -X POST https://<host>/api/v1/books \
@@ -540,8 +540,9 @@ curl -X POST https://<host>/api/v1/favorite_genres \
 | GET | `/api/v1/admin/readings` | Moderator or admin — reviewed readings, including deleted ones |
 
 These take the session cookie only; an API token gets a `403` whatever its
-scopes. `PATCH` takes the full list of role names, e.g. `{"user": {"roles":
-["member", "moderator"]}}`: an unknown name is a `422`, and an empty list
+scopes. `PATCH` takes a JSON body with the full list of role names, e.g. `{"user":
+{"roles": ["member", "moderator"]}}`: an unknown name is a `422`, anything but
+a list of strings (including a `null` entry) is a `400`, and an empty list
 removes every role. To remove a review, use `DELETE /api/v1/readings/:id`.
 
 ## Rate limits

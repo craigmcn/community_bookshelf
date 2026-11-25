@@ -1,6 +1,6 @@
 class Admin::ReadingsController < Admin::BaseController
   def index
-    @readings = Reading.reviewed_including_deleted.includes(:user, :book)
+    @readings = Reading.with_deleted.for_moderation.includes(:user, :book)
   end
 
   # Separate from ReadingsController#destroy so moderating from this list keeps

@@ -37,4 +37,13 @@ class Api::V1::BookSearchesControllerTest < ActionDispatch::IntegrationTest
     get api_v1_book_search_url, params: {q: ""}, headers: auth_headers(users(:member), scopes: ["read:readings"])
     assert_response :forbidden
   end
+
+  test "an Open Library outage returns no results, not a 500" do
+    stub_request(:get, /openlibrary\.org\/search\.json/).to_return(status: 503, body: "<html>Down</html>")
+
+    get api_v1_book_search_url, params: {q: "gatsby"}, headers: auth_headers(users(:member))
+
+    assert_response :success
+    assert_equal({"results" => []}, JSON.parse(response.body))
+  end
 end

@@ -85,4 +85,61 @@ class Api::ConditionalGetTest < ActionDispatch::IntegrationTest
     get api_v1_readings_url, headers: sign_in_headers.merge("If-None-Match" => etag)
     assert_response :success
   end
+
+  # The ETag must cover each row and the total, or pagination and removed rows go stale.
+  test "readings index 304 flips back to 200 when a reading on a later page is removed" do
+    member = users(:member)
+    extra = 20.times.map { Reading.create!(user: member, book: books(:two), status: :want_to_read) }
+    Reading.where(id: extra.first.id).update_all(updated_at: 1.year.ago)
+    headers = auth_headers(member)
+    get api_v1_readings_url, params: {mine: "true"}, headers: headers
+    etag = response.headers["ETag"]
+    assert_equal 2, JSON.parse(response.body).dig("pagination", "pages")
+
+    delete api_v1_reading_url(extra.first), headers: headers
+    get api_v1_readings_url, params: {mine: "true"}, headers: headers.merge("If-None-Match" => etag)
+
+    assert_response :success
+    assert_equal 1, JSON.parse(response.body).dig("pagination", "pages")
+  end
+
+  # A full page: the next row slides in, so the page's row count and newest updated_at stay the same.
+  test "readings index 304 flips back to 200 when a reading mid-page is removed" do
+    member = users(:member)
+    readings = 25.times.map { Reading.create!(user: member, book: books(:two), status: :want_to_read) }
+    headers = auth_headers(member)
+    get api_v1_readings_url, params: {book_id: books(:two).id}, headers: headers
+    etag = response.headers["ETag"]
+
+    delete api_v1_reading_url(readings[-3]), headers: headers
+    get api_v1_readings_url, params: {book_id: books(:two).id}, headers: headers.merge("If-None-Match" => etag)
+
+    assert_response :success
+    assert_not_includes JSON.parse(response.body)["readings"].pluck("id"), readings[-3].id
+  end
+
+  test "books index 304 flips back to 200 when a book on a later page is deleted" do
+    19.times { |i| Book.create!(title: "Zzz #{i}", author: "Someone", added_by: users(:member)) }
+    get api_v1_books_url
+    etag = response.headers["ETag"]
+    assert_equal 2, JSON.parse(response.body).dig("pagination", "pages")
+
+    Book.find_by!(title: "Zzz 9").destroy! # sorts last, so it's on page 2
+    get api_v1_books_url, headers: {"If-None-Match" => etag}
+
+    assert_response :success
+    assert_equal 1, JSON.parse(response.body).dig("pagination", "pages")
+  end
+
+  test "book show 304 flips back to 200 when only its tags change" do
+    book = books(:one)
+    get api_v1_book_url(book)
+    etag = response.headers["ETag"]
+
+    book.update!(tag_list: "classic")
+    get api_v1_book_url(book), headers: {"If-None-Match" => etag}
+
+    assert_response :success
+    assert_equal "classic", JSON.parse(response.body)["tag_list"]
+  end
 end

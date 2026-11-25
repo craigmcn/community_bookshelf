@@ -17,6 +17,18 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal @book.title, JSON.parse(response.body)["title"]
   end
 
+  # The tag lists used to run three queries per book.
+  test "the catalog's query count doesn't grow with the number of tagged books" do
+    books(:one).update!(tag_list: "classic", mood_list: "reflective", pace_list: "slow")
+    baseline = catalog_query_count
+
+    3.times { |i| Book.create!(title: "Tagged #{i}", author: "A", added_by: users(:member), tag_list: "classic, drama", mood_list: "dark", pace_list: "fast") }
+
+    assert_equal baseline, catalog_query_count
+    tagged = JSON.parse(response.body)["books"].find { |book| book["title"] == "Tagged 0" }
+    assert_equal ["classic, drama", "dark", "fast"], tagged.values_at("tag_list", "mood_list", "pace_list")
+  end
+
   test "signed-out visitors cannot write books" do
     assert_no_difference "Book.count" do
       post api_v1_books_url, params: {book: {title: "New Book", author: "Some Author"}}
@@ -161,5 +173,15 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
 
     get "/api/v1/books/#{@book.id}/edit", headers: auth_headers(users(:member))
     assert_response :not_found
+  end
+
+  private
+
+  def catalog_query_count
+    count = 0
+    counter = ->(*, payload) { count += 1 unless payload[:name] == "SCHEMA" || payload[:cached] }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { get api_v1_books_url }
+    assert_response :success
+    count
   end
 end

@@ -60,6 +60,13 @@ class Api::V1::BaseController < ActionController::Base
     render json: {error: "This endpoint takes a session cookie, not an API token"}, status: :forbidden if token_auth?
   end
 
+  # HTML forms can't send JSON, and cross-site fetch can't send it without a CORS preflight.
+  def require_json_body
+    return if request.media_type == "application/json"
+
+    render json: {error: "Content-Type must be application/json"}, status: :unsupported_media_type
+  end
+
   def token_auth?
     request.authorization.present?
   end

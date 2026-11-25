@@ -72,11 +72,25 @@ class Api::V1::Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   test "a missing or malformed roles list changes nothing" do
     csrf_token = admin_csrf_token
 
-    [{user: {name: "x"}}, {user: {roles: "admin"}}, {user: {roles: nil}}, {}].each do |body|
+    # Rails drops nulls from arrays, so [null] would otherwise read as [] and strip every role.
+    bodies = [{user: {name: "x"}}, {user: {roles: "admin"}}, {user: {roles: nil}}, {user: {roles: [nil]}},
+      {user: {roles: ["member", nil]}}, {user: {roles: [["admin"]]}}, {user: {roles: [{name: "admin"}]}},
+      {user: {roles: [1]}}, {user: "admin"}, [], {}]
+    bodies.each do |body|
       patch api_v1_admin_user_url(users(:member)), params: body.to_json, headers: json_headers(csrf_token)
       assert_response :bad_request, body.inspect
+      assert_equal({"error" => "user.roles must be a list of role names"}, JSON.parse(response.body), body.inspect)
       assert_equal ["member"], users(:member).reload.roles.pluck(:name)
     end
+  end
+
+  test "a non-JSON body is a 415 and changes nothing" do
+    csrf_token = admin_csrf_token
+
+    patch api_v1_admin_user_url(users(:member)), params: {user: {roles: ["admin"]}}, headers: {"X-CSRF-Token" => csrf_token}
+
+    assert_response :unsupported_media_type
+    assert_not users(:member).reload.admin?
   end
 
   test "a moderator can't change roles" do

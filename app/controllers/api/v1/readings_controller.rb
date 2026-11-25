@@ -13,9 +13,9 @@ class Api::V1::ReadingsController < Api::V1::BaseController
     # Moderators' index holds everyone's readings; a "my shelf" page needs only its owner's.
     @readings = @readings.where(user: current_user) if params[:mine] == "true"
 
-    # A string only: a hash would be read as a nested condition.
+    # Digits only: Rails would cast "12abc" to 12, and a hash would become a nested condition.
     if params[:book_id].is_a?(String) && params[:book_id].present?
-      @readings = @readings.where(book_id: params[:book_id])
+      @readings = params[:book_id].match?(/\A\d+\z/) ? @readings.where(book_id: params[:book_id]) : @readings.none
     end
 
     if params[:status].present? && Reading.statuses.key?(params[:status])
@@ -24,9 +24,11 @@ class Api::V1::ReadingsController < Api::V1::BaseController
 
     @readings = @readings.order(updated_at: :desc, id: :desc)
     @pagy, @readings = pagy(@readings)
-    # Each row nests its book, so a book-only change has to bust a cached copy, as in show.
-    books = @readings.map(&:book)
-    fresh_when(etag: [@readings, books], last_modified: [*@readings, *books].map(&:updated_at).max)
+    # Keyed on each row, its nested book and the total: a relation's own key is only the SQL,
+    # row count and newest updated_at, so a removed row or a changed page count could 304.
+    readings = @readings.to_a
+    books = readings.map(&:book)
+    fresh_when(etag: [readings, books, @pagy.count], last_modified: [*readings, *books].map(&:updated_at).max)
   end
 
   def show

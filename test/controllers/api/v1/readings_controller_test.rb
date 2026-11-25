@@ -86,8 +86,10 @@ class Api::V1::ReadingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "a book_id that isn't a book matches nothing, and a blank one is ignored" do
-    get api_v1_readings_url, params: {book_id: "not-a-book"}, headers: auth_headers(users(:member))
-    assert_empty JSON.parse(response.body)["readings"]
+    ["not-a-book", "#{@reading.book_id}abc", "#{@reading.book_id}.9", "#{@reading.book_id},#{books(:two).id}", "-#{@reading.book_id}"].each do |book_id|
+      get api_v1_readings_url, params: {book_id: book_id}, headers: auth_headers(users(:member))
+      assert_empty JSON.parse(response.body)["readings"], book_id
+    end
 
     get api_v1_readings_url, params: {book_id: "9" * 30}, headers: auth_headers(users(:member))
     assert_response :success
