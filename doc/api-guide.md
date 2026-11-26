@@ -71,15 +71,16 @@ role/ownership to succeed.
 
 ## Making a request
 
-Every request needs the token in an `Authorization` header:
+A script sends its token in an `Authorization` header:
 
 ```sh
 curl -H "Authorization: Bearer <your-token>" https://<host>/api/v1/books
 ```
 
-There's no anonymous access — even endpoints that are public on the website
-(browsing the book catalog) require a valid token or session cookie when
-called through the API. A missing or invalid token gets a `401`.
+Browsing the catalog (`GET /api/v1/books` and `GET /api/v1/books/:id`) is
+public, as on the website, so those two work without one. Everything else
+requires a valid token or session cookie, and gets a `401` without it. An
+invalid token is always a `401`, on those two as well.
 
 ## Signing in with a cookie (browser apps)
 
@@ -98,8 +99,9 @@ cookie the website uses, instead of holding a token:
   token, so use the one from the latest response.
 - **Scopes:** a cookie session can do everything the website can, so it
   holds every scope.
-- **Cookie-only:** the session endpoints refuse an `Authorization` header
-  with a `403`, so a leaked token can't open a browser session.
+- **Cookie-only:** the session and admin endpoints refuse an
+  `Authorization` header with a `403`, so a leaked token can't open a browser
+  session or change anyone's roles.
 - **Precedence:** if a request sends an `Authorization` header, only the
   token is used. An invalid token is a `401`, with no fallback to the cookie,
   and token requests need no CSRF header.
@@ -165,11 +167,12 @@ instead of a signed-in session.
 
 | Method | Path | Who |
 |---|---|---|
-| GET | `/api/v1/books` | Anyone with a token |
-| GET | `/api/v1/books/:id` | Anyone with a token |
+| GET | `/api/v1/books` | Anyone, signed in or not |
+| GET | `/api/v1/books/:id` | Anyone, signed in or not |
 | POST | `/api/v1/books` | Anyone with a token |
 | PATCH | `/api/v1/books/:id` | Moderator or admin |
 | DELETE | `/api/v1/books/:id` | Moderator or admin |
+| GET | `/api/v1/book_search` | Anyone with a token |
 
 `GET /api/v1/books` accepts an optional `q` param to search by title/author
 (same as the website's catalog search), and paginates 20 at a time.
@@ -180,6 +183,10 @@ Creating a book accepts the same fields as the website's add-book form:
 (the last three are comma-separated strings, same as the form). Pass
 `open_library_key` to auto-fill description and subjects from Open Library,
 same as the website.
+
+`GET /api/v1/book_search?q=` searches Open Library and returns `{"results":
+[{title, author, cover_url, open_library_key}]}`. It needs the `read:books`
+scope. If Open Library is down or rate-limiting, `results` is empty.
 
 ```sh
 curl -X POST https://<host>/api/v1/books \
@@ -199,10 +206,11 @@ curl -X POST https://<host>/api/v1/books \
 | DELETE | `/api/v1/readings/:id` | Owner, or moderator/admin — this is a soft delete, same as the website |
 
 `GET /api/v1/readings` accepts an optional `status` param
-(`want_to_read`/`reading`/`finished`/`dnf`) and paginates 20 at a time. A
-reading's `show` response nests its book; the index response doesn't (to
-avoid repeating book data across every row of a paginated list) — fetch
-`GET /api/v1/books/:id` separately if you need it there.
+(`want_to_read`/`reading`/`finished`/`dnf`), a `book_id`, and `mine=true`
+(which limits a moderator's or admin's list to their own readings), and
+paginates 20 at a time. Each reading nests its book. The list leaves out the
+book's `tag_list`/`mood_list`/`pace_list`; a reading's `show` response has
+them.
 
 Creating or updating a reading accepts the same fields as the website's
 reading form: `book_id`, `status`, `rating`, `review`, `is_review_public`,
@@ -522,14 +530,29 @@ curl -X POST https://<host>/api/v1/favorite_genres \
   -d '{"tag_id": 5}'
 ```
 
+### Admin
+
+| Method | Path | Who |
+|---|---|---|
+| GET | `/api/v1/admin/dashboard` | Admin — site totals and the five most-read books |
+| GET | `/api/v1/admin/users` | Admin — every user, with their roles |
+| PATCH | `/api/v1/admin/users/:id` | Admin — replace a user's roles |
+| GET | `/api/v1/admin/readings` | Moderator or admin — reviewed readings, including deleted ones |
+
+These take the session cookie only; an API token gets a `403` whatever its
+scopes. `PATCH` takes a JSON body with the full list of role names, e.g. `{"user":
+{"roles": ["member", "moderator"]}}`: an unknown name is a `422`, anything but
+a list of strings (including a `null` entry) is a `400`, and an empty list
+removes every role. To remove a review, use `DELETE /api/v1/readings/:id`.
+
 ## Rate limits
 
 To keep the API usable for everyone, requests are throttled:
 
 - **120 requests/minute** per token.
-- **30 requests/minute** per IP address for requests with no valid token —
-  this only affects scripts hammering the API with a missing or bad token;
-  it doesn't apply once you're sending a real one.
+- **30 requests/minute** per IP address for requests with no valid token or
+  session cookie, which includes signed-out catalog browsing. It doesn't
+  apply once you're sending a real one.
 
 Exceeding a limit gets a `429` with `{"error": "Rate limit exceeded"}`.
 There's no higher limit for moderator/admin tokens — a runaway script is

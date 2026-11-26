@@ -33,17 +33,11 @@ class Book < ApplicationRecord
 
   TAG_LIST_LABELS = {"genre" => "Genres / Tags", "mood" => "Moods", "pace" => "Pace"}.freeze
 
-  def tag_list
-    @tag_list || tags.genre.order(:name).pluck(:name).join(", ")
-  end
+  def tag_list = @tag_list || tag_names_in("genre")
 
-  def mood_list
-    @mood_list || tags.mood.order(:name).pluck(:name).join(", ")
-  end
+  def mood_list = @mood_list || tag_names_in("mood")
 
-  def pace_list
-    @pace_list || tags.pace.order(:name).pluck(:name).join(", ")
-  end
+  def pace_list = @pace_list || tag_names_in("pace")
 
   # Books sharing the most tags (any category) with this one, most-overlap first.
   def similar_books(limit: 6)
@@ -56,6 +50,15 @@ class Book < ApplicationRecord
       .where.not(id: id)
       .group("books.id")
       .order(Arel.sql("COUNT(taggings.id) DESC"), "books.title ASC")
+      .limit(limit)
+  end
+
+  # For the admin dashboard, on the website and /api/v1/admin/dashboard.
+  def self.most_read(limit: 5)
+    joins(:readings)
+      .group(:id)
+      .select("books.*, COUNT(readings.id) AS readings_count")
+      .order(readings_count: :desc, id: :desc) # id keeps tied books in a stable top list
       .limit(limit)
   end
 
@@ -127,6 +130,14 @@ class Book < ApplicationRecord
 
     taggings.where(tag_id: current_ids - desired_ids).destroy_all
     (desired_ids - current_ids).each { |tag_id| taggings.create!(tag_id: tag_id) }
+    # Tags live in taggings, so without this an API client's cached book (its ETag) keeps old tags.
+    touch unless desired_ids.sort == current_ids.sort
+  end
+
+  # Filters tags in memory when a list preloaded them, instead of a query per book and category.
+  def tag_names_in(category)
+    names = tags.loaded? ? tags.select { |tag| tag.category == category }.map(&:name) : tags.where(category: category).pluck(:name)
+    names.sort.join(", ")
   end
 
   # find_or_create_by finds first, so it's correct for the common case where the

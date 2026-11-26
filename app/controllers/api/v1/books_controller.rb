@@ -1,4 +1,7 @@
 class Api::V1::BooksController < Api::V1::BaseController
+  # The catalog is public on the website, so signed-out reads work here too (#219).
+  skip_before_action :authenticate!, only: %i[index show]
+  before_action :authenticate_if_present!, only: %i[index show]
   before_action -> { require_scope!("read:books") }, only: %i[index show]
   before_action -> { require_scope!("write:books") }, only: %i[create update destroy]
   before_action :set_book, only: %i[show update destroy]
@@ -14,7 +17,12 @@ class Api::V1::BooksController < Api::V1::BaseController
 
     @books = @books.order(:title, :id)
     @pagy, @books = pagy(@books)
-    fresh_when @books
+    # Per row plus the total, as in ReadingsController#index, so a delete can't 304 a stale page.
+    books = @books.to_a
+    return unless stale?(etag: [books, @pagy.count], last_modified: books.map(&:updated_at).max)
+
+    # Only when rendering: a 304 never reads the tags, and Bullet flags an unused preload.
+    ActiveRecord::Associations::Preloader.new(records: books, associations: :tags).call
   end
 
   def show

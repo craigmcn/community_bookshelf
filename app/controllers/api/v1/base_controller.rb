@@ -8,6 +8,8 @@ class Api::V1::BaseController < ActionController::Base
   include AuditsModeratorActions
   include SearchQuery
 
+  ANONYMOUS_SCOPES = %w[read:books].freeze
+
   # Rails' form-param CSRF check doesn't fit token clients; cookie writes are checked by
   # verify_csrf_token! instead, against the X-CSRF-Token header.
   skip_forgery_protection
@@ -48,6 +50,23 @@ class Api::V1::BaseController < ActionController::Base
     end
   end
 
+  # For reads that are public on the website: signed-out visitors get through, but a bad
+  # token is still a 401, so a script with an expired one isn't silently downgraded.
+  def authenticate_if_present!
+    token_auth? ? authenticate_via_token! : @cookie_user = clearance_session.current_user
+  end
+
+  def reject_token_auth
+    render json: {error: "This endpoint takes a session cookie, not an API token"}, status: :forbidden if token_auth?
+  end
+
+  # HTML forms can't send JSON, and cross-site fetch can't send it without a CORS preflight.
+  def require_json_body
+    return if request.media_type == "application/json"
+
+    render json: {error: "Content-Type must be application/json"}, status: :unsupported_media_type
+  end
+
   def token_auth?
     request.authorization.present?
   end
@@ -81,9 +100,12 @@ class Api::V1::BaseController < ActionController::Base
     @current_api_token&.user || @cookie_user
   end
 
-  # A cookie session can do everything the website can, so it holds every scope.
+  # A cookie session can do everything the website can, so it holds every scope. Signed-out
+  # visitors only reach the actions that use authenticate_if_present!, and may only read books.
   def current_scopes
-    @current_api_token ? @current_api_token.scopes : ApiToken::SCOPES
+    return @current_api_token.scopes if @current_api_token
+
+    @cookie_user ? ApiToken::SCOPES : ANONYMOUS_SCOPES
   end
 
   def require_scope!(scope)

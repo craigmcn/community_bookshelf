@@ -5,11 +5,7 @@ class Admin::DashboardController < Admin::BaseController
     @total_users = User.excluding_deleted_placeholder.count
     @total_books = Book.count
     @total_readings = Reading.count
-    @popular_books = Book.joins(:readings)
-      .group(:id)
-      .select("books.*, COUNT(readings.id) AS readings_count")
-      .order(readings_count: :desc, id: :desc) # id keeps tied books in a stable top 5
-      .limit(5)
+    @popular_books = Book.most_read
 
     @new_users_by_month = User.excluding_deleted_placeholder.group_by_month(:created_at, last: 12).count
     @books_added_by_month = Book.group_by_month(:created_at, last: 12).count

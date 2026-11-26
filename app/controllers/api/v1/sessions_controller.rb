@@ -5,6 +5,7 @@ class Api::V1::SessionsController < Api::V1::BaseController
 
   skip_before_action :authenticate!
   before_action :reject_token_auth
+  # A cross-site HTML form could otherwise sign the victim's browser in as the attacker (login CSRF).
   before_action :require_json_body, only: :create
   before_action :authenticate_via_cookie!, only: [:show, :destroy]
 
@@ -34,18 +35,6 @@ class Api::V1::SessionsController < Api::V1::BaseController
   end
 
   private
-
-  def reject_token_auth
-    render json: {error: "This endpoint takes a session cookie, not an API token"}, status: :forbidden if token_auth?
-  end
-
-  # A cross-site HTML form can POST here without CORS, which would sign the victim's browser
-  # in as the attacker (login CSRF). Forms can't send JSON, and fetch can't cross-site without a preflight.
-  def require_json_body
-    return if request.media_type == "application/json"
-
-    render json: {error: "Content-Type must be application/json"}, status: :unsupported_media_type
-  end
 
   def render_session(status:)
     @user = @cookie_user
