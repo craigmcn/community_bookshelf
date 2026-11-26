@@ -12,8 +12,32 @@ updates:
     # majors only as a deliberate, tested migration.
     - dependency-name: pagy
       update-types: ["version-update:semver-major"]
+  groups:
+    security:
+      applies-to: security-updates
+      patterns: ["*"]
+    # One PR for all minor/patch bumps; majors stay separate so a breaking
+    # upgrade can be reviewed (or ignored) on its own.
+    minor-and-patch:
+      update-types: [minor, patch]
+      patterns: ["*"]
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+  groups:
+    actions:
+      patterns: ["*"]
+# Security updates only: limit 0 turns version updates off, and the group
+# bundles concurrent advisories into one PR so CI runs once.
+- package-ecosystem: npm
+  directories:
+    - "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 0
+  groups:
+    security:
+      applies-to: security-updates
+      patterns: ["*"]
